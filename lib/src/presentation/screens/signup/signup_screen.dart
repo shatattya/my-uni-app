@@ -1,0 +1,309 @@
+import 'package:flutter/material.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart'; // Added
+import '../../../services/auth_service.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+
+class SignupScreen extends ConsumerStatefulWidget {
+  const SignupScreen({super.key});
+
+  @override
+  ConsumerState<SignupScreen> createState() => _SignupScreenState();
+}
+
+class _SignupScreenState extends ConsumerState<SignupScreen> {
+  String? internalIdError;
+  String? nameError;
+  String? passwordError;
+  String? confirmPasswordError;
+  String? semesterError;
+  String? sectionError;
+  bool _passwordHidden = true;
+  bool _confirmPasswordHidden = true;
+  bool isLoading = false;
+
+  final nameController = TextEditingController();
+  final idController = TextEditingController();
+  final passwordController = TextEditingController();
+  final confirmPasswordController = TextEditingController();
+  final semesterController = TextEditingController();
+  final sectionController = TextEditingController();
+
+  void validateName(String value) {
+    if (value.isEmpty) { setState(() => nameError = null); return; }
+    final regex = RegExp(r'^[a-zA-Z. ]+$');
+    if (!regex.hasMatch(value)) {
+      setState(() => nameError = "Name can only contain letters, spaces, and periods");
+      return;
+    }
+    setState(() => nameError = null);
+  }
+
+  void validateInternalId(String value) {
+    if (value.isEmpty) { setState(() => internalIdError = null); return; }
+    if (value.length != 9 || int.tryParse(value) == null) {
+      setState(() => internalIdError = "Internal ID must be exactly 9 digits");
+      return;
+    }
+    if (value.substring(2, 4) != "02") {
+      setState(() => internalIdError = "Department code must be 02");
+      return;
+    }
+    int batch = int.parse(value.substring(4, 6));
+    if (batch < 37 || batch > 60) {
+      setState(() => internalIdError = "Batch must be between 37 and 48");
+      return;
+    }
+    setState(() => internalIdError = null);
+  }
+
+  void validatePassword(String value) {
+    if (value.isEmpty) { setState(() => passwordError = null); return; }
+    final regex = RegExp(r'^(?=.*[0-9]).{8,}$');
+    if (!regex.hasMatch(value)) {
+      setState(() => passwordError = "Password must be at least 8 characters and contain a number");
+      return;
+    }
+    setState(() => passwordError = null);
+  }
+
+  void validateConfirmPassword(String value) {
+    if (value.isEmpty) { setState(() => confirmPasswordError = null); return; }
+    if (value != passwordController.text) {
+      setState(() => confirmPasswordError = "Passwords do not match");
+      return;
+    }
+    setState(() => confirmPasswordError = null);
+  }
+
+  void validateSemester(String value) {
+    if (value.isEmpty) { setState(() => semesterError = null); return; }
+    int? semester = int.tryParse(value);
+    if (semester == null || semester < 1 || semester > 8) {
+      setState(() => semesterError = "Semester must be between 1 and 8");
+      return;
+    }
+    setState(() => semesterError = null);
+  }
+
+  void validateSection(String value) {
+    if (value.isEmpty) { setState(() => sectionError = null); return; }
+    String upper = value.toUpperCase();
+    sectionController.value = sectionController.value.copyWith(
+      text: upper,
+      selection: TextSelection.collapsed(offset: upper.length),
+    );
+    if (upper != "A" && upper != "B" && upper != "C") {
+      setState(() => sectionError = "Section must be A, B, or C");
+    } else {
+      setState(() => sectionError = null);
+    }
+  }
+
+  @override
+  void dispose() {
+    nameController.dispose();
+    idController.dispose();
+    passwordController.dispose();
+    confirmPasswordController.dispose();
+    semesterController.dispose();
+    sectionController.dispose();
+    super.dispose();
+  }
+
+  void handleSignup() async {
+    if (!isFormValid()) {
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Please fix the errors before signing up")));
+      return;
+    }
+
+    setState(() => isLoading = true);
+
+    try {
+      final authService = ref.read(authServiceProvider);
+      await authService.signUp(
+        internalId: idController.text,
+        password: passwordController.text,
+        name: nameController.text,
+        semester: int.parse(semesterController.text),
+        section: sectionController.text,
+      );
+      if (!mounted) return;
+      Navigator.pop(context, "Account created successfully. Please log in.");
+
+    } on FirebaseAuthException catch (e) {
+      setState(() => isLoading = false);
+      String message = "Signup failed";
+      if (e.code == 'email-already-in-use') message = "An account with this Internal ID already exists";
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(message)));
+    } catch (e) {
+      setState(() => isLoading = false);
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("Error saving profile: ${e.toString().split(']').last}")));
+      }
+    }
+  }
+
+  bool isFormValid() {
+    if (nameController.text.isEmpty || idController.text.isEmpty || passwordController.text.isEmpty || confirmPasswordController.text.isEmpty || semesterController.text.isEmpty || sectionController.text.isEmpty) return false;
+    if (nameError != null || internalIdError != null || passwordError != null || confirmPasswordError != null || semesterError != null || sectionError != null) return false;
+    return true;
+  }
+
+  // Refactored helper for clean, perfectly scaled inputs
+  Widget _buildTextField({
+    required String label,
+    required String hint,
+    required TextEditingController controller,
+    required Function(String) onChanged,
+    TextInputType keyboardType = TextInputType.text,
+    String? errorText,
+    bool obscureText = false,
+    bool showVisibilityToggle = false,
+    VoidCallback? onToggleVisibility,
+  }) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(label, style: TextStyle(color: Colors.white, fontSize: 16.sp)),
+        SizedBox(height: 12.h),
+        TextField(
+          controller: controller,
+          obscureText: obscureText,
+          keyboardType: keyboardType,
+          onChanged: onChanged,
+          style: TextStyle(color: Colors.black, fontSize: 16.sp),
+          decoration: InputDecoration(
+            hintText: hint,
+            hintStyle: TextStyle(color: Colors.black54, fontSize: 16.sp),
+            filled: true,
+            fillColor: const Color(0xFFE0E0E0),
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(16.r),
+              borderSide: BorderSide.none,
+            ),
+            contentPadding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 16.h),
+            errorText: errorText,
+            suffixIcon: showVisibilityToggle
+                ? IconButton(
+              icon: Icon(
+                obscureText ? Icons.visibility_off : Icons.visibility,
+                color: Colors.grey,
+                size: 24.sp,
+              ),
+              onPressed: onToggleVisibility,
+            )
+                : null,
+          ),
+        ),
+        SizedBox(height: 20.h),
+      ],
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: Colors.black,
+      body: SafeArea(
+        child: SingleChildScrollView(
+          padding: EdgeInsets.symmetric(horizontal: 28.w), // Scaled
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              SizedBox(height: 20.h),
+
+              _buildTextField(
+                label: "Full Name",
+                hint: "Enter Your Full Name",
+                controller: nameController,
+                onChanged: validateName,
+                errorText: nameError,
+              ),
+
+              _buildTextField(
+                label: "Internal ID",
+                hint: "Enter Your Internal ID",
+                controller: idController,
+                keyboardType: TextInputType.number,
+                onChanged: validateInternalId,
+                errorText: internalIdError,
+              ),
+
+              _buildTextField(
+                label: "Password",
+                hint: "********",
+                controller: passwordController,
+                onChanged: validatePassword,
+                errorText: passwordError,
+                obscureText: _passwordHidden,
+                showVisibilityToggle: true,
+                onToggleVisibility: () => setState(() => _passwordHidden = !_passwordHidden),
+              ),
+
+              _buildTextField(
+                label: "Confirm Password",
+                hint: "********",
+                controller: confirmPasswordController,
+                onChanged: validateConfirmPassword,
+                errorText: confirmPasswordError,
+                obscureText: _confirmPasswordHidden,
+                showVisibilityToggle: true,
+                onToggleVisibility: () => setState(() => _confirmPasswordHidden = !_confirmPasswordHidden),
+              ),
+
+              _buildTextField(
+                label: "Semester",
+                hint: "Enter Your Semester",
+                controller: semesterController,
+                keyboardType: TextInputType.number,
+                onChanged: validateSemester,
+                errorText: semesterError,
+              ),
+
+              _buildTextField(
+                label: "Section",
+                hint: "Enter Your Section",
+                controller: sectionController,
+                onChanged: validateSection,
+                errorText: sectionError,
+              ),
+
+              SizedBox(height: 20.h),
+
+              SizedBox(
+                width: double.infinity,
+                height: 56.h,
+                child: ElevatedButton(
+                  onPressed: isLoading ? null : handleSignup,
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFF1877F2), // Premium Blue
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(16.r),
+                    ),
+                  ),
+                  child: isLoading
+                      ? SizedBox(
+                    height: 20.h,
+                    width: 20.h,
+                    child: const CircularProgressIndicator(color: Colors.white, strokeWidth: 2),
+                  )
+                      : Text(
+                    "Sign Up",
+                    style: TextStyle(
+                      fontSize: 18.sp,
+                      fontWeight: FontWeight.w600,
+                      color: Colors.white, // High contrast
+                    ),
+                  ),
+                ),
+              ),
+
+              SizedBox(height: 20.h),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}

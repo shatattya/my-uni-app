@@ -1,0 +1,567 @@
+[
+  {
+    "teacherId": "asd@bgctub.ac.bd",
+    "teacherName": "Md. Asaduzzaman",
+    "days": {
+      "Sunday": {
+        "class1": { "sub": "DM", "room": "224", "sem": 3, "sec": "A" },
+        "class2": { "sub": "DLD Lab", "room": "140", "sem": 3, "sec": "A" },
+        "class3": { "sub": "DS", "room": "118", "sem": 2, "sec": "A" },
+        "class4": { "sub": "CP Lab", "room": "118", "sem": 1, "sec": "A" },
+        "class5": { "sub": "CP Lab", "room": "118", "sem": 1, "sec": "A" }
+      },
+      "Monday": {
+        "class1": { "sub": "CP", "room": "220", "sem": 1, "sec": "A" },
+        "class2": { "sub": "DS", "room": "224", "sem": 2, "sec": "A" },
+        "class3": { "sub": "SDP-2", "room": "233", "sem": 6, "sec": "B" },
+        "class4": { "sub": "SDP-2", "room": "233", "sem": 6, "sec": "B" },
+        "class5": { "sub": "INC Lab", "room": "121", "sem": 4, "sec": "A" },
+        "class6": { "sub": "INC Lab", "room": "121", "sem": 4, "sec": "A" }
+      },
+      "Tuesday": {
+        "class1": { "sub": "DLD", "room": "224", "sem": 3, "sec": "A" },
+        "class2": { "sub": "DS", "room": "227", "sem": 2, "sec": "A" },
+        "class3": { "sub": "DM", "room": "224", "sem": 3, "sec": "A" }
+      },
+      "Wednesday": {
+        "class1": { "sub": "DLD", "room": "220", "sem": 3, "sec": "A" },
+        "class2": { "sub": "DLD", "room": "220", "sem": 3, "sec": "A" },
+        "class4": { "sub": "CP", "room": "118", "sem": 1, "sec": "A" },
+        "class6": { "sub": "DM", "room": "220", "sem": 3, "sec": "A" }
+      },
+      "Thursday": {
+        "class1": { "sub": "NA Lab", "room": "118", "sem": 4, "sec": "A" },
+        "class3": { "sub": "CP", "room": "118", "sem": 1, "sec": "A" },
+        "class4": { "sub": "DS Lab", "room": "118", "sem": 2, "sec": "A" }
+      }
+    }
+  },
+  {
+    "teacherId": "aw@bgctub.ac.bd",
+    "teacherName": "Abdul Wahab",
+    "days": {
+      "Sunday": {
+        "class1": { "sub": "C++", "room": "118", "sem": 2, "sec": "A" },
+        "class2": { "sub": "INC", "room": "221", "sem": 4, "sec": "B" },
+        "class3": { "sub": "TC", "room": "215", "sem": 7, "sec": "B" },
+        "class5": { "sub": "TC", "room": "220", "sem": 7, "sec": "A" },
+        "class6": { "sub": "INC", "room": "219", "sem": 4, "sec": "B" }
+      },
+      "Monday": {
+        "class1": { "sub": "TC Lab", "room": "118", "sem": 7, "sec": "B" },
+        "class2": { "sub": "TC Lab", "room": "118", "sem": 7, "sec": "A" },
+        "class6": { "sub": "C++", "room": "224", "sem": 2, "sec": "A" }
+      },
+      "Tuesday": {
+        "class1": { "sub": "TC", "room": "219", "sem": 7, "sec": "A" },
+        "class3": { "sub": "C++ Lab", "room": "118", "sem": 2, "sec": "A" },
+        "class4": { "sub": "C++ Lab", "room": "118", "sem": 2, "sec": "A" },
+        "class5": { "sub": "INC Lab", "room": "121", "sem": 4, "sec": "B" },
+        "class6": { "sub": "INC Lab", "room": "121", "sem": 4, "sec": "B" }
+      },
+      "Wednesday": {
+        "class1": { "sub": "TOC", "room": "215", "sem": 6, "sec": "C" },
+        "class2": { "sub": "TOC", "room": "215", "sem": 6, "sec": "C" },
+        "class5": { "sub": "CN Lab", "room": "118", "sem": 6, "sec": "C" },
+        "class4": { "sub": "TC", "room": "233", "sem": 7, "sec": "A" }
+      },
+      "Thursday": {
+        "class1": { "sub": "TC", "room": "223", "sem": 7, "sec": "B" },
+        "class2": { "sub": "TC", "room": "233", "sem": 7, "sec": "B" },
+        "class3": { "sub": "INC", "room": "221", "sem": 4, "sec": "B" },
+        "class6": { "sub": "C++", "room": "219", "sem": 2, "sec": "A" }
+      }
+    }
+  },
+  {
+    "teacherId": "dnm@bgctub.ac.bd",
+    "teacherName": "Dr. Nursadul Mamun",
+    "days": {
+      "Monday": {
+        "class1": { "sub": "AI", "room": "233", "sem": 6, "sec": "B" },
+        "class2": { "sub": "AI", "room": "233", "sem": 6, "sec": "B" }
+      },
+      "Wednesday": {
+        "class1": { "sub": "AI Lab", "room": "121", "sem": 6, "sec": "B" },
+        "class2": { "sub": "AI", "room": "121", "sem": 6, "sec": "B" },
+        "class3": { "sub": "AI", "room": "121", "sem": 6, "sec": "A" },
+        "class4": { "sub": "AI Lab", "room": "121", "sem": 6, "sec": "A" },
+        "class5": { "sub": "AI", "room": "121", "sem": 6, "sec": "A" },
+        "class6": { "sub": "AI", "room": "121", "sem": 6, "sec": "A" }
+      }
+    }
+  },
+  {
+    "teacherId": "fa@bgctub.ac.bd",
+    "teacherName": "Ferdous Ara",
+    "days": {
+      "Sunday": {
+        "class4": { "sub": "DES", "room": "224", "sem": 8, "sec": "B" },
+        "class5": { "sub": "SAD", "room": "223", "sem": 5, "sec": "B" }
+      },
+      "Monday": {
+        "class2": { "sub": "SAD", "room": "215", "sem": 5, "sec": "B" },
+        "class3": { "sub": "DES", "room": "219", "sem": 8, "sec": "B" },
+        "class4": { "sub": "DES", "room": "219", "sem": 8, "sec": "B" },
+        "class5": { "sub": "SDP-1", "room": "215", "sem": 5, "sec": "B" },
+        "class6": { "sub": "SDP-1", "room": "215", "sem": 5, "sec": "B" }
+      },
+      "Tuesday": {
+        "class1": { "sub": "SAD", "room": "228", "sem": 5, "sec": "B" },
+        "class2": { "sub": "ML LAB", "room": "121", "sem": 7, "sec": "A" },
+        "class3": { "sub": "ML LAB", "room": "121", "sem": 7, "sec": "A" },
+        "class5": { "sub": "SAD", "room": "221", "sem": 5, "sec": "A" },
+        "class6": { "sub": "SAD", "room": "221", "sem": 5, "sec": "A" }
+      },
+      "Wednesday": {
+        "class1": { "sub": "SAD", "room": "223", "sem": 5, "sec": "A" },
+        "class3": { "sub": "DES", "room": "227", "sem": 8, "sec": "A" },
+        "class5": { "sub": "SDP-1", "room": "223", "sem": 5, "sec": "A" },
+        "class6": { "sub": "SDP-1", "room": "223", "sem": 5, "sec": "A" }
+      },
+      "Thursday": {
+        "class2": { "sub": "DES", "room": "224", "sem": 8, "sec": "A" },
+        "class3": { "sub": "DES", "room": "224", "sem": 8, "sec": "A" }
+      }
+    }
+  },
+  {
+    "teacherId": "ic@bgctub.ac.bd",
+    "teacherName": "Imran Chowdhury",
+    "days": {
+      "Wednesday": {
+        "class1": { "sub": "HEB", "room": "221", "sem": 4, "sec": "A" },
+        "class2": { "sub": "HEB", "room": "221", "sem": 4, "sec": "A" },
+        "class4": { "sub": "HEB", "room": "219", "sem": 4, "sec": "B" },
+        "class5": { "sub": "HEB", "room": "219", "sem": 4, "sec": "B" }
+      }
+    }
+  },
+  {
+    "teacherId": "jh@bgctub.ac.bd",
+    "teacherName": "JH",
+    "days": {
+      "Thursday": {
+        "class1": { "sub": "ACC", "room": "220", "sem": 1, "sec": "A" },
+        "class2": { "sub": "ACC", "room": "220", "sem": 1, "sec": "A" }
+      }
+    }
+  },
+  {
+    "teacherId": "kcd@bgctub.ac.bd",
+    "teacherName": "KCD",
+    "days": {
+      "Wednesday": {
+        "class2": { "sub": "BS", "room": "228", "sem": 1, "sec": "A" }
+      }
+    }
+  },
+  {
+    "teacherId": "ma@bgctub.ac.bd",
+    "teacherName": "Manjur Alam",
+    "days": {
+      "Sunday": {
+        "class1": { "sub": "CPI", "room": "228", "sem": 6, "sec": "A" },
+        "class2": { "sub": "CPI Lab", "room": "126", "sem": 6, "sec": "A" },
+        "class3": { "sub": "CPI", "room": "233", "sem": 6, "sec": "B" },
+        "class4": { "sub": "CPI", "room": "233", "sem": 6, "sec": "B" }
+      },
+      "Monday": {
+        "class1": { "sub": "JAVA Lab", "room": "121", "sem": 3, "sec": "A" },
+        "class2": { "sub": "JAVA Lab", "room": "121", "sem": 3, "sec": "A" },
+        "class4": { "sub": "CPI", "room": "221", "sem": 6, "sec": "C" },
+        "class5": { "sub": "CPI", "room": "221", "sem": 6, "sec": "C" }
+      },
+      "Tuesday": {
+        "class1": { "sub": "AI", "room": "223", "sem": 6, "sec": "C" },
+        "class3": { "sub": "CPI", "room": "215", "sem": 6, "sec": "B" },
+        "class2": { "sub": "AI", "room": "223", "sem": 6, "sec": "C" },
+        "class5": { "sub": "JAVA", "room": "224", "sem": 3, "sec": "A" },
+        "class6": { "sub": "CPI", "room": "223", "sem": 6, "sec": "A" }
+      },
+      "Wednesday": {
+        "class2": { "sub": "CPI", "room": "224", "sem": 6, "sec": "A" },
+        "class3": { "sub": "CPI LAB", "room": "126", "sem": 6, "sec": "B" },
+        "class4": { "sub": "JAVA", "room": "220", "sem": 3, "sec": "A" },
+        "class5": { "sub": "JAVA", "room": "220", "sem": 3, "sec": "A" },
+        "class6": { "sub": "CPI", "room": "215", "sem": 6, "sec": "C" }
+      },
+      "Thursday": {
+        "class1": { "sub": "AI Lab", "room": "121", "sem": 6, "sec": "C" },
+        "class2": { "sub": "AI", "room": "121", "sem": 6, "sec": "C" },
+        "class4": { "sub": "CPI Lab", "room": "126", "sem": 6, "sec": "C" }
+      }
+    }
+  },
+  {
+    "teacherId": "mi@bgctub.ac.bd",
+    "teacherName": "Mahmudul Islam",
+    "days": {
+      "Monday": {
+        "class4": { "sub": "ECO", "room": "224", "sem": 2, "sec": "A" }
+      },
+      "Thursday": {
+        "class5": { "sub": "ECO", "room": "219", "sem": 2, "sec": "A" }
+      }
+    }
+  },
+  {
+    "teacherId": "na@bgctub.ac.bd",
+    "teacherName": "Nurul Absar",
+    "days": {
+      "Sunday": {
+        "class1": { "sub": "CSA", "room": "219", "sem": 4, "sec": "A" },
+        "class2": { "sub": "CSA", "room": "219", "sem": 4, "sec": "A" },
+        "class3": { "sub": "PHY-1", "room": "220", "sem": 1, "sec": "A" },
+        "class4": { "sub": "NA", "room": "221", "sem": 4, "sec": "B" },
+        "class5": { "sub": "NA", "room": "221", "sem": 4, "sec": "B" }
+      },
+      "Monday": {
+        "class2": { "sub": "PHY-1 Lab", "room": "131", "sem": 1, "sec": "A" },
+        "class3": { "sub": "NA", "room": "227", "sem": 4, "sec": "A" },
+        "class4": { "sub": "NA", "room": "227", "sem": 4, "sec": "A" },
+        "class5": { "sub": "PE", "room": "224", "sem": 2, "sec": "A" }
+      },
+      "Tuesday": {
+        "class4": { "sub": "CSA", "room": "220", "sem": 4, "sec": "B" },
+        "class5": { "sub": "PHY-2", "room": "227", "sem": 2, "sec": "A" }
+      },
+      "Wednesday": {
+        "class1": { "sub": "PHY-1", "room": "228", "sem": 1, "sec": "A" },
+        "class3": { "sub": "NA", "room": "219", "sem": 4, "sec": "B" },
+        "class4": { "sub": "NA", "room": "221", "sem": 4, "sec": "A" }
+      },
+      "Thursday": {
+        "class1": { "sub": "PHY-2", "room": "219", "sem": 2, "sec": "A" },
+        "class2": { "sub": "PHY-2 Lab", "room": "131", "sem": 2, "sec": "A" },
+        "class3": { "sub": "CSA", "room": "215", "sem": 4, "sec": "A" },
+        "class5": { "sub": "CSA", "room": "221", "sem": 4, "sec": "B" },
+        "class6": { "sub": "CSA", "room": "221", "sem": 4, "sec": "B" }
+      }
+    }
+  },
+{
+    "teacherId": "nt1@bgctub.ac.bd",
+    "teacherName": "NT-1",
+    "days": {
+      "Sunday": {
+        "class1": { "sub": "DC", "room": "223", "sem": 5, "sec": "B" },
+        "class2": { "sub": "DC", "room": "223", "sem": 5, "sec": "B" }
+      },
+      "Monday": {
+        "class1": { "sub": "DC", "room": "228", "sem": 5, "sec": "A" },
+        "class2": { "sub": "DC", "room": "215", "sem": 5, "sec": "B" }
+      },
+      "Tuesday": {
+        "class2": { "sub": "DC", "room": "219", "sem": 5, "sec": "A" }
+      },
+      "Thursday": {
+        "class6": { "sub": "DC", "room": "220", "sem": 5, "sec": "A" }
+      }
+    }
+  },
+  {
+    "teacherId": "nt2@bgctub.ac.bd",
+    "teacherName": "NT-2",
+    "days": {
+      "Sunday": {
+        "class4": { "sub": "DSD", "room": "220", "sem": 7, "sec": "A" },
+        "class6": { "sub": "DSD", "room": "215", "sem": 7, "sec": "B" }
+      },
+      "Monday": {
+        "class3": { "sub": "DSD", "room": "221", "sem": 7, "sec": "A" },
+        "class4": { "sub": "DSD", "room": "228", "sem": 7, "sec": "B" },
+        "class5": { "sub": "DSD", "room": "228", "sem": 7, "sec": "B" }
+      },
+      "Tuesday": {
+        "class1": { "sub": "DSD Lab", "room": "140", "sem": 7, "sec": "B" },
+        "class6": { "sub": "DSD Lab", "room": "140", "sem": 7, "sec": "A" }
+      }
+    }
+  },
+  {
+    "teacherId": "nt3@bgctub.ac.bd",
+    "teacherName": "NT-3",
+    "days": {
+      "Sunday": {
+        "class5": { "sub": "INC", "room": "219", "sem": 4, "sec": "A" }
+      },
+      "Wednesday": {
+        "class3": { "sub": "INC", "room": "221", "sem": 4, "sec": "A" }
+      },
+      "Thursday": {
+        "class4": { "sub": "INC", "room": "215", "sem": 4, "sec": "A" }
+      }
+    }
+  },
+  {
+    "teacherId": "rh@bgctub.ac.bd",
+    "teacherName": "Rezuana Haque",
+    "days": {
+      "Sunday": {
+        "class2": { "sub": "ML", "room": "224", "sem": 7, "sec": "A" },
+        "class4": { "sub": "ML", "room": "215", "sem": 7, "sec": "B" },
+        "class6": { "sub": "OS", "room": "223", "sem": 5, "sec": "B" }
+      },
+      "Monday": {
+        "class2": { "sub": "ML", "room": "220", "sem": 7, "sec": "B" },
+        "class3": { "sub": "ML", "room": "220", "sem": 7, "sec": "B" },
+        "class4": { "sub": "OS Lab", "room": "118", "sem": 5, "sec": "A" }
+      },
+      "Tuesday": {
+        "class2": { "sub": "OS", "room": "228", "sem": 5, "sec": "B" },
+        "class3": { "sub": "OS", "room": "228", "sem": 5, "sec": "B" },
+        "class4": { "sub": "OS", "room": "221", "sem": 5, "sec": "A" },
+        "class6": { "sub": "OS Lab", "room": "118", "sem": 5, "sec": "B" }
+      },
+      "Wednesday": {
+        "class2": { "sub": "OS", "room": "223", "sem": 5, "sec": "A" },
+        "class3": { "sub": "OS", "room": "223", "sem": 5, "sec": "A" },
+        "class5": { "sub": "ML", "room": "233", "sem": 7, "sec": "A" }
+      },
+      "Thursday": {
+        "class2": { "sub": "NA Lab", "room": "118", "sem": 4, "sec": "B" },
+        "class3": { "sub": "ML Lab", "room": "121", "sem": 7, "sec": "A" },
+        "class4": { "sub": "ML Lab", "room": "121", "sem": 7, "sec": "A" },
+        "class5": { "sub": "SDP-2", "room": "228", "sem": 6, "sec": "C" },
+        "class6": { "sub": "SDP-2", "room": "228", "sem": 6, "sec": "C" }
+      }
+    }
+  },
+  {
+    "teacherId": "si@bgctub.ac.bd",
+    "teacherName": "Mr. Shahidul Islam",
+    "days": {
+      "Monday": {
+        "class5": { "sub": "ELC", "room": "220", "sem": 1, "sec": "A" },
+        "class6": { "sub": "ELC", "room": "220", "sem": 1, "sec": "A" }
+      }
+    }
+  },
+  {
+    "teacherId": "sj@bgctub.ac.bd",
+    "teacherName": "Sabiha Jahan",
+    "days": {
+      "Sunday": {
+        "class1": { "sub": "CA", "room": "221", "sem": 4, "sec": "B" },
+        "class2": { "sub": "CG", "room": "227", "sem": 8, "sec": "B" },
+        "class3": { "sub": "CG", "room": "227", "sem": 8, "sec": "B" },
+        "class5": { "sub": "CG Lab", "room": "121", "sem": 8, "sec": "B" },
+        "class6": { "sub": "SIM", "room": "121", "sem": 6, "sec": "A" }
+
+      },
+      "Monday": {
+        "class2": { "sub": "CG", "room": "219", "sem": 8, "sec": "B" },
+        "class3": { "sub": "MP Lab", "room": "126", "sem": 5, "sec": "B" },
+        "class4": { "sub": "MP Lab", "room": "126", "sem": 5, "sec": "B" }
+      },
+      "Tuesday": {
+        "class3": { "sub": "SIM", "room": "233", "sem": 6, "sec": "C" },
+        "class4": { "sub": "SIM", "room": "233", "sem": 6, "sec": "C" },
+        "class5": { "sub": "SIM", "room": "215", "sem": 6, "sec": "B" },
+        "class6": { "sub": "SIM", "room": "215", "sem": 6, "sec": "B" }
+      },
+      "Wednesday": {
+        "class1": { "sub": "SIM", "room": "224", "sem": 6, "sec": "A" },
+        "class4": { "sub": "CG", "room": "227", "sem": 8, "sec": "A" },
+        "class5": { "sub": "CG", "room": "227", "sem": 8, "sec": "A" },
+        "class6": { "sub": "CA", "room": "219", "sem": 4, "sec": "B" }
+      },
+      "Thursday": {
+        "class1": { "sub": "MP Lab", "room": "126", "sem": 5, "sec": "A" },
+        "class2": { "sub": "MP Lab", "room": "126", "sem": 5, "sec": "A" },
+        "class4": { "sub": "CA", "room": "221", "sem": 4, "sec": "B" },
+        "class5": { "sub": "CG Lab", "room": "121", "sem": 8, "sec": "A" },
+        "class6": { "sub": "CG", "room": "121", "sem": 8, "sec": "A" }
+      }
+    }
+  },
+  {
+    "teacherId": "sk@bgctub.ac.bd",
+    "teacherName": "Sanjida Kamal",
+    "days": {
+      "Monday": {
+        "class2": { "sub": "BLL", "room": "228", "sem": 5, "sec": "A" },
+        "class3": { "sub": "BLL", "room": "228", "sem": 5, "sec": "A" }
+      },
+      "Thursday": {
+        "class5": { "sub": "BLL", "room": "227", "sem": 5, "sec": "B" },
+        "class6": { "sub": "BLL", "room": "227", "sem": 5, "sec": "B" }
+      }
+    }
+  }, 
+  {
+    "teacherId": "sns@bgctub.ac.bd",
+    "teacherName": "Shamsun Nahar Shoma",
+    "days": {
+      "Sunday": {
+        "class1": { "sub": "MATH-1", "room": "220", "sem": 1, "sec": "A" },
+        "class2": { "sub": "MATH-1", "room": "220", "sem": 1, "sec": "A" },
+        "class4": { "sub": "MATH-2", "room": "227", "sem": 2, "sec": "A" },
+        "class5": { "sub": "STAT", "room": "224", "sem": 3, "sec": "A" }
+      },
+      "Monday": {
+        "class1": { "sub": "MATH-4", "room": "227", "sem": 4, "sec": "A" },
+        "class3": { "sub": "MATH-2", "room": "224", "sem": 2, "sec": "A" },
+        "class4": { "sub": "MATH-1", "room": "220", "sem": 1, "sec": "A" },
+        "class5": { "sub": "MATH-3", "room": "223", "sem": 3, "sec": "A" }
+      },
+      "Tuesday": {
+        "class4": { "sub": "MATH-3", "room": "224", "sem": 3, "sec": "A" },
+        "class6": { "sub": "STAT", "room": "224", "sem": 3, "sec": "A" }
+      },
+      "Wednesday": {
+        "class1": { "sub": "MATH-4", "room": "219", "sem": 4, "sec": "B" },
+        "class2": { "sub": "MATH-4", "room": "219", "sem": 4, "sec": "B" },
+        "class3": { "sub": "MATH-3", "room": "220", "sem": 3, "sec": "A" },
+        "class5": { "sub": "MATH-4", "room": "221", "sem": 4, "sec": "A" }
+      },
+      "Thursday": {
+        "class1": { "sub": "MATH-4", "room": "221", "sem": 4, "sec": "B" },
+        "class2": { "sub": "MATH-4", "room": "215", "sem": 4, "sec": "A" },
+        "class3": { "sub": "MATH-2", "room": "219", "sem": 2, "sec": "A" }
+      }
+    }
+  },
+  {
+    "teacherId": "stn@bgctub.ac.bd",
+    "teacherName": "Sumaiya Tun Noor",
+    "days": {
+      "Sunday": {
+        "class1": { "sub": "COM", "room": "215", "sem": 7, "sec": "B" },
+        "class2": { "sub": "COM", "room": "215", "sem": 7, "sec": "B" },
+        "class3": { "sub": "SE", "room": "228", "sem": 6, "sec": "A" },
+        "class4": { "sub": "SE", "room": "228", "sem": 6, "sec": "A" },
+        "class6": { "sub": "CF Lab", "room": "118", "sem": 1, "sec": "A" }
+      },
+      "Monday": {
+        "class2": { "sub": "SE", "room": "223", "sem": 6, "sec": "C" },
+        "class3": { "sub": "SE", "room": "223", "sem": 6, "sec": "C" },
+        "class4": { "sub": "COM", "room": "219", "sem": 7, "sec": "A" },
+        "class5": { "sub": "SE", "room": "227", "sem": 6, "sec": "B" },
+        "class6": { "sub": "SE", "room": "227", "sem": 6, "sec": "B" }
+      },
+      "Tuesday": {
+        "class1": { "sub": "SE", "room": "215", "sem": 6, "sec": "B" },
+        "class2": { "sub": "CA LAB", "room": "118", "sem": 4, "sec": "B" },
+        "class3": { "sub": "COM", "room": "219", "sem": 7, "sec": "B" },
+        "class4": { "sub": "COM", "room": "219", "sem": 7, "sec": "A" },
+        "class5": { "sub": "COM", "room": "219", "sem": 7, "sec": "A" }
+      },
+      "Wednesday": {
+        "class5": { "sub": "CF", "room": "228", "sem": 1, "sec": "A" },
+        "class6": { "sub": "CF", "room": "228", "sem": 1, "sec": "A" }
+      },
+      "Thursday": {
+        "class2": { "sub": "SE", "room": "223", "sem": 6, "sec": "A" },
+        "class3": { "sub": "SE", "room": "228", "sem": 6, "sec": "C" },
+        "class4": { "sub": "CF", "room": "224", "sem": 1, "sec": "A" }
+      }
+    }
+  },
+  {
+    "teacherId": "su@bgctub.ac.bd",
+    "teacherName": "Salah Uddin Chowdhury",
+    "days": {
+      "Sunday": {
+        "class1": { "sub": "CN", "room": "233", "sem": 6, "sec": "B" },
+        "class2": { "sub": "CN Lab", "room": "121", "sem": 6, "sec": "B" },
+        "class3": { "sub": "CA", "room": "219", "sem": 4, "sec": "A" },
+        "class4": { "sub": "CA", "room": "219", "sem": 4, "sec": "A" }
+      },
+      "Monday": {
+        "class2": { "sub": "CA", "room": "227", "sem": 4, "sec": "A" }
+      },
+      "Tuesday": {
+        "class1": { "sub": "CN Lab", "room": "121", "sem": 6, "sec": "A" },
+        "class2": { "sub": "CN", "room": "221", "sem": 6, "sec": "A" },
+        "class4": { "sub": "CN", "room": "215", "sem": 6, "sec": "B" },
+        "class5": { "sub": "TOC", "room": "223", "sem": 6, "sec": "A" }
+      },
+      "Wednesday": {
+        "class4": { "sub": "CN", "room": "126", "sem": 6, "sec": "B" },
+        "class5": { "sub": "TOC", "room": "224", "sem": 6, "sec": "B" },
+        "class6": { "sub": "TOC", "room": "224", "sem": 6, "sec": "B" }
+      },
+      "Thursday": {
+        "class3": { "sub": "CN", "room": "223", "sem": 6, "sec": "A" },
+        "class4": { "sub": "CN", "room": "223", "sem": 6, "sec": "A" },
+        "class5": { "sub": "CA Lab", "room": "118", "sem": 4, "sec": "A" }
+      }
+    }
+  },
+  {
+    "teacherId": "tac@bgctub.ac.bd",
+    "teacherName": "Tanzi Ahmed Chowdhury",
+    "days": {
+      "Sunday": {
+        "class1": { "sub": "DSP", "room": "227", "sem": 8, "sec": "B" },
+        "class3": { "sub": "BE", "room": "223", "sem": 3, "sec": "A" },
+        "class5": { "sub": "BEE", "room": "227", "sem": 2, "sec": "A" },
+        "class6": { "sub": "BEE Lab", "room": "140", "sem": 2, "sec": "A" }
+      },
+      "Monday": {
+        "class1": { "sub": "BEE", "room": "224", "sem": 2, "sec": "A" },
+        "class3": { "sub": "BE", "room": "215", "sem": 3, "sec": "A" },
+        "class4": { "sub": "BE LAB", "room": "140", "sem": 3, "sec": "A" },
+        "class5": { "sub": "DSP", "room": "219", "sem": 8, "sec": "B" },
+        "class6": { "sub": "DSP", "room": "219", "sem": 8, "sec": "B" }
+      },
+      "Tuesday": {
+        "class1": { "sub": "BEE", "room": "227", "sem": 2, "sec": "A" },
+        "class2": { "sub": "BE", "room": "224", "sem": 3, "sec": "A" },
+        "class3": { "sub": "MP", "room": "221", "sem": 5, "sec": "A" },
+        "class4": { "sub": "MP", "room": "228", "sem": 5, "sec": "B" }
+      },
+      "Wednesday": {
+        "class1": { "sub": "DSP", "room": "227", "sem": 8, "sec": "A" },
+        "class2": { "sub": "DSP", "room": "227", "sem": 8, "sec": "A" },
+        "class4": { "sub": "MP", "room": "223", "sem": 5, "sec": "A" }
+      },
+      "Thursday": {
+        "class1": { "sub": "DSP", "room": "224", "sem": 8, "sec": "A" },
+        "class3": { "sub": "MP", "room": "227", "sem": 5, "sec": "B" },
+        "class4": { "sub": "MP", "room": "227", "sem": 5, "sec": "B" },
+        "class5": { "sub": "MP", "room": "220", "sem": 5, "sec": "A" }
+      }
+    }
+  },
+  {
+    "teacherId": "ts@bgctub.ac.bd",
+    "teacherName": "Tisha Saha",
+    "days": {
+      "Sunday": {
+        "class3": { "sub": "DBMS Lab", "room": "121", "sem": 5, "sec": "B" },
+        "class4": { "sub": "DBMS Lab", "room": "121", "sem": 5, "sec": "B" },
+        "class5": { "sub": "CNS", "room": "215", "sem": 7, "sec": "B" },
+        "class6": { "sub": "CNS", "room": "215", "sem": 7, "sec": "A" }
+
+      },
+      "Monday": {
+        "class1": { "sub": "CN", "room": "223", "sem": 6, "sec": "C" },
+        "class5": { "sub": "DBMS Lab", "room": "118", "sem": 5, "sec": "A" },
+        "class6": { "sub": "DBMS Lab", "room": "118", "sem": 5, "sec": "A" }
+      },
+      "Tuesday": {
+        "class1": { "sub": "DBMS", "room": "221", "sem": 5, "sec": "A" },
+        "class3": { "sub": "SDP-2", "room": "223", "sem": 6, "sec": "A" },
+        "class4": { "sub": "SDP-2", "room": "223", "sem": 6, "sec": "A" },
+        "class5": { "sub": "DBMS", "room": "228", "sem": 5, "sec": "B" },
+        "class6": { "sub": "CNS", "room": "220", "sem": 7, "sec": "B" }
+      },
+      "Wednesday": {
+        "class1": { "sub": "CNS", "room": "233", "sem": 7, "sec": "A" },
+        "class2": { "sub": "CNS", "room": "233", "sem": 7, "sec": "A" },
+        "class3": { "sub": "CN", "room": "215", "sem": 6, "sec": "C" },
+        "class4": { "sub": "CN", "room": "215", "sem": 6, "sec": "C" }
+      },
+      "Thursday": {
+        "class1": { "sub": "DBMS", "room": "227", "sem": 5, "sec": "B" },
+        "class2": { "sub": "DBMS", "room": "227", "sem": 5, "sec": "B" },
+        "class3": { "sub": "DBMS", "room": "220", "sem": 5, "sec": "A" },
+        "class4": { "sub": "DBMS", "room": "220", "sem": 5, "sec": "A" },
+        "class5": { "sub": "CNS", "room": "223", "sem": 7, "sec": "B" }
+      }
+    }
+  }
+]
