@@ -1,6 +1,8 @@
+# BGCTUB Companion 🎓
+
 **The Ultimate Campus Companion for BGC Trust University.**
 
-THis is a high-performance, offline-first mobile application designed to streamline campus life for students and teachers. Built with Flutter and powered by Firebase, it provides real-time updates for class routines, university notices, and academic resources.
+This is a high-performance, offline-first mobile application designed to streamline campus life for students and teachers. Built with Flutter and powered by Firebase, it provides real-time updates for class routines, university notices, and academic resources.
 
 ## ✨ Key Features
 * **Smart Routine System:** Offline-access to class schedules with automatic background syncing.
