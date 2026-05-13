@@ -1,15 +1,43 @@
-# Firebase Secrets (CRITICAL)
+# Firebase & Configuration Secrets (CRITICAL)
+# ----------------------------------------------------------------------------
 lib/firebase_options.dart
 android/app/google-services.json
 ios/Runner/GoogleService-Info.plist
+ios/firebase_app_id_file.json
+macos/Runner/GoogleService-Info.plist
+macos/firebase_app_id_file.json
+.env*
+secrets.json
 
-# Android Signing Secrets
+# Android Signing & Local Properties
+# ----------------------------------------------------------------------------
 *.jks
 *.keystore
 key.properties
-.env
+android/local.properties
+android/key.properties
+android/app/src/main/res/values/google-services.xml
 
-# Standard Flutter ignores
+# Flutter/Dart Build Artifacts
+# ----------------------------------------------------------------------------
 .dart_tool/
-build/
 .flutter-plugins
+.flutter-plugins-dependencies
+.pub-cache/
+.packages
+build/
+
+# Android/Kotlin Specific Junk (Fixed your compiler error)
+# ----------------------------------------------------------------------------
+android/.gradle/
+android/.kotlin/
+android/app/build/
+**/kotlin-compiler-*.salive
+
+# Tool Specific (VS Code, IntelliJ, Mac)
+# ----------------------------------------------------------------------------
+.vscode/
+.idea/
+*.iml
+.DS_Store
+*.log
