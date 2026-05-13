@@ -242,9 +242,12 @@ class _HomeTabState extends ConsumerState<HomeTab> {
           children: [
             Icon(icon, color: Colors.white, size: 22.sp),
             SizedBox(width: 16.w),
-            Text(
-              label,
-              style: TextStyle(color: Colors.white, fontSize: 16.sp, fontWeight: FontWeight.w500),
+            // MODIFICATION: Wrapped Text in Expanded to prevent right-side overflow
+            Expanded(
+              child: Text(
+                label,
+                style: TextStyle(color: Colors.white, fontSize: 16.sp, fontWeight: FontWeight.w500),
+              ),
             ),
           ],
         ),

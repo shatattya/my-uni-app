@@ -8,6 +8,7 @@ import 'edit_student_profile_screen.dart';
 import '../auth/auth_wrapper.dart';
 import '../../../providers/sync_controller.dart';
 import '../../widgets/developer_panel_sheet.dart'; // MODIFICATION: Import the new Dev Menu
+import '../../../services/auth_service.dart'; // Added: Import AuthService for secure logout
 
 class StudentProfileScreen extends ConsumerWidget {
   const StudentProfileScreen({super.key});
@@ -88,7 +89,8 @@ class StudentProfileScreen extends ConsumerWidget {
 
                   GestureDetector(
                     onTap: () async {
-                      await firebase_auth.FirebaseAuth.instance.signOut();
+                      // MODIFICATION: Use the centralized secure sign-out to wipe DB and clear FCM token
+                      await ref.read(authServiceProvider).signOut();
                       if (!context.mounted) return;
                       Navigator.of(context).pushAndRemoveUntil(
                         MaterialPageRoute(builder: (_) => const AuthWrapper()),

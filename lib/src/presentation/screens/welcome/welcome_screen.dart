@@ -29,7 +29,7 @@ class WelcomeScreen extends StatelessWidget {
 
               /// App Title
               Text(
-                "StageCall",
+                "My Uni App",
                 style: TextStyle(
                   fontSize: 32.sp, // Scaled
                   fontWeight: FontWeight.bold,
@@ -88,11 +88,22 @@ class WelcomeScreen extends StatelessWidget {
                 width: double.infinity,
                 height: 56.h, // Scaled
                 child: OutlinedButton(
-                  onPressed: () {
-                    Navigator.push(
+                  // MODIFICATION: Await the result and show a SnackBar if successful
+                  onPressed: () async {
+                    final result = await Navigator.push(
                       context,
                       MaterialPageRoute(builder: (_) => const SignupScreen()),
                     );
+
+                    if (result != null && result is String && context.mounted) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text(result, style: const TextStyle(color: Colors.white)),
+                          backgroundColor: Colors.green,
+                          duration: const Duration(seconds: 4),
+                        ),
+                      );
+                    }
                   },
                   style: OutlinedButton.styleFrom(
                     side: BorderSide(color: const Color(0xFF1877F2), width: 1.5.w), // Premium Blue & Scaled
@@ -118,11 +129,22 @@ class WelcomeScreen extends StatelessWidget {
                 width: double.infinity,
                 height: 56.h, // Scaled
                 child: OutlinedButton(
-                  onPressed: () {
-                    Navigator.push(
+                  // MODIFICATION: Await the result and show a SnackBar if successful
+                  onPressed: () async {
+                    final result = await Navigator.push(
                       context,
                       MaterialPageRoute(builder: (_) => const TeacherSignupScreen()),
                     );
+
+                    if (result != null && result is String && context.mounted) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text(result, style: const TextStyle(color: Colors.white)),
+                          backgroundColor: Colors.green,
+                          duration: const Duration(seconds: 4),
+                        ),
+                      );
+                    }
                   },
                   style: OutlinedButton.styleFrom(
                     side: BorderSide(color: Colors.white24, width: 1.5.w), // Scaled

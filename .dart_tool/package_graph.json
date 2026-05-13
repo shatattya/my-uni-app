@@ -5,7 +5,7 @@
   "packages": [
     {
       "name": "myuniapp",
-      "version": "2.8.0",
+      "version": "2.8.1",
       "dependencies": [
         "cloud_firestore",
         "dio",

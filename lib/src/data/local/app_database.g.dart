@@ -1051,6 +1051,14 @@ class $RoutinesTable extends Routines with TableInfo<$RoutinesTable, Routine> {
   late final GeneratedColumn<String> teacherName = GeneratedColumn<String>(
       'teacher_name', aliasedName, false,
       type: DriftSqlType.string, requiredDuringInsert: true);
+  static const VerificationMeta _teacherIdMeta =
+      const VerificationMeta('teacherId');
+  @override
+  late final GeneratedColumn<String> teacherId = GeneratedColumn<String>(
+      'teacher_id', aliasedName, false,
+      type: DriftSqlType.string,
+      requiredDuringInsert: false,
+      defaultValue: const Constant(''));
   static const VerificationMeta _roomNumberMeta =
       const VerificationMeta('roomNumber');
   @override
@@ -1092,6 +1100,7 @@ class $RoutinesTable extends Routines with TableInfo<$RoutinesTable, Routine> {
         id,
         subjectName,
         teacherName,
+        teacherId,
         roomNumber,
         dayOfWeek,
         startTime,
@@ -1129,6 +1138,10 @@ class $RoutinesTable extends Routines with TableInfo<$RoutinesTable, Routine> {
               data['teacher_name']!, _teacherNameMeta));
     } else if (isInserting) {
       context.missing(_teacherNameMeta);
+    }
+    if (data.containsKey('teacher_id')) {
+      context.handle(_teacherIdMeta,
+          teacherId.isAcceptableOrUnknown(data['teacher_id']!, _teacherIdMeta));
     }
     if (data.containsKey('room_number')) {
       context.handle(
@@ -1185,6 +1198,8 @@ class $RoutinesTable extends Routines with TableInfo<$RoutinesTable, Routine> {
           .read(DriftSqlType.string, data['${effectivePrefix}subject_name'])!,
       teacherName: attachedDatabase.typeMapping
           .read(DriftSqlType.string, data['${effectivePrefix}teacher_name'])!,
+      teacherId: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}teacher_id'])!,
       roomNumber: attachedDatabase.typeMapping
           .read(DriftSqlType.string, data['${effectivePrefix}room_number'])!,
       dayOfWeek: attachedDatabase.typeMapping
@@ -1210,6 +1225,7 @@ class Routine extends DataClass implements Insertable<Routine> {
   final String id;
   final String subjectName;
   final String teacherName;
+  final String teacherId;
   final String roomNumber;
   final int dayOfWeek;
   final String startTime;
@@ -1220,6 +1236,7 @@ class Routine extends DataClass implements Insertable<Routine> {
       {required this.id,
       required this.subjectName,
       required this.teacherName,
+      required this.teacherId,
       required this.roomNumber,
       required this.dayOfWeek,
       required this.startTime,
@@ -1232,6 +1249,7 @@ class Routine extends DataClass implements Insertable<Routine> {
     map['id'] = Variable<String>(id);
     map['subject_name'] = Variable<String>(subjectName);
     map['teacher_name'] = Variable<String>(teacherName);
+    map['teacher_id'] = Variable<String>(teacherId);
     map['room_number'] = Variable<String>(roomNumber);
     map['day_of_week'] = Variable<int>(dayOfWeek);
     map['start_time'] = Variable<String>(startTime);
@@ -1246,6 +1264,7 @@ class Routine extends DataClass implements Insertable<Routine> {
       id: Value(id),
       subjectName: Value(subjectName),
       teacherName: Value(teacherName),
+      teacherId: Value(teacherId),
       roomNumber: Value(roomNumber),
       dayOfWeek: Value(dayOfWeek),
       startTime: Value(startTime),
@@ -1262,6 +1281,7 @@ class Routine extends DataClass implements Insertable<Routine> {
       id: serializer.fromJson<String>(json['id']),
       subjectName: serializer.fromJson<String>(json['subjectName']),
       teacherName: serializer.fromJson<String>(json['teacherName']),
+      teacherId: serializer.fromJson<String>(json['teacherId']),
       roomNumber: serializer.fromJson<String>(json['roomNumber']),
       dayOfWeek: serializer.fromJson<int>(json['dayOfWeek']),
       startTime: serializer.fromJson<String>(json['startTime']),
@@ -1277,6 +1297,7 @@ class Routine extends DataClass implements Insertable<Routine> {
       'id': serializer.toJson<String>(id),
       'subjectName': serializer.toJson<String>(subjectName),
       'teacherName': serializer.toJson<String>(teacherName),
+      'teacherId': serializer.toJson<String>(teacherId),
       'roomNumber': serializer.toJson<String>(roomNumber),
       'dayOfWeek': serializer.toJson<int>(dayOfWeek),
       'startTime': serializer.toJson<String>(startTime),
@@ -1290,6 +1311,7 @@ class Routine extends DataClass implements Insertable<Routine> {
           {String? id,
           String? subjectName,
           String? teacherName,
+          String? teacherId,
           String? roomNumber,
           int? dayOfWeek,
           String? startTime,
@@ -1300,6 +1322,7 @@ class Routine extends DataClass implements Insertable<Routine> {
         id: id ?? this.id,
         subjectName: subjectName ?? this.subjectName,
         teacherName: teacherName ?? this.teacherName,
+        teacherId: teacherId ?? this.teacherId,
         roomNumber: roomNumber ?? this.roomNumber,
         dayOfWeek: dayOfWeek ?? this.dayOfWeek,
         startTime: startTime ?? this.startTime,
@@ -1314,6 +1337,7 @@ class Routine extends DataClass implements Insertable<Routine> {
           data.subjectName.present ? data.subjectName.value : this.subjectName,
       teacherName:
           data.teacherName.present ? data.teacherName.value : this.teacherName,
+      teacherId: data.teacherId.present ? data.teacherId.value : this.teacherId,
       roomNumber:
           data.roomNumber.present ? data.roomNumber.value : this.roomNumber,
       dayOfWeek: data.dayOfWeek.present ? data.dayOfWeek.value : this.dayOfWeek,
@@ -1330,6 +1354,7 @@ class Routine extends DataClass implements Insertable<Routine> {
           ..write('id: $id, ')
           ..write('subjectName: $subjectName, ')
           ..write('teacherName: $teacherName, ')
+          ..write('teacherId: $teacherId, ')
           ..write('roomNumber: $roomNumber, ')
           ..write('dayOfWeek: $dayOfWeek, ')
           ..write('startTime: $startTime, ')
@@ -1341,8 +1366,8 @@ class Routine extends DataClass implements Insertable<Routine> {
   }
 
   @override
-  int get hashCode => Object.hash(id, subjectName, teacherName, roomNumber,
-      dayOfWeek, startTime, endTime, semester, section);
+  int get hashCode => Object.hash(id, subjectName, teacherName, teacherId,
+      roomNumber, dayOfWeek, startTime, endTime, semester, section);
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
@@ -1350,6 +1375,7 @@ class Routine extends DataClass implements Insertable<Routine> {
           other.id == this.id &&
           other.subjectName == this.subjectName &&
           other.teacherName == this.teacherName &&
+          other.teacherId == this.teacherId &&
           other.roomNumber == this.roomNumber &&
           other.dayOfWeek == this.dayOfWeek &&
           other.startTime == this.startTime &&
@@ -1362,6 +1388,7 @@ class RoutinesCompanion extends UpdateCompanion<Routine> {
   final Value<String> id;
   final Value<String> subjectName;
   final Value<String> teacherName;
+  final Value<String> teacherId;
   final Value<String> roomNumber;
   final Value<int> dayOfWeek;
   final Value<String> startTime;
@@ -1373,6 +1400,7 @@ class RoutinesCompanion extends UpdateCompanion<Routine> {
     this.id = const Value.absent(),
     this.subjectName = const Value.absent(),
     this.teacherName = const Value.absent(),
+    this.teacherId = const Value.absent(),
     this.roomNumber = const Value.absent(),
     this.dayOfWeek = const Value.absent(),
     this.startTime = const Value.absent(),
@@ -1385,6 +1413,7 @@ class RoutinesCompanion extends UpdateCompanion<Routine> {
     required String id,
     required String subjectName,
     required String teacherName,
+    this.teacherId = const Value.absent(),
     required String roomNumber,
     required int dayOfWeek,
     required String startTime,
@@ -1405,6 +1434,7 @@ class RoutinesCompanion extends UpdateCompanion<Routine> {
     Expression<String>? id,
     Expression<String>? subjectName,
     Expression<String>? teacherName,
+    Expression<String>? teacherId,
     Expression<String>? roomNumber,
     Expression<int>? dayOfWeek,
     Expression<String>? startTime,
@@ -1417,6 +1447,7 @@ class RoutinesCompanion extends UpdateCompanion<Routine> {
       if (id != null) 'id': id,
       if (subjectName != null) 'subject_name': subjectName,
       if (teacherName != null) 'teacher_name': teacherName,
+      if (teacherId != null) 'teacher_id': teacherId,
       if (roomNumber != null) 'room_number': roomNumber,
       if (dayOfWeek != null) 'day_of_week': dayOfWeek,
       if (startTime != null) 'start_time': startTime,
@@ -1431,6 +1462,7 @@ class RoutinesCompanion extends UpdateCompanion<Routine> {
       {Value<String>? id,
       Value<String>? subjectName,
       Value<String>? teacherName,
+      Value<String>? teacherId,
       Value<String>? roomNumber,
       Value<int>? dayOfWeek,
       Value<String>? startTime,
@@ -1442,6 +1474,7 @@ class RoutinesCompanion extends UpdateCompanion<Routine> {
       id: id ?? this.id,
       subjectName: subjectName ?? this.subjectName,
       teacherName: teacherName ?? this.teacherName,
+      teacherId: teacherId ?? this.teacherId,
       roomNumber: roomNumber ?? this.roomNumber,
       dayOfWeek: dayOfWeek ?? this.dayOfWeek,
       startTime: startTime ?? this.startTime,
@@ -1463,6 +1496,9 @@ class RoutinesCompanion extends UpdateCompanion<Routine> {
     }
     if (teacherName.present) {
       map['teacher_name'] = Variable<String>(teacherName.value);
+    }
+    if (teacherId.present) {
+      map['teacher_id'] = Variable<String>(teacherId.value);
     }
     if (roomNumber.present) {
       map['room_number'] = Variable<String>(roomNumber.value);
@@ -1494,6 +1530,7 @@ class RoutinesCompanion extends UpdateCompanion<Routine> {
           ..write('id: $id, ')
           ..write('subjectName: $subjectName, ')
           ..write('teacherName: $teacherName, ')
+          ..write('teacherId: $teacherId, ')
           ..write('roomNumber: $roomNumber, ')
           ..write('dayOfWeek: $dayOfWeek, ')
           ..write('startTime: $startTime, ')
@@ -1938,6 +1975,7 @@ typedef $$RoutinesTableCreateCompanionBuilder = RoutinesCompanion Function({
   required String id,
   required String subjectName,
   required String teacherName,
+  Value<String> teacherId,
   required String roomNumber,
   required int dayOfWeek,
   required String startTime,
@@ -1950,6 +1988,7 @@ typedef $$RoutinesTableUpdateCompanionBuilder = RoutinesCompanion Function({
   Value<String> id,
   Value<String> subjectName,
   Value<String> teacherName,
+  Value<String> teacherId,
   Value<String> roomNumber,
   Value<int> dayOfWeek,
   Value<String> startTime,
@@ -1979,6 +2018,7 @@ class $$RoutinesTableTableManager extends RootTableManager<
             Value<String> id = const Value.absent(),
             Value<String> subjectName = const Value.absent(),
             Value<String> teacherName = const Value.absent(),
+            Value<String> teacherId = const Value.absent(),
             Value<String> roomNumber = const Value.absent(),
             Value<int> dayOfWeek = const Value.absent(),
             Value<String> startTime = const Value.absent(),
@@ -1991,6 +2031,7 @@ class $$RoutinesTableTableManager extends RootTableManager<
             id: id,
             subjectName: subjectName,
             teacherName: teacherName,
+            teacherId: teacherId,
             roomNumber: roomNumber,
             dayOfWeek: dayOfWeek,
             startTime: startTime,
@@ -2003,6 +2044,7 @@ class $$RoutinesTableTableManager extends RootTableManager<
             required String id,
             required String subjectName,
             required String teacherName,
+            Value<String> teacherId = const Value.absent(),
             required String roomNumber,
             required int dayOfWeek,
             required String startTime,
@@ -2015,6 +2057,7 @@ class $$RoutinesTableTableManager extends RootTableManager<
             id: id,
             subjectName: subjectName,
             teacherName: teacherName,
+            teacherId: teacherId,
             roomNumber: roomNumber,
             dayOfWeek: dayOfWeek,
             startTime: startTime,
@@ -2041,6 +2084,11 @@ class $$RoutinesTableFilterComposer
 
   ColumnFilters<String> get teacherName => $state.composableBuilder(
       column: $state.table.teacherName,
+      builder: (column, joinBuilders) =>
+          ColumnFilters(column, joinBuilders: joinBuilders));
+
+  ColumnFilters<String> get teacherId => $state.composableBuilder(
+      column: $state.table.teacherId,
       builder: (column, joinBuilders) =>
           ColumnFilters(column, joinBuilders: joinBuilders));
 
@@ -2090,6 +2138,11 @@ class $$RoutinesTableOrderingComposer
 
   ColumnOrderings<String> get teacherName => $state.composableBuilder(
       column: $state.table.teacherName,
+      builder: (column, joinBuilders) =>
+          ColumnOrderings(column, joinBuilders: joinBuilders));
+
+  ColumnOrderings<String> get teacherId => $state.composableBuilder(
+      column: $state.table.teacherId,
       builder: (column, joinBuilders) =>
           ColumnOrderings(column, joinBuilders: joinBuilders));
 

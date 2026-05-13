@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:flutter_screenutil/flutter_screenutil.dart'; // Added ScreenUtil
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../../../providers/profile_controller.dart';
 import '../../../data/repositories/user_repository.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -14,6 +14,7 @@ class EditTeacherProfileScreen extends ConsumerStatefulWidget {
 }
 
 class _EditTeacherProfileScreenState extends ConsumerState<EditTeacherProfileScreen> {
+  final nameController = TextEditingController(); // MODIFICATION: Added name controller
   final emailController = TextEditingController();
   final currentPasswordController = TextEditingController();
   final passwordController = TextEditingController();
@@ -25,6 +26,9 @@ class _EditTeacherProfileScreenState extends ConsumerState<EditTeacherProfileScr
 
   int currentAvatarId = 10;
   String userRole = 'teacher';
+
+  // FIX: The Bulletproof Update Lock
+  bool _isUpdating = false;
 
   @override
   void initState() {
@@ -39,6 +43,7 @@ class _EditTeacherProfileScreenState extends ConsumerState<EditTeacherProfileScr
       final user = await ref.read(userRepositoryProvider).watchUser(userAuth.uid).first;
       if (user != null && mounted) {
         setState(() {
+          nameController.text = user.name; // MODIFICATION: Load current name
           currentAvatarId = user.avatarId;
           userRole = user.role;
         });
@@ -48,6 +53,7 @@ class _EditTeacherProfileScreenState extends ConsumerState<EditTeacherProfileScr
 
   @override
   void dispose() {
+    nameController.dispose(); // MODIFICATION: Dispose name controller
     emailController.dispose();
     currentPasswordController.dispose();
     passwordController.dispose();
@@ -61,7 +67,10 @@ class _EditTeacherProfileScreenState extends ConsumerState<EditTeacherProfileScr
       return;
     }
 
+    setState(() => _isUpdating = true); // Lock the state locally
+
     ref.read(profileControllerProvider.notifier).updateTeacherProfile(
+      name: nameController.text.trim(), // MODIFICATION: Pass name to controller
       avatarId: currentAvatarId,
       currentPassword: currentPasswordController.text.trim(),
       newPassword: passwordController.text.trim(),
@@ -70,12 +79,15 @@ class _EditTeacherProfileScreenState extends ConsumerState<EditTeacherProfileScr
 
   @override
   Widget build(BuildContext context) {
-    final profileState = ref.watch(profileControllerProvider);
     final formattedAvatarId = currentAvatarId.toString().padLeft(2, '0');
 
-    // BUG FIX: The Rock-Solid Listener
+    // BUG FIX: The Bulletproof Local Listener Lock
     ref.listen<AsyncValue<void>>(profileControllerProvider, (prev, next) {
-      if (prev != null && prev.isLoading && !next.isLoading) {
+      if (!_isUpdating) return; // Completely ignore updates not triggered by this specific screen instance
+
+      if (!next.isLoading) {
+        setState(() => _isUpdating = false); // Release the lock
+
         if (next.hasError) {
           ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(content: Text(next.error.toString().replaceAll("Exception: ", "")), backgroundColor: Colors.redAccent)
@@ -93,34 +105,37 @@ class _EditTeacherProfileScreenState extends ConsumerState<EditTeacherProfileScr
       backgroundColor: Colors.black,
       appBar: AppBar(backgroundColor: Colors.black, elevation: 0),
       body: SingleChildScrollView(
-        padding: EdgeInsets.symmetric(horizontal: 28.w), // Scaled
+        padding: EdgeInsets.symmetric(horizontal: 28.w),
         child: Column(
           children: [
             Center(
               child: CircleAvatar(
-                radius: 60.r, // Scaled
+                radius: 60.r,
                 backgroundColor: Colors.white,
                 child: CircleAvatar(
-                  radius: 58.r, // Scaled
+                  radius: 58.r,
                   backgroundColor: Colors.black,
                   backgroundImage: AssetImage("assets/avatars/$formattedAvatarId.png"),
                 ),
               ),
             ),
-            SizedBox(height: 16.h), // Scaled
+            SizedBox(height: 16.h),
             GestureDetector(
               onTap: () {
                 AvatarPickerSheet.show(context, userRole, (id) {
                   setState(() => currentAvatarId = id);
                 });
               },
-              child: Text("Change Picture", style: TextStyle(color: const Color(0xFF1877F2), fontSize: 16.sp)), // Premium Blue & Scaled
+              child: Text("Change Picture", style: TextStyle(color: const Color(0xFF1877F2), fontSize: 16.sp)),
             ),
-            SizedBox(height: 30.h), // Scaled
+            SizedBox(height: 30.h),
+
+            // MODIFICATION: Added Full Name input field
+            _buildField("Full Name", nameController),
 
             _buildField("E-mail", emailController, enabled: false),
 
-            Divider(color: Colors.white24, thickness: 1, height: 40.h), // Scaled
+            Divider(color: Colors.white24, thickness: 1, height: 40.h),
 
             _buildField(
                 "Current Password (Required if changing password)",
@@ -144,23 +159,23 @@ class _EditTeacherProfileScreenState extends ConsumerState<EditTeacherProfileScr
                 onToggleVisibility: () => setState(() => _obscureConfirm = !_obscureConfirm)
             ),
 
-            SizedBox(height: 40.h), // Scaled
+            SizedBox(height: 40.h),
 
             SizedBox(
               width: double.infinity,
-              height: 56.h, // Scaled
+              height: 56.h,
               child: ElevatedButton(
-                onPressed: profileState.isLoading ? null : handleUpdate,
+                onPressed: _isUpdating ? null : handleUpdate,
                 style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFF1877F2), // Premium Blue
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16.r)) // Scaled
+                    backgroundColor: const Color(0xFF1877F2),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16.r))
                 ),
-                child: profileState.isLoading
-                    ? SizedBox(height: 20.h, width: 20.h, child: const CircularProgressIndicator(color: Colors.white, strokeWidth: 2)) // Scaled
-                    : Text("Update", style: TextStyle(color: Colors.white, fontSize: 18.sp, fontWeight: FontWeight.w600)), // Premium font
+                child: _isUpdating
+                    ? SizedBox(height: 20.h, width: 20.h, child: const CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
+                    : Text("Update", style: TextStyle(color: Colors.white, fontSize: 18.sp, fontWeight: FontWeight.w600)),
               ),
             ),
-            SizedBox(height: 40.h), // Scaled
+            SizedBox(height: 40.h),
           ],
         ),
       ),
@@ -169,34 +184,34 @@ class _EditTeacherProfileScreenState extends ConsumerState<EditTeacherProfileScr
 
   Widget _buildField(String label, TextEditingController controller, {bool isPassword = false, bool enabled = true, bool obscureText = false, VoidCallback? onToggleVisibility}) {
     return Padding(
-      padding: EdgeInsets.only(bottom: 20.h), // Scaled
+      padding: EdgeInsets.only(bottom: 20.h),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(label, style: TextStyle(color: Colors.white, fontSize: 14.sp, fontWeight: FontWeight.w500)), // Scaled
-          SizedBox(height: 8.h), // Scaled
+          Text(label, style: TextStyle(color: Colors.white, fontSize: 14.sp, fontWeight: FontWeight.w500)),
+          SizedBox(height: 8.h),
           TextField(
             controller: controller,
             obscureText: obscureText,
             enabled: enabled,
-            style: TextStyle(color: enabled ? Colors.white : Colors.white54, fontSize: 16.sp), // Scaled
+            style: TextStyle(color: enabled ? Colors.white : Colors.white54, fontSize: 16.sp),
             decoration: InputDecoration(
               filled: false,
               enabledBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(12.r), // Scaled
+                borderRadius: BorderRadius.circular(12.r),
                 borderSide: BorderSide(color: enabled ? Colors.white30 : Colors.white12),
               ),
               focusedBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(12.r), // Scaled
-                borderSide: const BorderSide(color: Color(0xFF1877F2)), // Premium Blue
+                borderRadius: BorderRadius.circular(12.r),
+                borderSide: const BorderSide(color: Color(0xFF1877F2)),
               ),
               disabledBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(12.r), // Scaled
+                borderRadius: BorderRadius.circular(12.r),
                 borderSide: const BorderSide(color: Colors.white12),
               ),
-              contentPadding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 16.h), // Scaled
+              contentPadding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 16.h),
               suffixIcon: isPassword ? IconButton(
-                icon: Icon(obscureText ? Icons.visibility_off_outlined : Icons.visibility_outlined, color: Colors.white54, size: 24.sp), // Outlined & Scaled
+                icon: Icon(obscureText ? Icons.visibility_off_outlined : Icons.visibility_outlined, color: Colors.white54, size: 24.sp),
                 onPressed: onToggleVisibility,
               ) : null,
             ),

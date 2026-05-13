@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -65,10 +64,15 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
-      title: 'StageCall',
+      title: 'BGCTUB Companion',
       theme: ThemeData(
         fontFamily: "MyFont",
+        colorScheme: ColorScheme.fromSeed(
+          seedColor: Colors.deepPurple,
+          brightness: Brightness.dark,
+        ),
         brightness: Brightness.dark,
+        useMaterial3: true,
       ),
       routes: {
         "/home": (context) => const HomeScreen(),
@@ -77,4 +81,3 @@ class MyApp extends StatelessWidget {
     );
   }
 }
-// Removed the obsolete AuthService class that was here

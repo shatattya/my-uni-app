@@ -1,19 +1,30 @@
 import 'package:firebase_auth/firebase_auth.dart' as firebase_auth;
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:firebase_messaging/firebase_messaging.dart'; // Added for FCM unsubscription
 import '../data/repositories/user_repository.dart';
+import '../data/repositories/routine_repository.dart'; // ADDED: To reset sync metadata
+import '../data/local/app_database.dart'; // Added to access the database wipe
+import '../providers/db_provider.dart'; // Added to inject the DB
 
 final authServiceProvider = Provider<AuthService>((ref) {
-  return AuthService(ref.watch(userRepositoryProvider));
+  // MODIFICATION: Injected the RoutineRepository to handle metadata resets
+  return AuthService(
+    ref.watch(userRepositoryProvider),
+    ref.watch(routineRepositoryProvider),
+    ref.watch(dbProvider),
+  );
 });
 
 class AuthService {
   final firebase_auth.FirebaseAuth _auth = firebase_auth.FirebaseAuth.instance;
   final UserRepository _userRepo;
+  final RoutineRepository _routineRepo; // ADDED
+  final AppDatabase _db; // Added database dependency
 
-  AuthService(this._userRepo);
+  AuthService(this._userRepo, this._routineRepo, this._db);
 
-  // Existing Student Sign Up (Unchanged)
+  // Existing Student Sign Up
   Future<firebase_auth.UserCredential> signUp({
     required String internalId,
     required String password,
@@ -41,6 +52,10 @@ class AuthService {
     });
 
     await _userRepo.syncUser(uid);
+
+    // MODIFICATION: Sign out immediately so they aren't auto-logged in
+    await _auth.signOut();
+
     return credential;
   }
 
@@ -76,6 +91,10 @@ class AuthService {
 
     // Sync to Local SQLite immediately
     await _userRepo.syncUser(uid);
+
+    // MODIFICATION: Sign out immediately so they aren't auto-logged in
+    await _auth.signOut();
+
     return credential;
   }
 
@@ -106,5 +125,24 @@ class AuthService {
     await _userRepo.syncUser(credential.user!.uid);
 
     return credential;
+  }
+
+  // MODIFICATION: Centralized secure sign-out method
+  Future<void> signOut() async {
+    try {
+      // 1. Delete the FCM token.
+      await FirebaseMessaging.instance.deleteToken();
+    } catch (e) {
+      print("DEBUG: Failed to delete FCM token during sign out: $e");
+    }
+
+    // 2. Reset routine sync metadata to allow the next user to sync immediately
+    _routineRepo.resetSyncMetadata();
+
+    // 3. Annihilate the local SQLite database to prevent offline data ghosting
+    await _db.clearAllData();
+
+    // 4. Actually sign out of Firebase
+    await _auth.signOut();
   }
 }

@@ -7,6 +7,7 @@ import '../../../data/repositories/user_repository.dart';
 import 'edit_teacher_profile_screen.dart';
 import '../auth/auth_wrapper.dart';
 import '../../../providers/sync_controller.dart';
+import '../../../services/auth_service.dart'; // Added: Import AuthService for secure logout
 
 class TeacherProfileScreen extends ConsumerWidget {
   const TeacherProfileScreen({super.key});
@@ -60,7 +61,8 @@ class TeacherProfileScreen extends ConsumerWidget {
 
                   GestureDetector(
                     onTap: () async {
-                      await firebase_auth.FirebaseAuth.instance.signOut();
+                      // MODIFICATION: Use the centralized secure sign-out to wipe DB and clear FCM token
+                      await ref.read(authServiceProvider).signOut();
                       if (!context.mounted) return;
                       Navigator.of(context).pushAndRemoveUntil(
                         MaterialPageRoute(builder: (_) => const AuthWrapper()),

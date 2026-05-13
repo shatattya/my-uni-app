@@ -18,7 +18,7 @@ class Users extends Table {
   // Identity Role (e.g., 'student' or 'teacher')
   TextColumn get role => text().withDefault(const Constant('student'))();
 
-  // Privilege Flags (NEW IN v3)
+  // Privilege Flags
   BoolColumn get isDev => boolean().withDefault(const Constant(false))();
   BoolColumn get isCR => boolean().withDefault(const Constant(false))();
 
@@ -29,7 +29,7 @@ class Users extends Table {
   Set<Column> get primaryKey => {id};
 }
 
-/// 2. Schema for Announcements (Upgraded for Edit/Delete)
+/// 2. Schema for Announcements
 class Announcements extends Table {
   TextColumn get id => text()();
   TextColumn get title => text()();
@@ -49,21 +49,19 @@ class Announcements extends Table {
   Set<Column> get primaryKey => {id};
 }
 
-/// 3. Schema for the Routine (Timetable Feature)
+/// 3. Schema for the Routine
 class Routines extends Table {
-  TextColumn get id => text()(); // Firestore Document ID
+  TextColumn get id => text()();
   TextColumn get subjectName => text()();
   TextColumn get teacherName => text()();
+  TextColumn get teacherId => text().withDefault(const Constant(''))();
   TextColumn get roomNumber => text()();
 
-  // 1 = Monday, 2 = Tuesday, etc. (Integers make sorting easy)
   IntColumn get dayOfWeek => integer()();
 
-  // Stored as strings for easy display (e.g., "09:00 AM", "10:30 AM")
   TextColumn get startTime => text()();
   TextColumn get endTime => text()();
 
-  // Filtering variables to show the right routine to the right student
   IntColumn get semester => integer()();
   TextColumn get section => text()();
 
@@ -75,32 +73,39 @@ class Routines extends Table {
 class AppDatabase extends _$AppDatabase {
   AppDatabase() : super(_openConnection());
 
-  // Pro Coder: Bumped to version 3 to separate identity from privileges
   @override
-  int get schemaVersion => 3;
+  int get schemaVersion => 4;
 
-  // Safely upgrades the database for existing users incrementally
   @override
   MigrationStrategy get migration => MigrationStrategy(
     onCreate: (Migrator m) {
       return m.createAll();
     },
     onUpgrade: (Migrator m, int from, int to) async {
-      // Step-by-step sequential upgrades ensure no data is lost
-      // regardless of what version the user updates from.
       if (from < 2) {
-        // Upgrades from v1 to v2
         await m.addColumn(announcements, announcements.authorUid);
         await m.addColumn(announcements, announcements.isDeleted);
         await m.createTable(routines);
       }
       if (from < 3) {
-        // Upgrades from v2 to v3
         await m.addColumn(users, users.isDev);
         await m.addColumn(users, users.isCR);
       }
+      if (from < 4) {
+        await m.addColumn(routines, routines.teacherId);
+      }
     },
   );
+
+  // MODIFICATION: Added a safe, atomic transaction to wipe all local tables on logout.
+  // This prevents the next logged-in user from seeing ghost data.
+  Future<void> clearAllData() async {
+    await transaction(() async {
+      await delete(users).go();
+      await delete(announcements).go();
+      await delete(routines).go();
+    });
+  }
 }
 
 /// Tell Drift where to store the SQLite file on the device

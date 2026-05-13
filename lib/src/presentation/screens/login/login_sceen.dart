@@ -13,6 +13,7 @@ class LoginScreen extends ConsumerStatefulWidget {
 
 class _LoginScreenState extends ConsumerState<LoginScreen> {
   bool _obscurePassword = true;
+  bool isLoading = false; // MODIFICATION: Added loading state
 
   final TextEditingController idController = TextEditingController();
   final TextEditingController passwordController = TextEditingController();
@@ -28,6 +29,8 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
       return;
     }
 
+    setState(() => isLoading = true); // MODIFICATION: Start loading
+
     try {
       final authService = ref.read(authServiceProvider);
       await authService.login(idOrEmail: idOrEmail, password: password);
@@ -36,6 +39,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
       Navigator.pushReplacementNamed(context, "/home");
 
     } on FirebaseAuthException catch (e) {
+      setState(() => isLoading = false); // MODIFICATION: Stop loading on error
       String message = "Login failed";
 
       if (e.code == 'user-not-found') message = "No account found";
@@ -44,6 +48,11 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
 
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text(message)),
+      );
+    } catch (e) {
+      setState(() => isLoading = false); // MODIFICATION: Stop loading on any other error
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(e.toString().split(']').last)),
       );
     }
   }
@@ -155,14 +164,20 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                 width: double.infinity,
                 height: 56.h, // Scaled
                 child: ElevatedButton(
-                  onPressed: handleLogin,
+                  onPressed: isLoading ? null : handleLogin, // MODIFICATION: Disable while loading
                   style: ElevatedButton.styleFrom(
                     backgroundColor: const Color(0xFF1877F2), // Premium Blue
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(16.r), // Scaled
                     ),
                   ),
-                  child: Text(
+                  child: isLoading // MODIFICATION: Show loading indicator if true
+                      ? SizedBox(
+                    height: 20.h,
+                    width: 20.h,
+                    child: const CircularProgressIndicator(color: Colors.white, strokeWidth: 2),
+                  )
+                      : Text(
                     "Log in",
                     style: TextStyle(
                         fontSize: 18.sp, // Scaled

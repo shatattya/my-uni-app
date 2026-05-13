@@ -1,7 +1,8 @@
-# StageCall 🎓
+# BGCTUB Companion 🎓
+
 **The Ultimate Campus Companion for BGC Trust University.**
 
-StageCall is a high-performance, offline-first mobile application designed to streamline campus life for students and teachers. Built with Flutter and powered by Firebase, it provides real-time updates for class routines, university notices, and academic resources.
+This is a high-performance, offline-first mobile application designed to streamline campus life for students and teachers. Built with Flutter and powered by Firebase, it provides real-time updates for class routines, university notices, and academic resources.
 
 ## ✨ Key Features
 * **Smart Routine System:** Offline-access to class schedules with automatic background syncing.
@@ -47,3 +48,4 @@ Note: For security reasons, sensitive configuration files (`google-services.json
 This app uses **Dart Code Obfuscation** for production builds to prevent reverse engineering. To build a secure release:
 ```bash
 flutter build apk --release --obfuscate --split-debug-info=build/app/outputs/symbols
+

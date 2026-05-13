@@ -4,6 +4,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:path_provider/path_provider.dart'; // FIXED: Correct import path
 import '../data/repositories/user_repository.dart';
 import '../data/repositories/announcement_repository.dart';
+import '../data/repositories/routine_repository.dart'; // Added import for routine sync
 
 final syncControllerProvider = AsyncNotifierProvider<SyncController, DateTime?>(() {
   return SyncController();
@@ -64,6 +65,7 @@ class SyncController extends AsyncNotifier<DateTime?> {
       await Future.wait([
         userRepo.syncUser(uid),
         ref.read(announcementRepositoryProvider).syncAnnouncements(),
+        ref.read(routineRepositoryProvider).syncRoutines(), // Added: Now syncs routine on demand
       ]);
 
       // 4. Update the state and persist the timestamp to the file
@@ -87,7 +89,10 @@ class SyncController extends AsyncNotifier<DateTime?> {
   // Helper method to ping Google to guarantee an active connection exists
   Future<bool> _checkInternet() async {
     try {
-      final result = await InternetAddress.lookup('google.com');
+      // MODIFICATION: Changed from google.com to firestore.googleapis.com
+      // This prevents false "No Internet" errors on strict University Wi-Fi networks
+      // while still verifying that our specific database backend is reachable.
+      final result = await InternetAddress.lookup('firestore.googleapis.com');
       return result.isNotEmpty && result[0].rawAddress.isNotEmpty;
     } on SocketException catch (_) {
       return false;

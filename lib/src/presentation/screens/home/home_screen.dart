@@ -32,9 +32,11 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     super.initState();
     _setupInteractedMessage();
 
-    // MODIFICATION: Trigger automatic background update check on startup
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      _checkForUpdatesSilently();
+    // MODIFICATION: Trigger automatic background update check on startup after a 7-second delay
+    Future.delayed(const Duration(seconds: 7), () {
+      if (mounted) {
+        _checkForUpdatesSilently();
+      }
     });
   }
 

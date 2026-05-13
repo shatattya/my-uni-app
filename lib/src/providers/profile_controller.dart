@@ -53,7 +53,9 @@ class ProfileController extends AsyncNotifier<void> {
     });
   }
 
+  // MODIFICATION: Added the 'name' parameter here to pass it to the repository
   Future<void> updateTeacherProfile({
+    required String name,
     required int avatarId,
     String? currentPassword, // Added parameter
     String? newPassword,
@@ -80,7 +82,9 @@ class ProfileController extends AsyncNotifier<void> {
           throw Exception(e.message ?? "Failed to update password");
         }
       }
-      await ref.read(userRepositoryProvider).updateTeacherAvatar(user.uid, avatarId);
+
+      // MODIFICATION: Updated to call the new repository method with the name
+      await ref.read(userRepositoryProvider).updateTeacherProfile(user.uid, name, avatarId);
     });
   }
 }
