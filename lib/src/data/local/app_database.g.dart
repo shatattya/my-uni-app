@@ -1543,18 +1543,849 @@ class RoutinesCompanion extends UpdateCompanion<Routine> {
   }
 }
 
+class $CachedStudentsTable extends CachedStudents
+    with TableInfo<$CachedStudentsTable, CachedStudent> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $CachedStudentsTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _studentIdMeta =
+      const VerificationMeta('studentId');
+  @override
+  late final GeneratedColumn<String> studentId = GeneratedColumn<String>(
+      'student_id', aliasedName, false,
+      type: DriftSqlType.string, requiredDuringInsert: true);
+  static const VerificationMeta _nameMeta = const VerificationMeta('name');
+  @override
+  late final GeneratedColumn<String> name = GeneratedColumn<String>(
+      'name', aliasedName, false,
+      type: DriftSqlType.string, requiredDuringInsert: true);
+  static const VerificationMeta _semesterMeta =
+      const VerificationMeta('semester');
+  @override
+  late final GeneratedColumn<int> semester = GeneratedColumn<int>(
+      'semester', aliasedName, false,
+      type: DriftSqlType.int, requiredDuringInsert: true);
+  static const VerificationMeta _sectionMeta =
+      const VerificationMeta('section');
+  @override
+  late final GeneratedColumn<String> section = GeneratedColumn<String>(
+      'section', aliasedName, false,
+      type: DriftSqlType.string, requiredDuringInsert: true);
+  static const VerificationMeta _updatedAtMeta =
+      const VerificationMeta('updatedAt');
+  @override
+  late final GeneratedColumn<DateTime> updatedAt = GeneratedColumn<DateTime>(
+      'updated_at', aliasedName, true,
+      type: DriftSqlType.dateTime, requiredDuringInsert: false);
+  static const VerificationMeta _isActiveMeta =
+      const VerificationMeta('isActive');
+  @override
+  late final GeneratedColumn<bool> isActive = GeneratedColumn<bool>(
+      'is_active', aliasedName, false,
+      type: DriftSqlType.bool,
+      requiredDuringInsert: false,
+      defaultConstraints:
+          GeneratedColumn.constraintIsAlways('CHECK ("is_active" IN (0, 1))'),
+      defaultValue: const Constant(true));
+  @override
+  List<GeneratedColumn> get $columns =>
+      [studentId, name, semester, section, updatedAt, isActive];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'cached_students';
+  @override
+  VerificationContext validateIntegrity(Insertable<CachedStudent> instance,
+      {bool isInserting = false}) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('student_id')) {
+      context.handle(_studentIdMeta,
+          studentId.isAcceptableOrUnknown(data['student_id']!, _studentIdMeta));
+    } else if (isInserting) {
+      context.missing(_studentIdMeta);
+    }
+    if (data.containsKey('name')) {
+      context.handle(
+          _nameMeta, name.isAcceptableOrUnknown(data['name']!, _nameMeta));
+    } else if (isInserting) {
+      context.missing(_nameMeta);
+    }
+    if (data.containsKey('semester')) {
+      context.handle(_semesterMeta,
+          semester.isAcceptableOrUnknown(data['semester']!, _semesterMeta));
+    } else if (isInserting) {
+      context.missing(_semesterMeta);
+    }
+    if (data.containsKey('section')) {
+      context.handle(_sectionMeta,
+          section.isAcceptableOrUnknown(data['section']!, _sectionMeta));
+    } else if (isInserting) {
+      context.missing(_sectionMeta);
+    }
+    if (data.containsKey('updated_at')) {
+      context.handle(_updatedAtMeta,
+          updatedAt.isAcceptableOrUnknown(data['updated_at']!, _updatedAtMeta));
+    }
+    if (data.containsKey('is_active')) {
+      context.handle(_isActiveMeta,
+          isActive.isAcceptableOrUnknown(data['is_active']!, _isActiveMeta));
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {studentId};
+  @override
+  CachedStudent map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return CachedStudent(
+      studentId: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}student_id'])!,
+      name: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}name'])!,
+      semester: attachedDatabase.typeMapping
+          .read(DriftSqlType.int, data['${effectivePrefix}semester'])!,
+      section: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}section'])!,
+      updatedAt: attachedDatabase.typeMapping
+          .read(DriftSqlType.dateTime, data['${effectivePrefix}updated_at']),
+      isActive: attachedDatabase.typeMapping
+          .read(DriftSqlType.bool, data['${effectivePrefix}is_active'])!,
+    );
+  }
+
+  @override
+  $CachedStudentsTable createAlias(String alias) {
+    return $CachedStudentsTable(attachedDatabase, alias);
+  }
+}
+
+class CachedStudent extends DataClass implements Insertable<CachedStudent> {
+  final String studentId;
+  final String name;
+  final int semester;
+  final String section;
+  final DateTime? updatedAt;
+  final bool isActive;
+  const CachedStudent(
+      {required this.studentId,
+      required this.name,
+      required this.semester,
+      required this.section,
+      this.updatedAt,
+      required this.isActive});
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['student_id'] = Variable<String>(studentId);
+    map['name'] = Variable<String>(name);
+    map['semester'] = Variable<int>(semester);
+    map['section'] = Variable<String>(section);
+    if (!nullToAbsent || updatedAt != null) {
+      map['updated_at'] = Variable<DateTime>(updatedAt);
+    }
+    map['is_active'] = Variable<bool>(isActive);
+    return map;
+  }
+
+  CachedStudentsCompanion toCompanion(bool nullToAbsent) {
+    return CachedStudentsCompanion(
+      studentId: Value(studentId),
+      name: Value(name),
+      semester: Value(semester),
+      section: Value(section),
+      updatedAt: updatedAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(updatedAt),
+      isActive: Value(isActive),
+    );
+  }
+
+  factory CachedStudent.fromJson(Map<String, dynamic> json,
+      {ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return CachedStudent(
+      studentId: serializer.fromJson<String>(json['studentId']),
+      name: serializer.fromJson<String>(json['name']),
+      semester: serializer.fromJson<int>(json['semester']),
+      section: serializer.fromJson<String>(json['section']),
+      updatedAt: serializer.fromJson<DateTime?>(json['updatedAt']),
+      isActive: serializer.fromJson<bool>(json['isActive']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'studentId': serializer.toJson<String>(studentId),
+      'name': serializer.toJson<String>(name),
+      'semester': serializer.toJson<int>(semester),
+      'section': serializer.toJson<String>(section),
+      'updatedAt': serializer.toJson<DateTime?>(updatedAt),
+      'isActive': serializer.toJson<bool>(isActive),
+    };
+  }
+
+  CachedStudent copyWith(
+          {String? studentId,
+          String? name,
+          int? semester,
+          String? section,
+          Value<DateTime?> updatedAt = const Value.absent(),
+          bool? isActive}) =>
+      CachedStudent(
+        studentId: studentId ?? this.studentId,
+        name: name ?? this.name,
+        semester: semester ?? this.semester,
+        section: section ?? this.section,
+        updatedAt: updatedAt.present ? updatedAt.value : this.updatedAt,
+        isActive: isActive ?? this.isActive,
+      );
+  CachedStudent copyWithCompanion(CachedStudentsCompanion data) {
+    return CachedStudent(
+      studentId: data.studentId.present ? data.studentId.value : this.studentId,
+      name: data.name.present ? data.name.value : this.name,
+      semester: data.semester.present ? data.semester.value : this.semester,
+      section: data.section.present ? data.section.value : this.section,
+      updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
+      isActive: data.isActive.present ? data.isActive.value : this.isActive,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('CachedStudent(')
+          ..write('studentId: $studentId, ')
+          ..write('name: $name, ')
+          ..write('semester: $semester, ')
+          ..write('section: $section, ')
+          ..write('updatedAt: $updatedAt, ')
+          ..write('isActive: $isActive')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode =>
+      Object.hash(studentId, name, semester, section, updatedAt, isActive);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is CachedStudent &&
+          other.studentId == this.studentId &&
+          other.name == this.name &&
+          other.semester == this.semester &&
+          other.section == this.section &&
+          other.updatedAt == this.updatedAt &&
+          other.isActive == this.isActive);
+}
+
+class CachedStudentsCompanion extends UpdateCompanion<CachedStudent> {
+  final Value<String> studentId;
+  final Value<String> name;
+  final Value<int> semester;
+  final Value<String> section;
+  final Value<DateTime?> updatedAt;
+  final Value<bool> isActive;
+  final Value<int> rowid;
+  const CachedStudentsCompanion({
+    this.studentId = const Value.absent(),
+    this.name = const Value.absent(),
+    this.semester = const Value.absent(),
+    this.section = const Value.absent(),
+    this.updatedAt = const Value.absent(),
+    this.isActive = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  CachedStudentsCompanion.insert({
+    required String studentId,
+    required String name,
+    required int semester,
+    required String section,
+    this.updatedAt = const Value.absent(),
+    this.isActive = const Value.absent(),
+    this.rowid = const Value.absent(),
+  })  : studentId = Value(studentId),
+        name = Value(name),
+        semester = Value(semester),
+        section = Value(section);
+  static Insertable<CachedStudent> custom({
+    Expression<String>? studentId,
+    Expression<String>? name,
+    Expression<int>? semester,
+    Expression<String>? section,
+    Expression<DateTime>? updatedAt,
+    Expression<bool>? isActive,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (studentId != null) 'student_id': studentId,
+      if (name != null) 'name': name,
+      if (semester != null) 'semester': semester,
+      if (section != null) 'section': section,
+      if (updatedAt != null) 'updated_at': updatedAt,
+      if (isActive != null) 'is_active': isActive,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  CachedStudentsCompanion copyWith(
+      {Value<String>? studentId,
+      Value<String>? name,
+      Value<int>? semester,
+      Value<String>? section,
+      Value<DateTime?>? updatedAt,
+      Value<bool>? isActive,
+      Value<int>? rowid}) {
+    return CachedStudentsCompanion(
+      studentId: studentId ?? this.studentId,
+      name: name ?? this.name,
+      semester: semester ?? this.semester,
+      section: section ?? this.section,
+      updatedAt: updatedAt ?? this.updatedAt,
+      isActive: isActive ?? this.isActive,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (studentId.present) {
+      map['student_id'] = Variable<String>(studentId.value);
+    }
+    if (name.present) {
+      map['name'] = Variable<String>(name.value);
+    }
+    if (semester.present) {
+      map['semester'] = Variable<int>(semester.value);
+    }
+    if (section.present) {
+      map['section'] = Variable<String>(section.value);
+    }
+    if (updatedAt.present) {
+      map['updated_at'] = Variable<DateTime>(updatedAt.value);
+    }
+    if (isActive.present) {
+      map['is_active'] = Variable<bool>(isActive.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('CachedStudentsCompanion(')
+          ..write('studentId: $studentId, ')
+          ..write('name: $name, ')
+          ..write('semester: $semester, ')
+          ..write('section: $section, ')
+          ..write('updatedAt: $updatedAt, ')
+          ..write('isActive: $isActive, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
+class $AttendanceRecordsTable extends AttendanceRecords
+    with TableInfo<$AttendanceRecordsTable, AttendanceRecord> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $AttendanceRecordsTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _attendanceIdMeta =
+      const VerificationMeta('attendanceId');
+  @override
+  late final GeneratedColumn<String> attendanceId = GeneratedColumn<String>(
+      'attendance_id', aliasedName, false,
+      type: DriftSqlType.string, requiredDuringInsert: true);
+  static const VerificationMeta _subjectIdMeta =
+      const VerificationMeta('subjectId');
+  @override
+  late final GeneratedColumn<String> subjectId = GeneratedColumn<String>(
+      'subject_id', aliasedName, false,
+      type: DriftSqlType.string, requiredDuringInsert: true);
+  static const VerificationMeta _semesterMeta =
+      const VerificationMeta('semester');
+  @override
+  late final GeneratedColumn<int> semester = GeneratedColumn<int>(
+      'semester', aliasedName, false,
+      type: DriftSqlType.int, requiredDuringInsert: true);
+  static const VerificationMeta _sectionMeta =
+      const VerificationMeta('section');
+  @override
+  late final GeneratedColumn<String> section = GeneratedColumn<String>(
+      'section', aliasedName, false,
+      type: DriftSqlType.string, requiredDuringInsert: true);
+  static const VerificationMeta _dateMeta = const VerificationMeta('date');
+  @override
+  late final GeneratedColumn<String> date = GeneratedColumn<String>(
+      'date', aliasedName, false,
+      type: DriftSqlType.string, requiredDuringInsert: true);
+  static const VerificationMeta _presentStudentIdsMeta =
+      const VerificationMeta('presentStudentIds');
+  @override
+  late final GeneratedColumn<String> presentStudentIds =
+      GeneratedColumn<String>('present_student_ids', aliasedName, false,
+          type: DriftSqlType.string, requiredDuringInsert: true);
+  static const VerificationMeta _isSyncedMeta =
+      const VerificationMeta('isSynced');
+  @override
+  late final GeneratedColumn<bool> isSynced = GeneratedColumn<bool>(
+      'is_synced', aliasedName, false,
+      type: DriftSqlType.bool,
+      requiredDuringInsert: false,
+      defaultConstraints:
+          GeneratedColumn.constraintIsAlways('CHECK ("is_synced" IN (0, 1))'),
+      defaultValue: const Constant(false));
+  static const VerificationMeta _createdAtMeta =
+      const VerificationMeta('createdAt');
+  @override
+  late final GeneratedColumn<DateTime> createdAt = GeneratedColumn<DateTime>(
+      'created_at', aliasedName, false,
+      type: DriftSqlType.dateTime, requiredDuringInsert: true);
+  static const VerificationMeta _updatedAtMeta =
+      const VerificationMeta('updatedAt');
+  @override
+  late final GeneratedColumn<DateTime> updatedAt = GeneratedColumn<DateTime>(
+      'updated_at', aliasedName, false,
+      type: DriftSqlType.dateTime, requiredDuringInsert: true);
+  @override
+  List<GeneratedColumn> get $columns => [
+        attendanceId,
+        subjectId,
+        semester,
+        section,
+        date,
+        presentStudentIds,
+        isSynced,
+        createdAt,
+        updatedAt
+      ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'attendance_records';
+  @override
+  VerificationContext validateIntegrity(Insertable<AttendanceRecord> instance,
+      {bool isInserting = false}) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('attendance_id')) {
+      context.handle(
+          _attendanceIdMeta,
+          attendanceId.isAcceptableOrUnknown(
+              data['attendance_id']!, _attendanceIdMeta));
+    } else if (isInserting) {
+      context.missing(_attendanceIdMeta);
+    }
+    if (data.containsKey('subject_id')) {
+      context.handle(_subjectIdMeta,
+          subjectId.isAcceptableOrUnknown(data['subject_id']!, _subjectIdMeta));
+    } else if (isInserting) {
+      context.missing(_subjectIdMeta);
+    }
+    if (data.containsKey('semester')) {
+      context.handle(_semesterMeta,
+          semester.isAcceptableOrUnknown(data['semester']!, _semesterMeta));
+    } else if (isInserting) {
+      context.missing(_semesterMeta);
+    }
+    if (data.containsKey('section')) {
+      context.handle(_sectionMeta,
+          section.isAcceptableOrUnknown(data['section']!, _sectionMeta));
+    } else if (isInserting) {
+      context.missing(_sectionMeta);
+    }
+    if (data.containsKey('date')) {
+      context.handle(
+          _dateMeta, date.isAcceptableOrUnknown(data['date']!, _dateMeta));
+    } else if (isInserting) {
+      context.missing(_dateMeta);
+    }
+    if (data.containsKey('present_student_ids')) {
+      context.handle(
+          _presentStudentIdsMeta,
+          presentStudentIds.isAcceptableOrUnknown(
+              data['present_student_ids']!, _presentStudentIdsMeta));
+    } else if (isInserting) {
+      context.missing(_presentStudentIdsMeta);
+    }
+    if (data.containsKey('is_synced')) {
+      context.handle(_isSyncedMeta,
+          isSynced.isAcceptableOrUnknown(data['is_synced']!, _isSyncedMeta));
+    }
+    if (data.containsKey('created_at')) {
+      context.handle(_createdAtMeta,
+          createdAt.isAcceptableOrUnknown(data['created_at']!, _createdAtMeta));
+    } else if (isInserting) {
+      context.missing(_createdAtMeta);
+    }
+    if (data.containsKey('updated_at')) {
+      context.handle(_updatedAtMeta,
+          updatedAt.isAcceptableOrUnknown(data['updated_at']!, _updatedAtMeta));
+    } else if (isInserting) {
+      context.missing(_updatedAtMeta);
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {attendanceId};
+  @override
+  AttendanceRecord map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return AttendanceRecord(
+      attendanceId: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}attendance_id'])!,
+      subjectId: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}subject_id'])!,
+      semester: attachedDatabase.typeMapping
+          .read(DriftSqlType.int, data['${effectivePrefix}semester'])!,
+      section: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}section'])!,
+      date: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}date'])!,
+      presentStudentIds: attachedDatabase.typeMapping.read(
+          DriftSqlType.string, data['${effectivePrefix}present_student_ids'])!,
+      isSynced: attachedDatabase.typeMapping
+          .read(DriftSqlType.bool, data['${effectivePrefix}is_synced'])!,
+      createdAt: attachedDatabase.typeMapping
+          .read(DriftSqlType.dateTime, data['${effectivePrefix}created_at'])!,
+      updatedAt: attachedDatabase.typeMapping
+          .read(DriftSqlType.dateTime, data['${effectivePrefix}updated_at'])!,
+    );
+  }
+
+  @override
+  $AttendanceRecordsTable createAlias(String alias) {
+    return $AttendanceRecordsTable(attachedDatabase, alias);
+  }
+}
+
+class AttendanceRecord extends DataClass
+    implements Insertable<AttendanceRecord> {
+  final String attendanceId;
+  final String subjectId;
+  final int semester;
+  final String section;
+  final String date;
+  final String presentStudentIds;
+  final bool isSynced;
+  final DateTime createdAt;
+  final DateTime updatedAt;
+  const AttendanceRecord(
+      {required this.attendanceId,
+      required this.subjectId,
+      required this.semester,
+      required this.section,
+      required this.date,
+      required this.presentStudentIds,
+      required this.isSynced,
+      required this.createdAt,
+      required this.updatedAt});
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['attendance_id'] = Variable<String>(attendanceId);
+    map['subject_id'] = Variable<String>(subjectId);
+    map['semester'] = Variable<int>(semester);
+    map['section'] = Variable<String>(section);
+    map['date'] = Variable<String>(date);
+    map['present_student_ids'] = Variable<String>(presentStudentIds);
+    map['is_synced'] = Variable<bool>(isSynced);
+    map['created_at'] = Variable<DateTime>(createdAt);
+    map['updated_at'] = Variable<DateTime>(updatedAt);
+    return map;
+  }
+
+  AttendanceRecordsCompanion toCompanion(bool nullToAbsent) {
+    return AttendanceRecordsCompanion(
+      attendanceId: Value(attendanceId),
+      subjectId: Value(subjectId),
+      semester: Value(semester),
+      section: Value(section),
+      date: Value(date),
+      presentStudentIds: Value(presentStudentIds),
+      isSynced: Value(isSynced),
+      createdAt: Value(createdAt),
+      updatedAt: Value(updatedAt),
+    );
+  }
+
+  factory AttendanceRecord.fromJson(Map<String, dynamic> json,
+      {ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return AttendanceRecord(
+      attendanceId: serializer.fromJson<String>(json['attendanceId']),
+      subjectId: serializer.fromJson<String>(json['subjectId']),
+      semester: serializer.fromJson<int>(json['semester']),
+      section: serializer.fromJson<String>(json['section']),
+      date: serializer.fromJson<String>(json['date']),
+      presentStudentIds: serializer.fromJson<String>(json['presentStudentIds']),
+      isSynced: serializer.fromJson<bool>(json['isSynced']),
+      createdAt: serializer.fromJson<DateTime>(json['createdAt']),
+      updatedAt: serializer.fromJson<DateTime>(json['updatedAt']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'attendanceId': serializer.toJson<String>(attendanceId),
+      'subjectId': serializer.toJson<String>(subjectId),
+      'semester': serializer.toJson<int>(semester),
+      'section': serializer.toJson<String>(section),
+      'date': serializer.toJson<String>(date),
+      'presentStudentIds': serializer.toJson<String>(presentStudentIds),
+      'isSynced': serializer.toJson<bool>(isSynced),
+      'createdAt': serializer.toJson<DateTime>(createdAt),
+      'updatedAt': serializer.toJson<DateTime>(updatedAt),
+    };
+  }
+
+  AttendanceRecord copyWith(
+          {String? attendanceId,
+          String? subjectId,
+          int? semester,
+          String? section,
+          String? date,
+          String? presentStudentIds,
+          bool? isSynced,
+          DateTime? createdAt,
+          DateTime? updatedAt}) =>
+      AttendanceRecord(
+        attendanceId: attendanceId ?? this.attendanceId,
+        subjectId: subjectId ?? this.subjectId,
+        semester: semester ?? this.semester,
+        section: section ?? this.section,
+        date: date ?? this.date,
+        presentStudentIds: presentStudentIds ?? this.presentStudentIds,
+        isSynced: isSynced ?? this.isSynced,
+        createdAt: createdAt ?? this.createdAt,
+        updatedAt: updatedAt ?? this.updatedAt,
+      );
+  AttendanceRecord copyWithCompanion(AttendanceRecordsCompanion data) {
+    return AttendanceRecord(
+      attendanceId: data.attendanceId.present
+          ? data.attendanceId.value
+          : this.attendanceId,
+      subjectId: data.subjectId.present ? data.subjectId.value : this.subjectId,
+      semester: data.semester.present ? data.semester.value : this.semester,
+      section: data.section.present ? data.section.value : this.section,
+      date: data.date.present ? data.date.value : this.date,
+      presentStudentIds: data.presentStudentIds.present
+          ? data.presentStudentIds.value
+          : this.presentStudentIds,
+      isSynced: data.isSynced.present ? data.isSynced.value : this.isSynced,
+      createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
+      updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('AttendanceRecord(')
+          ..write('attendanceId: $attendanceId, ')
+          ..write('subjectId: $subjectId, ')
+          ..write('semester: $semester, ')
+          ..write('section: $section, ')
+          ..write('date: $date, ')
+          ..write('presentStudentIds: $presentStudentIds, ')
+          ..write('isSynced: $isSynced, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('updatedAt: $updatedAt')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(attendanceId, subjectId, semester, section,
+      date, presentStudentIds, isSynced, createdAt, updatedAt);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is AttendanceRecord &&
+          other.attendanceId == this.attendanceId &&
+          other.subjectId == this.subjectId &&
+          other.semester == this.semester &&
+          other.section == this.section &&
+          other.date == this.date &&
+          other.presentStudentIds == this.presentStudentIds &&
+          other.isSynced == this.isSynced &&
+          other.createdAt == this.createdAt &&
+          other.updatedAt == this.updatedAt);
+}
+
+class AttendanceRecordsCompanion extends UpdateCompanion<AttendanceRecord> {
+  final Value<String> attendanceId;
+  final Value<String> subjectId;
+  final Value<int> semester;
+  final Value<String> section;
+  final Value<String> date;
+  final Value<String> presentStudentIds;
+  final Value<bool> isSynced;
+  final Value<DateTime> createdAt;
+  final Value<DateTime> updatedAt;
+  final Value<int> rowid;
+  const AttendanceRecordsCompanion({
+    this.attendanceId = const Value.absent(),
+    this.subjectId = const Value.absent(),
+    this.semester = const Value.absent(),
+    this.section = const Value.absent(),
+    this.date = const Value.absent(),
+    this.presentStudentIds = const Value.absent(),
+    this.isSynced = const Value.absent(),
+    this.createdAt = const Value.absent(),
+    this.updatedAt = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  AttendanceRecordsCompanion.insert({
+    required String attendanceId,
+    required String subjectId,
+    required int semester,
+    required String section,
+    required String date,
+    required String presentStudentIds,
+    this.isSynced = const Value.absent(),
+    required DateTime createdAt,
+    required DateTime updatedAt,
+    this.rowid = const Value.absent(),
+  })  : attendanceId = Value(attendanceId),
+        subjectId = Value(subjectId),
+        semester = Value(semester),
+        section = Value(section),
+        date = Value(date),
+        presentStudentIds = Value(presentStudentIds),
+        createdAt = Value(createdAt),
+        updatedAt = Value(updatedAt);
+  static Insertable<AttendanceRecord> custom({
+    Expression<String>? attendanceId,
+    Expression<String>? subjectId,
+    Expression<int>? semester,
+    Expression<String>? section,
+    Expression<String>? date,
+    Expression<String>? presentStudentIds,
+    Expression<bool>? isSynced,
+    Expression<DateTime>? createdAt,
+    Expression<DateTime>? updatedAt,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (attendanceId != null) 'attendance_id': attendanceId,
+      if (subjectId != null) 'subject_id': subjectId,
+      if (semester != null) 'semester': semester,
+      if (section != null) 'section': section,
+      if (date != null) 'date': date,
+      if (presentStudentIds != null) 'present_student_ids': presentStudentIds,
+      if (isSynced != null) 'is_synced': isSynced,
+      if (createdAt != null) 'created_at': createdAt,
+      if (updatedAt != null) 'updated_at': updatedAt,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  AttendanceRecordsCompanion copyWith(
+      {Value<String>? attendanceId,
+      Value<String>? subjectId,
+      Value<int>? semester,
+      Value<String>? section,
+      Value<String>? date,
+      Value<String>? presentStudentIds,
+      Value<bool>? isSynced,
+      Value<DateTime>? createdAt,
+      Value<DateTime>? updatedAt,
+      Value<int>? rowid}) {
+    return AttendanceRecordsCompanion(
+      attendanceId: attendanceId ?? this.attendanceId,
+      subjectId: subjectId ?? this.subjectId,
+      semester: semester ?? this.semester,
+      section: section ?? this.section,
+      date: date ?? this.date,
+      presentStudentIds: presentStudentIds ?? this.presentStudentIds,
+      isSynced: isSynced ?? this.isSynced,
+      createdAt: createdAt ?? this.createdAt,
+      updatedAt: updatedAt ?? this.updatedAt,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (attendanceId.present) {
+      map['attendance_id'] = Variable<String>(attendanceId.value);
+    }
+    if (subjectId.present) {
+      map['subject_id'] = Variable<String>(subjectId.value);
+    }
+    if (semester.present) {
+      map['semester'] = Variable<int>(semester.value);
+    }
+    if (section.present) {
+      map['section'] = Variable<String>(section.value);
+    }
+    if (date.present) {
+      map['date'] = Variable<String>(date.value);
+    }
+    if (presentStudentIds.present) {
+      map['present_student_ids'] = Variable<String>(presentStudentIds.value);
+    }
+    if (isSynced.present) {
+      map['is_synced'] = Variable<bool>(isSynced.value);
+    }
+    if (createdAt.present) {
+      map['created_at'] = Variable<DateTime>(createdAt.value);
+    }
+    if (updatedAt.present) {
+      map['updated_at'] = Variable<DateTime>(updatedAt.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('AttendanceRecordsCompanion(')
+          ..write('attendanceId: $attendanceId, ')
+          ..write('subjectId: $subjectId, ')
+          ..write('semester: $semester, ')
+          ..write('section: $section, ')
+          ..write('date: $date, ')
+          ..write('presentStudentIds: $presentStudentIds, ')
+          ..write('isSynced: $isSynced, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('updatedAt: $updatedAt, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
 abstract class _$AppDatabase extends GeneratedDatabase {
   _$AppDatabase(QueryExecutor e) : super(e);
   $AppDatabaseManager get managers => $AppDatabaseManager(this);
   late final $UsersTable users = $UsersTable(this);
   late final $AnnouncementsTable announcements = $AnnouncementsTable(this);
   late final $RoutinesTable routines = $RoutinesTable(this);
+  late final $CachedStudentsTable cachedStudents = $CachedStudentsTable(this);
+  late final $AttendanceRecordsTable attendanceRecords =
+      $AttendanceRecordsTable(this);
   @override
   Iterable<TableInfo<Table, Object?>> get allTables =>
       allSchemaEntities.whereType<TableInfo<Table, Object?>>();
   @override
   List<DatabaseSchemaEntity> get allSchemaEntities =>
-      [users, announcements, routines];
+      [users, announcements, routines, cachedStudents, attendanceRecords];
 }
 
 typedef $$UsersTableCreateCompanionBuilder = UsersCompanion Function({
@@ -2177,6 +3008,344 @@ class $$RoutinesTableOrderingComposer
           ColumnOrderings(column, joinBuilders: joinBuilders));
 }
 
+typedef $$CachedStudentsTableCreateCompanionBuilder = CachedStudentsCompanion
+    Function({
+  required String studentId,
+  required String name,
+  required int semester,
+  required String section,
+  Value<DateTime?> updatedAt,
+  Value<bool> isActive,
+  Value<int> rowid,
+});
+typedef $$CachedStudentsTableUpdateCompanionBuilder = CachedStudentsCompanion
+    Function({
+  Value<String> studentId,
+  Value<String> name,
+  Value<int> semester,
+  Value<String> section,
+  Value<DateTime?> updatedAt,
+  Value<bool> isActive,
+  Value<int> rowid,
+});
+
+class $$CachedStudentsTableTableManager extends RootTableManager<
+    _$AppDatabase,
+    $CachedStudentsTable,
+    CachedStudent,
+    $$CachedStudentsTableFilterComposer,
+    $$CachedStudentsTableOrderingComposer,
+    $$CachedStudentsTableCreateCompanionBuilder,
+    $$CachedStudentsTableUpdateCompanionBuilder> {
+  $$CachedStudentsTableTableManager(
+      _$AppDatabase db, $CachedStudentsTable table)
+      : super(TableManagerState(
+          db: db,
+          table: table,
+          filteringComposer:
+              $$CachedStudentsTableFilterComposer(ComposerState(db, table)),
+          orderingComposer:
+              $$CachedStudentsTableOrderingComposer(ComposerState(db, table)),
+          updateCompanionCallback: ({
+            Value<String> studentId = const Value.absent(),
+            Value<String> name = const Value.absent(),
+            Value<int> semester = const Value.absent(),
+            Value<String> section = const Value.absent(),
+            Value<DateTime?> updatedAt = const Value.absent(),
+            Value<bool> isActive = const Value.absent(),
+            Value<int> rowid = const Value.absent(),
+          }) =>
+              CachedStudentsCompanion(
+            studentId: studentId,
+            name: name,
+            semester: semester,
+            section: section,
+            updatedAt: updatedAt,
+            isActive: isActive,
+            rowid: rowid,
+          ),
+          createCompanionCallback: ({
+            required String studentId,
+            required String name,
+            required int semester,
+            required String section,
+            Value<DateTime?> updatedAt = const Value.absent(),
+            Value<bool> isActive = const Value.absent(),
+            Value<int> rowid = const Value.absent(),
+          }) =>
+              CachedStudentsCompanion.insert(
+            studentId: studentId,
+            name: name,
+            semester: semester,
+            section: section,
+            updatedAt: updatedAt,
+            isActive: isActive,
+            rowid: rowid,
+          ),
+        ));
+}
+
+class $$CachedStudentsTableFilterComposer
+    extends FilterComposer<_$AppDatabase, $CachedStudentsTable> {
+  $$CachedStudentsTableFilterComposer(super.$state);
+  ColumnFilters<String> get studentId => $state.composableBuilder(
+      column: $state.table.studentId,
+      builder: (column, joinBuilders) =>
+          ColumnFilters(column, joinBuilders: joinBuilders));
+
+  ColumnFilters<String> get name => $state.composableBuilder(
+      column: $state.table.name,
+      builder: (column, joinBuilders) =>
+          ColumnFilters(column, joinBuilders: joinBuilders));
+
+  ColumnFilters<int> get semester => $state.composableBuilder(
+      column: $state.table.semester,
+      builder: (column, joinBuilders) =>
+          ColumnFilters(column, joinBuilders: joinBuilders));
+
+  ColumnFilters<String> get section => $state.composableBuilder(
+      column: $state.table.section,
+      builder: (column, joinBuilders) =>
+          ColumnFilters(column, joinBuilders: joinBuilders));
+
+  ColumnFilters<DateTime> get updatedAt => $state.composableBuilder(
+      column: $state.table.updatedAt,
+      builder: (column, joinBuilders) =>
+          ColumnFilters(column, joinBuilders: joinBuilders));
+
+  ColumnFilters<bool> get isActive => $state.composableBuilder(
+      column: $state.table.isActive,
+      builder: (column, joinBuilders) =>
+          ColumnFilters(column, joinBuilders: joinBuilders));
+}
+
+class $$CachedStudentsTableOrderingComposer
+    extends OrderingComposer<_$AppDatabase, $CachedStudentsTable> {
+  $$CachedStudentsTableOrderingComposer(super.$state);
+  ColumnOrderings<String> get studentId => $state.composableBuilder(
+      column: $state.table.studentId,
+      builder: (column, joinBuilders) =>
+          ColumnOrderings(column, joinBuilders: joinBuilders));
+
+  ColumnOrderings<String> get name => $state.composableBuilder(
+      column: $state.table.name,
+      builder: (column, joinBuilders) =>
+          ColumnOrderings(column, joinBuilders: joinBuilders));
+
+  ColumnOrderings<int> get semester => $state.composableBuilder(
+      column: $state.table.semester,
+      builder: (column, joinBuilders) =>
+          ColumnOrderings(column, joinBuilders: joinBuilders));
+
+  ColumnOrderings<String> get section => $state.composableBuilder(
+      column: $state.table.section,
+      builder: (column, joinBuilders) =>
+          ColumnOrderings(column, joinBuilders: joinBuilders));
+
+  ColumnOrderings<DateTime> get updatedAt => $state.composableBuilder(
+      column: $state.table.updatedAt,
+      builder: (column, joinBuilders) =>
+          ColumnOrderings(column, joinBuilders: joinBuilders));
+
+  ColumnOrderings<bool> get isActive => $state.composableBuilder(
+      column: $state.table.isActive,
+      builder: (column, joinBuilders) =>
+          ColumnOrderings(column, joinBuilders: joinBuilders));
+}
+
+typedef $$AttendanceRecordsTableCreateCompanionBuilder
+    = AttendanceRecordsCompanion Function({
+  required String attendanceId,
+  required String subjectId,
+  required int semester,
+  required String section,
+  required String date,
+  required String presentStudentIds,
+  Value<bool> isSynced,
+  required DateTime createdAt,
+  required DateTime updatedAt,
+  Value<int> rowid,
+});
+typedef $$AttendanceRecordsTableUpdateCompanionBuilder
+    = AttendanceRecordsCompanion Function({
+  Value<String> attendanceId,
+  Value<String> subjectId,
+  Value<int> semester,
+  Value<String> section,
+  Value<String> date,
+  Value<String> presentStudentIds,
+  Value<bool> isSynced,
+  Value<DateTime> createdAt,
+  Value<DateTime> updatedAt,
+  Value<int> rowid,
+});
+
+class $$AttendanceRecordsTableTableManager extends RootTableManager<
+    _$AppDatabase,
+    $AttendanceRecordsTable,
+    AttendanceRecord,
+    $$AttendanceRecordsTableFilterComposer,
+    $$AttendanceRecordsTableOrderingComposer,
+    $$AttendanceRecordsTableCreateCompanionBuilder,
+    $$AttendanceRecordsTableUpdateCompanionBuilder> {
+  $$AttendanceRecordsTableTableManager(
+      _$AppDatabase db, $AttendanceRecordsTable table)
+      : super(TableManagerState(
+          db: db,
+          table: table,
+          filteringComposer:
+              $$AttendanceRecordsTableFilterComposer(ComposerState(db, table)),
+          orderingComposer: $$AttendanceRecordsTableOrderingComposer(
+              ComposerState(db, table)),
+          updateCompanionCallback: ({
+            Value<String> attendanceId = const Value.absent(),
+            Value<String> subjectId = const Value.absent(),
+            Value<int> semester = const Value.absent(),
+            Value<String> section = const Value.absent(),
+            Value<String> date = const Value.absent(),
+            Value<String> presentStudentIds = const Value.absent(),
+            Value<bool> isSynced = const Value.absent(),
+            Value<DateTime> createdAt = const Value.absent(),
+            Value<DateTime> updatedAt = const Value.absent(),
+            Value<int> rowid = const Value.absent(),
+          }) =>
+              AttendanceRecordsCompanion(
+            attendanceId: attendanceId,
+            subjectId: subjectId,
+            semester: semester,
+            section: section,
+            date: date,
+            presentStudentIds: presentStudentIds,
+            isSynced: isSynced,
+            createdAt: createdAt,
+            updatedAt: updatedAt,
+            rowid: rowid,
+          ),
+          createCompanionCallback: ({
+            required String attendanceId,
+            required String subjectId,
+            required int semester,
+            required String section,
+            required String date,
+            required String presentStudentIds,
+            Value<bool> isSynced = const Value.absent(),
+            required DateTime createdAt,
+            required DateTime updatedAt,
+            Value<int> rowid = const Value.absent(),
+          }) =>
+              AttendanceRecordsCompanion.insert(
+            attendanceId: attendanceId,
+            subjectId: subjectId,
+            semester: semester,
+            section: section,
+            date: date,
+            presentStudentIds: presentStudentIds,
+            isSynced: isSynced,
+            createdAt: createdAt,
+            updatedAt: updatedAt,
+            rowid: rowid,
+          ),
+        ));
+}
+
+class $$AttendanceRecordsTableFilterComposer
+    extends FilterComposer<_$AppDatabase, $AttendanceRecordsTable> {
+  $$AttendanceRecordsTableFilterComposer(super.$state);
+  ColumnFilters<String> get attendanceId => $state.composableBuilder(
+      column: $state.table.attendanceId,
+      builder: (column, joinBuilders) =>
+          ColumnFilters(column, joinBuilders: joinBuilders));
+
+  ColumnFilters<String> get subjectId => $state.composableBuilder(
+      column: $state.table.subjectId,
+      builder: (column, joinBuilders) =>
+          ColumnFilters(column, joinBuilders: joinBuilders));
+
+  ColumnFilters<int> get semester => $state.composableBuilder(
+      column: $state.table.semester,
+      builder: (column, joinBuilders) =>
+          ColumnFilters(column, joinBuilders: joinBuilders));
+
+  ColumnFilters<String> get section => $state.composableBuilder(
+      column: $state.table.section,
+      builder: (column, joinBuilders) =>
+          ColumnFilters(column, joinBuilders: joinBuilders));
+
+  ColumnFilters<String> get date => $state.composableBuilder(
+      column: $state.table.date,
+      builder: (column, joinBuilders) =>
+          ColumnFilters(column, joinBuilders: joinBuilders));
+
+  ColumnFilters<String> get presentStudentIds => $state.composableBuilder(
+      column: $state.table.presentStudentIds,
+      builder: (column, joinBuilders) =>
+          ColumnFilters(column, joinBuilders: joinBuilders));
+
+  ColumnFilters<bool> get isSynced => $state.composableBuilder(
+      column: $state.table.isSynced,
+      builder: (column, joinBuilders) =>
+          ColumnFilters(column, joinBuilders: joinBuilders));
+
+  ColumnFilters<DateTime> get createdAt => $state.composableBuilder(
+      column: $state.table.createdAt,
+      builder: (column, joinBuilders) =>
+          ColumnFilters(column, joinBuilders: joinBuilders));
+
+  ColumnFilters<DateTime> get updatedAt => $state.composableBuilder(
+      column: $state.table.updatedAt,
+      builder: (column, joinBuilders) =>
+          ColumnFilters(column, joinBuilders: joinBuilders));
+}
+
+class $$AttendanceRecordsTableOrderingComposer
+    extends OrderingComposer<_$AppDatabase, $AttendanceRecordsTable> {
+  $$AttendanceRecordsTableOrderingComposer(super.$state);
+  ColumnOrderings<String> get attendanceId => $state.composableBuilder(
+      column: $state.table.attendanceId,
+      builder: (column, joinBuilders) =>
+          ColumnOrderings(column, joinBuilders: joinBuilders));
+
+  ColumnOrderings<String> get subjectId => $state.composableBuilder(
+      column: $state.table.subjectId,
+      builder: (column, joinBuilders) =>
+          ColumnOrderings(column, joinBuilders: joinBuilders));
+
+  ColumnOrderings<int> get semester => $state.composableBuilder(
+      column: $state.table.semester,
+      builder: (column, joinBuilders) =>
+          ColumnOrderings(column, joinBuilders: joinBuilders));
+
+  ColumnOrderings<String> get section => $state.composableBuilder(
+      column: $state.table.section,
+      builder: (column, joinBuilders) =>
+          ColumnOrderings(column, joinBuilders: joinBuilders));
+
+  ColumnOrderings<String> get date => $state.composableBuilder(
+      column: $state.table.date,
+      builder: (column, joinBuilders) =>
+          ColumnOrderings(column, joinBuilders: joinBuilders));
+
+  ColumnOrderings<String> get presentStudentIds => $state.composableBuilder(
+      column: $state.table.presentStudentIds,
+      builder: (column, joinBuilders) =>
+          ColumnOrderings(column, joinBuilders: joinBuilders));
+
+  ColumnOrderings<bool> get isSynced => $state.composableBuilder(
+      column: $state.table.isSynced,
+      builder: (column, joinBuilders) =>
+          ColumnOrderings(column, joinBuilders: joinBuilders));
+
+  ColumnOrderings<DateTime> get createdAt => $state.composableBuilder(
+      column: $state.table.createdAt,
+      builder: (column, joinBuilders) =>
+          ColumnOrderings(column, joinBuilders: joinBuilders));
+
+  ColumnOrderings<DateTime> get updatedAt => $state.composableBuilder(
+      column: $state.table.updatedAt,
+      builder: (column, joinBuilders) =>
+          ColumnOrderings(column, joinBuilders: joinBuilders));
+}
+
 class $AppDatabaseManager {
   final _$AppDatabase _db;
   $AppDatabaseManager(this._db);
@@ -2186,4 +3355,8 @@ class $AppDatabaseManager {
       $$AnnouncementsTableTableManager(_db, _db.announcements);
   $$RoutinesTableTableManager get routines =>
       $$RoutinesTableTableManager(_db, _db.routines);
+  $$CachedStudentsTableTableManager get cachedStudents =>
+      $$CachedStudentsTableTableManager(_db, _db.cachedStudents);
+  $$AttendanceRecordsTableTableManager get attendanceRecords =>
+      $$AttendanceRecordsTableTableManager(_db, _db.attendanceRecords);
 }

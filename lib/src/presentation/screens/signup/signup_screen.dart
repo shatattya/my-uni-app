@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart'; // ADDED: For Haptic Feedback
 import 'package:flutter_screenutil/flutter_screenutil.dart'; // Added
 import '../../../services/auth_service.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'privacy_policy_screen.dart'; // ADDED: Import the new Privacy Policy screen
 
 class SignupScreen extends ConsumerStatefulWidget {
   const SignupScreen({super.key});
@@ -21,6 +23,9 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
   bool _passwordHidden = true;
   bool _confirmPasswordHidden = true;
   bool isLoading = false;
+
+  // MODIFICATION: Added Privacy Policy State
+  bool _isPolicyAccepted = false;
 
   final nameController = TextEditingController();
   final idController = TextEditingController();
@@ -112,8 +117,16 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
   }
 
   void handleSignup() async {
+    // MODIFICATION: Enforce Form Validity and Policy Acceptance with Haptic Feedback
     if (!isFormValid()) {
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Please fix the errors before signing up")));
+      HapticFeedback.heavyImpact(); // iOS UX warning
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Please fix the errors before signing up"), backgroundColor: Colors.redAccent));
+      return;
+    }
+
+    if (!_isPolicyAccepted) {
+      HapticFeedback.heavyImpact(); // iOS UX warning
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("You must accept the Privacy Policy to create an account."), backgroundColor: Colors.redAccent));
       return;
     }
 
@@ -129,17 +142,20 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
         section: sectionController.text,
       );
       if (!mounted) return;
+      HapticFeedback.mediumImpact(); // iOS UX success
       Navigator.pop(context, "Account created successfully. Please log in.");
 
     } on FirebaseAuthException catch (e) {
       setState(() => isLoading = false);
       String message = "Signup failed";
       if (e.code == 'email-already-in-use') message = "An account with this Internal ID already exists";
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(message)));
+      HapticFeedback.heavyImpact();
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(message), backgroundColor: Colors.redAccent));
     } catch (e) {
       setState(() => isLoading = false);
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("Error saving profile: ${e.toString().split(']').last}")));
+        HapticFeedback.heavyImpact();
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("Error saving profile: ${e.toString().split(']').last}"), backgroundColor: Colors.redAccent));
       }
     }
   }
@@ -203,104 +219,155 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: Colors.black,
-      body: SafeArea(
-        child: SingleChildScrollView(
-          padding: EdgeInsets.symmetric(horizontal: 28.w), // Scaled
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              SizedBox(height: 20.h),
+    // MODIFICATION: Wrap Scaffold in GestureDetector for iOS Keyboard dismiss
+    return GestureDetector(
+      onTap: () => FocusScope.of(context).unfocus(),
+      child: Scaffold(
+        backgroundColor: Colors.black,
+        body: SafeArea(
+          child: SingleChildScrollView(
+            padding: EdgeInsets.symmetric(horizontal: 28.w), // Scaled
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                SizedBox(height: 20.h),
 
-              _buildTextField(
-                label: "Full Name",
-                hint: "Enter Your Full Name",
-                controller: nameController,
-                onChanged: validateName,
-                errorText: nameError,
-              ),
+                _buildTextField(
+                  label: "Full Name",
+                  hint: "Enter Your Full Name",
+                  controller: nameController,
+                  onChanged: validateName,
+                  errorText: nameError,
+                ),
 
-              _buildTextField(
-                label: "Internal ID",
-                hint: "Enter Your Internal ID",
-                controller: idController,
-                keyboardType: TextInputType.number,
-                onChanged: validateInternalId,
-                errorText: internalIdError,
-              ),
+                _buildTextField(
+                  label: "Internal ID",
+                  hint: "Enter Your Internal ID",
+                  controller: idController,
+                  keyboardType: TextInputType.number,
+                  onChanged: validateInternalId,
+                  errorText: internalIdError,
+                ),
 
-              _buildTextField(
-                label: "Password",
-                hint: "********",
-                controller: passwordController,
-                onChanged: validatePassword,
-                errorText: passwordError,
-                obscureText: _passwordHidden,
-                showVisibilityToggle: true,
-                onToggleVisibility: () => setState(() => _passwordHidden = !_passwordHidden),
-              ),
+                _buildTextField(
+                  label: "Password",
+                  hint: "********",
+                  controller: passwordController,
+                  onChanged: validatePassword,
+                  errorText: passwordError,
+                  obscureText: _passwordHidden,
+                  showVisibilityToggle: true,
+                  onToggleVisibility: () => setState(() => _passwordHidden = !_passwordHidden),
+                ),
 
-              _buildTextField(
-                label: "Confirm Password",
-                hint: "********",
-                controller: confirmPasswordController,
-                onChanged: validateConfirmPassword,
-                errorText: confirmPasswordError,
-                obscureText: _confirmPasswordHidden,
-                showVisibilityToggle: true,
-                onToggleVisibility: () => setState(() => _confirmPasswordHidden = !_confirmPasswordHidden),
-              ),
+                _buildTextField(
+                  label: "Confirm Password",
+                  hint: "********",
+                  controller: confirmPasswordController,
+                  onChanged: validateConfirmPassword,
+                  errorText: confirmPasswordError,
+                  obscureText: _confirmPasswordHidden,
+                  showVisibilityToggle: true,
+                  onToggleVisibility: () => setState(() => _confirmPasswordHidden = !_confirmPasswordHidden),
+                ),
 
-              _buildTextField(
-                label: "Semester",
-                hint: "Enter Your Semester",
-                controller: semesterController,
-                keyboardType: TextInputType.number,
-                onChanged: validateSemester,
-                errorText: semesterError,
-              ),
+                _buildTextField(
+                  label: "Semester",
+                  hint: "Enter Your Semester",
+                  controller: semesterController,
+                  keyboardType: TextInputType.number,
+                  onChanged: validateSemester,
+                  errorText: semesterError,
+                ),
 
-              _buildTextField(
-                label: "Section",
-                hint: "Enter Your Section",
-                controller: sectionController,
-                onChanged: validateSection,
-                errorText: sectionError,
-              ),
+                _buildTextField(
+                  label: "Section",
+                  hint: "Enter Your Section",
+                  controller: sectionController,
+                  onChanged: validateSection,
+                  errorText: sectionError,
+                ),
 
-              SizedBox(height: 20.h),
-
-              SizedBox(
-                width: double.infinity,
-                height: 56.h,
-                child: ElevatedButton(
-                  onPressed: isLoading ? null : handleSignup,
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFF1877F2), // Premium Blue
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(16.r),
+                // MODIFICATION: Privacy Policy Checkbox Row
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
+                    SizedBox(
+                      height: 24.h,
+                      width: 24.w,
+                      child: Checkbox(
+                        value: _isPolicyAccepted,
+                        onChanged: (value) {
+                          HapticFeedback.selectionClick();
+                          setState(() => _isPolicyAccepted = value ?? false);
+                        },
+                        activeColor: const Color(0xFF1877F2),
+                        checkColor: Colors.white,
+                        side: const BorderSide(color: Colors.white54, width: 1.5),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(4.r)),
+                      ),
                     ),
-                  ),
-                  child: isLoading
-                      ? SizedBox(
-                    height: 20.h,
-                    width: 20.h,
-                    child: const CircularProgressIndicator(color: Colors.white, strokeWidth: 2),
-                  )
-                      : Text(
-                    "Sign Up",
-                    style: TextStyle(
-                      fontSize: 18.sp,
-                      fontWeight: FontWeight.w600,
-                      color: Colors.white, // High contrast
+                    SizedBox(width: 12.w),
+                    Expanded(
+                      child: GestureDetector(
+                        onTap: () {
+                          HapticFeedback.lightImpact();
+                          Navigator.push(context, MaterialPageRoute(builder: (_) => const PrivacyPolicyScreen()));
+                        },
+                        child: Text.rich(
+                          TextSpan(
+                            text: "I agree to the ",
+                            style: TextStyle(color: Colors.white70, fontSize: 14.sp),
+                            children: [
+                              TextSpan(
+                                text: "Privacy Policy",
+                                style: TextStyle(
+                                  color: const Color(0xFF1877F2),
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+                SizedBox(height: 24.h),
+
+                SizedBox(
+                  width: double.infinity,
+                  height: 56.h,
+                  child: ElevatedButton(
+                    onPressed: isLoading ? null : handleSignup,
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: const Color(0xFF1877F2), // Premium Blue
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(16.r),
+                      ),
+                      // Visual feedback if disabled (opacity trick)
+                      disabledBackgroundColor: const Color(0xFF1877F2).withValues(alpha: 0.5),
+                    ),
+                    child: isLoading
+                        ? SizedBox(
+                      height: 20.h,
+                      width: 20.h,
+                      child: const CircularProgressIndicator(color: Colors.white, strokeWidth: 2),
+                    )
+                        : Text(
+                      "Sign Up",
+                      style: TextStyle(
+                        fontSize: 18.sp,
+                        fontWeight: FontWeight.w600,
+                        color: Colors.white, // High contrast
+                      ),
                     ),
                   ),
                 ),
-              ),
 
-              SizedBox(height: 20.h),
-            ],
+                SizedBox(height: 40.h),
+              ],
+            ),
           ),
         ),
       ),

@@ -8,6 +8,8 @@ import '../../../../data/repositories/user_repository.dart';
 import '../../../../services/update_service.dart';
 import '../../../widgets/update_notice_sheet.dart';
 import '../contact_us_screen.dart';
+import '../../attendance/attendance_setup_screen.dart';
+import '../../attendance/attendance_export_screen.dart'; // Added import for the export screen
 
 class HomeTab extends ConsumerStatefulWidget {
   const HomeTab({super.key});
@@ -40,6 +42,11 @@ class _HomeTabState extends ConsumerState<HomeTab> {
 
   @override
   Widget build(BuildContext context) {
+    final firebaseUser = firebase_auth.FirebaseAuth.instance.currentUser;
+    final userStream = firebaseUser != null
+        ? ref.watch(userRepositoryProvider).watchUser(firebaseUser.uid)
+        : const Stream.empty();
+
     return Scaffold(
       backgroundColor: Colors.transparent, // Keeps the underlying black background from IndexedStack
       drawer: _buildDrawer(context, ref),
@@ -69,26 +76,52 @@ class _HomeTabState extends ConsumerState<HomeTab> {
             ),
             SizedBox(height: 24.h),
             Expanded(
-              child: Padding(
-                padding: EdgeInsets.symmetric(horizontal: 20.w),
-                child: GridView(
-                  physics: const BouncingScrollPhysics(),
-                  gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                    crossAxisCount: 4,
-                    crossAxisSpacing: 12.w,
-                    mainAxisSpacing: 16.h,
-                    mainAxisExtent: 100.h,
-                  ),
-                  children: const [
-                    HomeFeatureTile(icon: Icons.calendar_today_outlined, label: "Academic\nCalendar"),
-                    HomeFeatureTile(icon: Icons.picture_as_pdf_outlined, label: "Notes"),
-                    HomeFeatureTile(icon: Icons.menu_book_outlined, label: "Books"),
-                    HomeFeatureTile(icon: Icons.directions_bus_outlined, label: "Bus\nSchedule"),
-                    HomeFeatureTile(icon: Icons.sports_score_outlined, label: "Clubs"),
-                    HomeFeatureTile(icon: Icons.directions_run_outlined, label: "Festivals"),
-                    HomeFeatureTile(icon: Icons.sentiment_satisfied_outlined, label: "Attendance"),
-                  ],
-                ),
+              // MODIFICATION: Wrapped the grid in a StreamBuilder to dynamically hide/show tiles based on role
+              child: StreamBuilder(
+                  stream: userStream,
+                  builder: (context, snapshot) {
+                    final user = snapshot.data;
+                    final isTeacherOrDev = user != null && (user.role == 'teacher' || user.isDev);
+
+                    return Padding(
+                      padding: EdgeInsets.symmetric(horizontal: 20.w),
+                      child: GridView(
+                        physics: const BouncingScrollPhysics(),
+                        gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                          crossAxisCount: 4,
+                          crossAxisSpacing: 12.w,
+                          mainAxisSpacing: 16.h,
+                          mainAxisExtent: 100.h,
+                        ),
+                        children: [
+                          const HomeFeatureTile(icon: Icons.calendar_today_outlined, label: "Academic\nCalendar"),
+                          const HomeFeatureTile(icon: Icons.picture_as_pdf_outlined, label: "Notes"),
+                          const HomeFeatureTile(icon: Icons.menu_book_outlined, label: "Books"),
+                          const HomeFeatureTile(icon: Icons.directions_bus_outlined, label: "Bus\nSchedule"),
+                          const HomeFeatureTile(icon: Icons.sports_score_outlined, label: "Clubs"),
+                          const HomeFeatureTile(icon: Icons.directions_run_outlined, label: "Festivals"),
+
+                          // Render these tiles ONLY if the user is a teacher or developer
+                          if (isTeacherOrDev) ...[
+                            HomeFeatureTile(
+                              icon: Icons.sentiment_satisfied_outlined,
+                              label: "Attendance",
+                              onTap: () {
+                                Navigator.push(context, MaterialPageRoute(builder: (_) => const AttendanceSetupScreen()));
+                              },
+                            ),
+                            HomeFeatureTile(
+                              icon: Icons.ios_share_outlined,
+                              label: "Attendance\nDashboard",
+                              onTap: () {
+                                Navigator.push(context, MaterialPageRoute(builder: (_) => const AttendanceExportScreen()));
+                              },
+                            ),
+                          ],
+                        ],
+                      ),
+                    );
+                  }
               ),
             ),
           ],

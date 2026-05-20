@@ -53,6 +53,7 @@ class UpdateNoticeSheet extends StatelessWidget {
             margin: EdgeInsets.symmetric(vertical: 24.h),
             padding: EdgeInsets.all(16.w),
             width: double.infinity,
+            constraints: BoxConstraints(maxHeight: 300.h), // MODIFICATION: Constrain the maximum height
             decoration: BoxDecoration(
               color: Colors.black26,
               borderRadius: BorderRadius.circular(16.r),
@@ -60,12 +61,19 @@ class UpdateNoticeSheet extends StatelessWidget {
             ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min, // MODIFICATION: Ensure column wraps content tightly
               children: [
                 Text("Release Notes", style: TextStyle(color: const Color(0xFF1877F2), fontWeight: FontWeight.w600, fontSize: 13.sp)),
                 SizedBox(height: 8.h),
-                Text(
-                  updateInfo.releaseNotes,
-                  style: TextStyle(color: Colors.white70, fontSize: 14.sp, height: 1.4),
+                // MODIFICATION: Wrapped text in Flexible and SingleChildScrollView to allow safe scrolling
+                Flexible(
+                  child: SingleChildScrollView(
+                    physics: const BouncingScrollPhysics(),
+                    child: Text(
+                      updateInfo.releaseNotes,
+                      style: TextStyle(color: Colors.white70, fontSize: 14.sp, height: 1.4),
+                    ),
+                  ),
                 ),
               ],
             ),

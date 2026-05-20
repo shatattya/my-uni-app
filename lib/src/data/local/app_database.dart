@@ -4,24 +4,17 @@ import 'package:drift/native.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:path/path.dart' as p;
 
-// This generated file will be created in the next step
 part 'app_database.g.dart';
 
-/// 1. Schema for the User
 class Users extends Table {
-  TextColumn get id => text()(); // Firebase UID
+  TextColumn get id => text()();
   TextColumn get name => text()();
   TextColumn get internalId => text()();
   IntColumn get semester => integer()();
   TextColumn get section => text()();
-
-  // Identity Role (e.g., 'student' or 'teacher')
   TextColumn get role => text().withDefault(const Constant('student'))();
-
-  // Privilege Flags
   BoolColumn get isDev => boolean().withDefault(const Constant(false))();
   BoolColumn get isCR => boolean().withDefault(const Constant(false))();
-
   IntColumn get avatarId => integer().withDefault(const Constant(1))();
   DateTimeColumn get lastProfileUpdate => dateTime().nullable()();
 
@@ -29,19 +22,15 @@ class Users extends Table {
   Set<Column> get primaryKey => {id};
 }
 
-/// 2. Schema for Announcements
 class Announcements extends Table {
   TextColumn get id => text()();
   TextColumn get title => text()();
   TextColumn get body => text()();
   TextColumn get authorName => text()();
-
-  // COLUMNS FOR DELETION & EDITING
   TextColumn get authorUid => text().withDefault(const Constant(''))();
   BoolColumn get isDeleted => boolean().withDefault(const Constant(false))();
-
-  TextColumn get targetSemesters => text()(); // JSON list like "[1, 2]"
-  TextColumn get targetSections => text()();   // JSON list like '["A", "B"]'
+  TextColumn get targetSemesters => text()();
+  TextColumn get targetSections => text()();
   BoolColumn get isGlobal => boolean().withDefault(const Constant(false))();
   DateTimeColumn get createdAt => dateTime()();
 
@@ -49,19 +38,15 @@ class Announcements extends Table {
   Set<Column> get primaryKey => {id};
 }
 
-/// 3. Schema for the Routine
 class Routines extends Table {
   TextColumn get id => text()();
   TextColumn get subjectName => text()();
   TextColumn get teacherName => text()();
   TextColumn get teacherId => text().withDefault(const Constant(''))();
   TextColumn get roomNumber => text()();
-
   IntColumn get dayOfWeek => integer()();
-
   TextColumn get startTime => text()();
   TextColumn get endTime => text()();
-
   IntColumn get semester => integer()();
   TextColumn get section => text()();
 
@@ -69,12 +54,39 @@ class Routines extends Table {
   Set<Column> get primaryKey => {id};
 }
 
-@DriftDatabase(tables: [Users, Announcements, Routines])
+class CachedStudents extends Table {
+  TextColumn get studentId => text()();
+  TextColumn get name => text()();
+  IntColumn get semester => integer()();
+  TextColumn get section => text()();
+  DateTimeColumn get updatedAt => dateTime().nullable()();
+  BoolColumn get isActive => boolean().withDefault(const Constant(true))();
+
+  @override
+  Set<Column> get primaryKey => {studentId};
+}
+
+class AttendanceRecords extends Table {
+  TextColumn get attendanceId => text()();
+  TextColumn get subjectId => text()();
+  IntColumn get semester => integer()();
+  TextColumn get section => text()();
+  TextColumn get date => text()();
+  TextColumn get presentStudentIds => text()();
+  BoolColumn get isSynced => boolean().withDefault(const Constant(false))();
+  DateTimeColumn get createdAt => dateTime()();
+  DateTimeColumn get updatedAt => dateTime()();
+
+  @override
+  Set<Column> get primaryKey => {attendanceId};
+}
+
+@DriftDatabase(tables: [Users, Announcements, Routines, CachedStudents, AttendanceRecords])
 class AppDatabase extends _$AppDatabase {
   AppDatabase() : super(_openConnection());
 
   @override
-  int get schemaVersion => 4;
+  int get schemaVersion => 6;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -82,33 +94,41 @@ class AppDatabase extends _$AppDatabase {
       return m.createAll();
     },
     onUpgrade: (Migrator m, int from, int to) async {
+      // MODIFICATION: Wrapped all schema additions in try-catch blocks to safely
+      // ignore duplicate column/table errors caused by inconsistent dev states.
       if (from < 2) {
-        await m.addColumn(announcements, announcements.authorUid);
-        await m.addColumn(announcements, announcements.isDeleted);
-        await m.createTable(routines);
+        try { await m.addColumn(announcements, announcements.authorUid); } catch (_) {}
+        try { await m.addColumn(announcements, announcements.isDeleted); } catch (_) {}
+        try { await m.createTable(routines); } catch (_) {}
       }
       if (from < 3) {
-        await m.addColumn(users, users.isDev);
-        await m.addColumn(users, users.isCR);
+        try { await m.addColumn(users, users.isDev); } catch (_) {}
+        try { await m.addColumn(users, users.isCR); } catch (_) {}
       }
       if (from < 4) {
-        await m.addColumn(routines, routines.teacherId);
+        try { await m.addColumn(routines, routines.teacherId); } catch (_) {}
+      }
+      if (from < 5) {
+        try { await m.createTable(cachedStudents); } catch (_) {}
+        try { await m.createTable(attendanceRecords); } catch (_) {}
+      }
+      if (from < 6) {
+        try { await m.addColumn(attendanceRecords, attendanceRecords.isSynced); } catch (_) {}
       }
     },
   );
 
-  // MODIFICATION: Added a safe, atomic transaction to wipe all local tables on logout.
-  // This prevents the next logged-in user from seeing ghost data.
   Future<void> clearAllData() async {
     await transaction(() async {
       await delete(users).go();
       await delete(announcements).go();
       await delete(routines).go();
+      await delete(cachedStudents).go();
+      await delete(attendanceRecords).go();
     });
   }
 }
 
-/// Tell Drift where to store the SQLite file on the device
 LazyDatabase _openConnection() {
   return LazyDatabase(() async {
     final dbFolder = await getApplicationDocumentsDirectory();

@@ -4,7 +4,7 @@
     "teacherName": "Md. Asaduzzaman",
     "days": {
       "Sunday": {
-        "class1": { "sub": "DM", "room": "224", "sem": 3, "sec": "A" },
+        "class1": { "sub": "DM", "room": "121", "sem": 3, "sec": "A" },
         "class2": { "sub": "DLD Lab", "room": "140", "sem": 3, "sec": "A" },
         "class3": { "sub": "DS", "room": "118", "sem": 2, "sec": "A" },
         "class4": { "sub": "CP Lab", "room": "118", "sem": 1, "sec": "A" },
@@ -13,7 +13,6 @@
       "Monday": {
         "class1": { "sub": "CP", "room": "220", "sem": 1, "sec": "A" },
         "class2": { "sub": "DS", "room": "224", "sem": 2, "sec": "A" },
-        "class3": { "sub": "SDP-2", "room": "233", "sem": 6, "sec": "B" },
         "class4": { "sub": "SDP-2", "room": "233", "sem": 6, "sec": "B" },
         "class5": { "sub": "INC Lab", "room": "121", "sem": 4, "sec": "A" },
         "class6": { "sub": "INC Lab", "room": "121", "sem": 4, "sec": "A" }
@@ -21,7 +20,8 @@
       "Tuesday": {
         "class1": { "sub": "DLD", "room": "224", "sem": 3, "sec": "A" },
         "class2": { "sub": "DS", "room": "227", "sem": 2, "sec": "A" },
-        "class3": { "sub": "DM", "room": "224", "sem": 3, "sec": "A" }
+        "class3": { "sub": "DM", "room": "224", "sem": 3, "sec": "A" },
+        "class4": { "sub": "SDP-2", "room": "215", "sem": 6, "sec": "B" }
       },
       "Wednesday": {
         "class1": { "sub": "DLD", "room": "220", "sem": 3, "sec": "A" },
@@ -48,12 +48,11 @@
         "class6": { "sub": "INC", "room": "219", "sem": 4, "sec": "B" }
       },
       "Monday": {
-        "class1": { "sub": "TC Lab", "room": "118", "sem": 7, "sec": "B" },
-        "class2": { "sub": "TC Lab", "room": "118", "sem": 7, "sec": "A" },
+        "class1": { "sub": "TC", "room": "221", "sem": 7, "sec": "A" },
         "class6": { "sub": "C++", "room": "224", "sem": 2, "sec": "A" }
       },
       "Tuesday": {
-        "class1": { "sub": "TC", "room": "219", "sem": 7, "sec": "A" },
+        
         "class3": { "sub": "C++ Lab", "room": "118", "sem": 2, "sec": "A" },
         "class4": { "sub": "C++ Lab", "room": "118", "sem": 2, "sec": "A" },
         "class5": { "sub": "INC Lab", "room": "121", "sem": 4, "sec": "B" },
@@ -62,6 +61,7 @@
       "Wednesday": {
         "class1": { "sub": "TOC", "room": "215", "sem": 6, "sec": "C" },
         "class2": { "sub": "TOC", "room": "215", "sem": 6, "sec": "C" },
+        "class3": { "sub": "INC", "room": "221", "sem": 4, "sec": "A" },
         "class5": { "sub": "CN Lab", "room": "118", "sem": 6, "sec": "C" },
         "class4": { "sub": "TC", "room": "233", "sem": 7, "sec": "A" }
       },
@@ -69,6 +69,7 @@
         "class1": { "sub": "TC", "room": "223", "sem": 7, "sec": "B" },
         "class2": { "sub": "TC", "room": "233", "sem": 7, "sec": "B" },
         "class3": { "sub": "INC", "room": "221", "sem": 4, "sec": "B" },
+        "class4": { "sub": "INC", "room": "215", "sem": 4, "sec": "A" },
         "class6": { "sub": "C++", "room": "219", "sem": 2, "sec": "A" }
       }
     }
@@ -82,7 +83,7 @@
         "class2": { "sub": "AI", "room": "233", "sem": 6, "sec": "B" }
       },
       "Wednesday": {
-        "class1": { "sub": "AI Lab", "room": "121", "sem": 6, "sec": "B" },
+        "class1": { "sub": "AI", "room": "121", "sem": 6, "sec": "B" },
         "class2": { "sub": "AI", "room": "121", "sem": 6, "sec": "B" },
         "class3": { "sub": "AI", "room": "121", "sem": 6, "sec": "A" },
         "class4": { "sub": "AI Lab", "room": "121", "sem": 6, "sec": "A" },
@@ -96,8 +97,7 @@
     "teacherName": "Ferdous Ara",
     "days": {
       "Sunday": {
-        "class4": { "sub": "DES", "room": "224", "sem": 8, "sec": "B" },
-        "class5": { "sub": "SAD", "room": "223", "sem": 5, "sec": "B" }
+        "class4": { "sub": "DES", "room": "224", "sem": 8, "sec": "B" }
       },
       "Monday": {
         "class2": { "sub": "SAD", "room": "215", "sem": 5, "sec": "B" },
@@ -227,7 +227,7 @@
         "class5": { "sub": "PHY-2", "room": "227", "sem": 2, "sec": "A" }
       },
       "Wednesday": {
-        "class1": { "sub": "PHY-1", "room": "228", "sem": 1, "sec": "A" },
+        "class6": { "sub": "PHY-1", "room": "228", "sem": 1, "sec": "A" },
         "class3": { "sub": "NA", "room": "219", "sem": 4, "sec": "B" },
         "class4": { "sub": "NA", "room": "221", "sem": 4, "sec": "A" }
       },
@@ -306,12 +306,12 @@
       "Monday": {
         "class2": { "sub": "ML", "room": "220", "sem": 7, "sec": "B" },
         "class3": { "sub": "ML", "room": "220", "sem": 7, "sec": "B" },
-        "class4": { "sub": "OS Lab", "room": "118", "sem": 5, "sec": "A" }
+        "class1": { "sub": "OS", "room": "228", "sem": 5, "sec": "A" }
       },
       "Tuesday": {
         "class2": { "sub": "OS", "room": "228", "sem": 5, "sec": "B" },
         "class3": { "sub": "OS", "room": "228", "sem": 5, "sec": "B" },
-        "class4": { "sub": "OS", "room": "221", "sem": 5, "sec": "A" },
+        "class5": { "sub": "SDP-2", "room": "228", "sem": 6, "sec": "C" },
         "class6": { "sub": "OS Lab", "room": "118", "sem": 5, "sec": "B" }
       },
       "Wednesday": {
@@ -324,7 +324,7 @@
         "class3": { "sub": "ML Lab", "room": "121", "sem": 7, "sec": "A" },
         "class4": { "sub": "ML Lab", "room": "121", "sem": 7, "sec": "A" },
         "class5": { "sub": "SDP-2", "room": "228", "sem": 6, "sec": "C" },
-        "class6": { "sub": "SDP-2", "room": "228", "sem": 6, "sec": "C" }
+        "class6": { "sub": "OS Lab", "room": "118", "sem": 5, "sec": "A" }
       }
     }
   },
@@ -347,13 +347,13 @@
         "class2": { "sub": "CG", "room": "227", "sem": 8, "sec": "B" },
         "class3": { "sub": "CG", "room": "227", "sem": 8, "sec": "B" },
         "class5": { "sub": "CG Lab", "room": "121", "sem": 8, "sec": "B" },
-        "class6": { "sub": "SIM", "room": "121", "sem": 6, "sec": "A" }
+        "class6": { "sub": "SIM", "room": "221", "sem": 6, "sec": "A" }
 
       },
       "Monday": {
         "class2": { "sub": "CG", "room": "219", "sem": 8, "sec": "B" },
-        "class3": { "sub": "MP Lab", "room": "126", "sem": 5, "sec": "B" },
-        "class4": { "sub": "MP Lab", "room": "126", "sem": 5, "sec": "B" }
+        "class3": { "sub": "MP Lab", "room": "121", "sem": 5, "sec": "B" },
+        "class4": { "sub": "MP Lab", "room": "121", "sem": 5, "sec": "B" }
       },
       "Tuesday": {
         "class3": { "sub": "SIM", "room": "233", "sem": 6, "sec": "C" },
@@ -407,6 +407,7 @@
         "class5": { "sub": "MATH-3", "room": "223", "sem": 3, "sec": "A" }
       },
       "Tuesday": {
+        "class1": { "sub": "MATH-4", "room": "220", "sem": 4, "sec": "B" },
         "class4": { "sub": "MATH-3", "room": "224", "sem": 3, "sec": "A" },
         "class6": { "sub": "STAT", "room": "224", "sem": 3, "sec": "A" }
       },
@@ -417,7 +418,6 @@
         "class5": { "sub": "MATH-4", "room": "221", "sem": 4, "sec": "A" }
       },
       "Thursday": {
-        "class1": { "sub": "MATH-4", "room": "221", "sem": 4, "sec": "B" },
         "class2": { "sub": "MATH-4", "room": "215", "sem": 4, "sec": "A" },
         "class3": { "sub": "MATH-2", "room": "219", "sem": 2, "sec": "A" }
       }
@@ -437,7 +437,7 @@
       "Monday": {
         "class2": { "sub": "SE", "room": "223", "sem": 6, "sec": "C" },
         "class3": { "sub": "SE", "room": "223", "sem": 6, "sec": "C" },
-        "class4": { "sub": "COM", "room": "219", "sem": 7, "sec": "A" },
+        "class4": { "sub": "COM", "room": "215", "sem": 7, "sec": "A" },
         "class5": { "sub": "SE", "room": "227", "sem": 6, "sec": "B" },
         "class6": { "sub": "SE", "room": "227", "sem": 6, "sec": "B" }
       },
@@ -449,8 +449,8 @@
         "class5": { "sub": "COM", "room": "219", "sem": 7, "sec": "A" }
       },
       "Wednesday": {
-        "class5": { "sub": "CF", "room": "228", "sem": 1, "sec": "A" },
-        "class6": { "sub": "CF", "room": "228", "sem": 1, "sec": "A" }
+        "class1": { "sub": "CF", "room": "228", "sem": 1, "sec": "A" },
+        "class2": { "sub": "CF", "room": "228", "sem": 1, "sec": "A" }
       },
       "Thursday": {
         "class2": { "sub": "SE", "room": "223", "sem": 6, "sec": "A" },
@@ -470,13 +470,13 @@
         "class4": { "sub": "CA", "room": "219", "sem": 4, "sec": "A" }
       },
       "Monday": {
-        "class2": { "sub": "CA", "room": "227", "sem": 4, "sec": "A" }
+        "class2": { "sub": "CA", "room": "227", "sem": 4, "sec": "A" },
+        "class3": { "sub": "CN", "room": "233", "sem": 6, "sec": "B" }
       },
       "Tuesday": {
         "class1": { "sub": "CN Lab", "room": "121", "sem": 6, "sec": "A" },
-        "class2": { "sub": "CN", "room": "221", "sem": 6, "sec": "A" },
-        "class4": { "sub": "CN", "room": "215", "sem": 6, "sec": "B" },
-        "class5": { "sub": "TOC", "room": "223", "sem": 6, "sec": "A" }
+        "class2": { "sub": "CN", "room": "221", "sem": 6, "sec": "A" }
+        
       },
       "Wednesday": {
         "class4": { "sub": "CN", "room": "126", "sem": 6, "sec": "B" },
@@ -484,6 +484,7 @@
         "class6": { "sub": "TOC", "room": "224", "sem": 6, "sec": "B" }
       },
       "Thursday": {
+        "class1": { "sub": "TOC", "room": "215", "sem": 6, "sec": "A" },
         "class3": { "sub": "CN", "room": "223", "sem": 6, "sec": "A" },
         "class4": { "sub": "CN", "room": "223", "sem": 6, "sec": "A" },
         "class5": { "sub": "CA Lab", "room": "118", "sem": 4, "sec": "A" }
@@ -534,7 +535,7 @@
         "class3": { "sub": "DBMS Lab", "room": "121", "sem": 5, "sec": "B" },
         "class4": { "sub": "DBMS Lab", "room": "121", "sem": 5, "sec": "B" },
         "class5": { "sub": "CNS", "room": "215", "sem": 7, "sec": "B" },
-        "class6": { "sub": "CNS", "room": "215", "sem": 7, "sec": "A" }
+        "class6": { "sub": "CNS", "room": "220", "sem": 7, "sec": "A" }
 
       },
       "Monday": {
@@ -547,7 +548,7 @@
         "class3": { "sub": "SDP-2", "room": "223", "sem": 6, "sec": "A" },
         "class4": { "sub": "SDP-2", "room": "223", "sem": 6, "sec": "A" },
         "class5": { "sub": "DBMS", "room": "228", "sem": 5, "sec": "B" },
-        "class6": { "sub": "CNS", "room": "220", "sem": 7, "sec": "B" }
+        "class2": { "sub": "CNS", "room": "220", "sem": 7, "sec": "B" }
       },
       "Wednesday": {
         "class1": { "sub": "CNS", "room": "233", "sem": 7, "sec": "A" },
@@ -565,3 +566,4 @@
     }
   }
 ]
+

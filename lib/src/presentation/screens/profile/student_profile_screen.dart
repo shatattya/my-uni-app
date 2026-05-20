@@ -1,30 +1,50 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart'; // ADDED: For iOS Haptic Feedback
 import 'package:firebase_auth/firebase_auth.dart' as firebase_auth;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart'; // Added ScreenUtil
 
 import '../../../data/repositories/user_repository.dart';
+import '../../../data/local/app_database.dart'; // ADDED: To resolve Drift User type
 import 'edit_student_profile_screen.dart';
 import '../auth/auth_wrapper.dart';
 import '../../../providers/sync_controller.dart';
 import '../../widgets/developer_panel_sheet.dart'; // MODIFICATION: Import the new Dev Menu
 import '../../../services/auth_service.dart'; // Added: Import AuthService for secure logout
 
-class StudentProfileScreen extends ConsumerWidget {
+class StudentProfileScreen extends ConsumerStatefulWidget {
   const StudentProfileScreen({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<StudentProfileScreen> createState() => _StudentProfileScreenState();
+}
+
+class _StudentProfileScreenState extends ConsumerState<StudentProfileScreen> {
+  late Stream<User?> _userStream;
+
+  @override
+  void initState() {
+    super.initState();
+    final firebaseUser = firebase_auth.FirebaseAuth.instance.currentUser;
+
+    // MEMORY FIX: Initialize stream exactly once
+    if (firebaseUser != null) {
+      _userStream = ref.read(userRepositoryProvider).watchUser(firebaseUser.uid);
+    } else {
+      _userStream = const Stream.empty();
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final firebaseUser = firebase_auth.FirebaseAuth.instance.currentUser;
     if (firebaseUser == null) return Center(child: Text("Not logged in", style: TextStyle(fontSize: 16.sp, color: Colors.white)));
-
-    final userStream = ref.watch(userRepositoryProvider).watchUser(firebaseUser.uid);
 
     return Scaffold(
       backgroundColor: Colors.black,
       body: SafeArea(
-        child: StreamBuilder(
-          stream: userStream,
+        child: StreamBuilder<User?>(
+          stream: _userStream, // Using the cached stream
           builder: (context, snapshot) {
             if (snapshot.connectionState == ConnectionState.waiting) {
               return const Center(child: CircularProgressIndicator(color: Color(0xFF1877F2)));
@@ -80,6 +100,7 @@ class StudentProfileScreen extends ConsumerWidget {
                       icon: Icon(Icons.developer_mode, color: Colors.amber, size: 22.sp),
                       label: Text("Developer Panel", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14.sp)),
                       onPressed: () {
+                        HapticFeedback.mediumImpact(); // iOS UX
                         DeveloperPanelSheet.show(context);
                       },
                     ),
@@ -89,6 +110,7 @@ class StudentProfileScreen extends ConsumerWidget {
 
                   GestureDetector(
                     onTap: () async {
+                      HapticFeedback.mediumImpact(); // iOS UX
                       // MODIFICATION: Use the centralized secure sign-out to wipe DB and clear FCM token
                       await ref.read(authServiceProvider).signOut();
                       if (!context.mounted) return;
@@ -131,6 +153,7 @@ class StudentProfileScreen extends ConsumerWidget {
                                 action: syncState.isLoading ? "Syncing..." : "Sync",
                                 color: syncState.isLoading ? Colors.white54 : const Color(0xFF1877F2),
                                 onTap: syncState.isLoading ? () {} : () async {
+                                  HapticFeedback.lightImpact(); // iOS UX
                                   try {
                                     await ref.read(syncControllerProvider.notifier).syncAllData();
                                     if (context.mounted) {
@@ -155,7 +178,10 @@ class StudentProfileScreen extends ConsumerWidget {
                           title: "Edit Profile",
                           action: "Edit",
                           color: const Color(0xFF1877F2),
-                          onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const EditStudentProfileScreen())),
+                          onTap: () {
+                            HapticFeedback.lightImpact(); // iOS UX
+                            Navigator.push(context, MaterialPageRoute(builder: (_) => const EditStudentProfileScreen()));
+                          },
                         ),
                         SizedBox(height: 25.h),
                         _actionRow(
@@ -163,7 +189,10 @@ class StudentProfileScreen extends ConsumerWidget {
                           title: "Delete Account",
                           action: "Delete",
                           color: Colors.redAccent,
-                          onTap: () {},
+                          onTap: () {
+                            HapticFeedback.heavyImpact(); // iOS UX
+                            // Delete account logic placeholder
+                          },
                         ),
                       ],
                     ),

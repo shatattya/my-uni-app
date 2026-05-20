@@ -41,3 +41,6 @@ android/app/build/
 *.iml
 .DS_Store
 *.log
+
+.idea/
+*.xml

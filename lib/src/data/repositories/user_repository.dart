@@ -54,6 +54,7 @@ class UserRepository {
       final email = currentUser.email ?? "";
       Map<String, dynamic>? data;
       String resolvedInternalId = "";
+      bool fetchFailed = false; // Added to track network/firestore errors
 
       try {
         // 1. Direct Document Fetch
@@ -88,6 +89,7 @@ class UserRepository {
         }
       } catch (firestoreError) {
         print("DEBUG: Firestore fetch failed: $firestoreError");
+        fetchFailed = true; // Mark that the fetch threw an error (e.g., offline)
       }
 
       if (data != null) {
@@ -125,17 +127,19 @@ class UserRepository {
             lastProfileUpdate: Value(lastUpdate),
           ),
         );
+      } else if (fetchFailed) {
+        // Prevent aggressive logout if the device is simply offline or Firestore failed
+        print("DEBUG: Sync failed due to network or Firestore error. Retaining session.");
+        throw Exception("Network error or offline. Could not sync profile.");
       } else {
+        // Only log out if fetch succeeded but user genuinely doesn't exist in DB
         print("DEBUG: Sync failed. User document does not exist.");
         await firebase_auth.FirebaseAuth.instance.signOut();
         throw Exception("Profile data missing. You have been safely logged out.");
       }
     } catch (e) {
       print("DEBUG: User Sync error: $e");
-      // Only force sign out if the user is actually still logged in.
-      if (firebase_auth.FirebaseAuth.instance.currentUser != null) {
-        await firebase_auth.FirebaseAuth.instance.signOut();
-      }
+      // Removed the forced sign-out here to prevent offline logout traps
       rethrow;
     }
   }

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart'; // ADDED: For Haptic Feedback
 import 'package:flutter_screenutil/flutter_screenutil.dart'; // Added
 import '../../../services/auth_service.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -23,8 +24,9 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     final password = passwordController.text.trim();
 
     if (idOrEmail.isEmpty || password.isEmpty) {
+      HapticFeedback.heavyImpact(); // iOS UX warning
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Please enter your credentials")),
+        const SnackBar(content: Text("Please enter your credentials"), backgroundColor: Colors.redAccent),
       );
       return;
     }
@@ -36,6 +38,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
       await authService.login(idOrEmail: idOrEmail, password: password);
       if (!mounted) return;
 
+      HapticFeedback.mediumImpact(); // iOS UX success
       Navigator.pushReplacementNamed(context, "/home");
 
     } on FirebaseAuthException catch (e) {
@@ -46,13 +49,15 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
       if (e.code == 'wrong-password') message = "Incorrect password";
       if (e.code == 'invalid-teacher-email') message = "Teachers must use @bgctub.ac.bd email";
 
+      HapticFeedback.heavyImpact(); // iOS UX error
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(message)),
+        SnackBar(content: Text(message), backgroundColor: Colors.redAccent),
       );
     } catch (e) {
       setState(() => isLoading = false); // MODIFICATION: Stop loading on any other error
+      HapticFeedback.heavyImpact(); // iOS UX error
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(e.toString().split(']').last)),
+        SnackBar(content: Text(e.toString().split(']').last), backgroundColor: Colors.redAccent),
       );
     }
   }
@@ -66,130 +71,135 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: Colors.black,
-      body: SafeArea(
-        child: SingleChildScrollView(
-          padding: EdgeInsets.symmetric(horizontal: 28.w), // Scaled
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              SizedBox(height: 30.h), // Scaled
+    // MODIFICATION: Wrap Scaffold in GestureDetector for global keyboard dismissal
+    return GestureDetector(
+      onTap: () => FocusScope.of(context).unfocus(),
+      child: Scaffold(
+        backgroundColor: Colors.black,
+        body: SafeArea(
+          child: SingleChildScrollView(
+            padding: EdgeInsets.symmetric(horizontal: 28.w), // Scaled
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                SizedBox(height: 30.h), // Scaled
 
-              /// Illustration
-              Center(
-                child: Image.asset(
-                  "assets/images/login_illustration.png",
-                  height: 260.h, // Scaled
-                ),
-              ),
-
-              SizedBox(height: 40.h), // Scaled
-
-              /// ID Label
-              Text(
-                "Internal ID or University Mail (For Teachers Only)",
-                style: TextStyle(
-                  color: Colors.white,
-                  fontSize: 14.sp, // Scaled and refined slightly for elegance
-                ),
-              ),
-
-              SizedBox(height: 12.h), // Scaled
-
-              /// ID Field
-              TextField(
-                controller: idController,
-                style: TextStyle(color: Colors.black, fontSize: 16.sp), // Scaled
-                decoration: InputDecoration(
-                  hintText: "ex : 230241123",
-                  hintStyle: TextStyle(color: Colors.black54, fontSize: 16.sp), // Scaled
-                  filled: true,
-                  fillColor: const Color(0xFFE0E0E0),
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(16.r), // Scaled
-                    borderSide: BorderSide.none,
-                  ),
-                  contentPadding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 16.h), // Scaled
-                ),
-              ),
-
-              SizedBox(height: 30.h), // Scaled
-
-              /// Password Label
-              Text(
-                "Password",
-                style: TextStyle(
-                  color: Colors.white,
-                  fontSize: 16.sp, // Scaled
-                ),
-              ),
-
-              SizedBox(height: 12.h), // Scaled
-
-              /// Password Field
-              TextField(
-                controller: passwordController,
-                obscureText: _obscurePassword,
-                style: TextStyle(color: Colors.black, fontSize: 16.sp), // Scaled
-                decoration: InputDecoration(
-                  hintText: "********",
-                  hintStyle: TextStyle(color: Colors.black54, fontSize: 16.sp), // Scaled
-                  filled: true,
-                  fillColor: const Color(0xFFE0E0E0),
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(16.r), // Scaled
-                    borderSide: BorderSide.none,
-                  ),
-                  contentPadding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 16.h), // Scaled
-                  suffixIcon: IconButton(
-                    icon: Icon(
-                      _obscurePassword ? Icons.visibility_off : Icons.visibility,
-                      color: Colors.grey,
-                      size: 24.sp, // Scaled
-                    ),
-                    onPressed: () {
-                      setState(() {
-                        _obscurePassword = !_obscurePassword;
-                      });
-                    },
+                /// Illustration
+                Center(
+                  child: Image.asset(
+                    "assets/images/login_illustration.png",
+                    height: 260.h, // Scaled
                   ),
                 ),
-              ),
 
-              SizedBox(height: 60.h), // Scaled
+                SizedBox(height: 40.h), // Scaled
 
-              /// Login Button
-              SizedBox(
-                width: double.infinity,
-                height: 56.h, // Scaled
-                child: ElevatedButton(
-                  onPressed: isLoading ? null : handleLogin, // MODIFICATION: Disable while loading
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFF1877F2), // Premium Blue
-                    shape: RoundedRectangleBorder(
+                /// ID Label
+                Text(
+                  "Internal ID or University Mail (For Teachers Only)",
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 14.sp, // Scaled and refined slightly for elegance
+                  ),
+                ),
+
+                SizedBox(height: 12.h), // Scaled
+
+                /// ID Field
+                TextField(
+                  controller: idController,
+                  style: TextStyle(color: Colors.black, fontSize: 16.sp), // Scaled
+                  decoration: InputDecoration(
+                    hintText: "ex : 230241123",
+                    hintStyle: TextStyle(color: Colors.black54, fontSize: 16.sp), // Scaled
+                    filled: true,
+                    fillColor: const Color(0xFFE0E0E0),
+                    border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(16.r), // Scaled
+                      borderSide: BorderSide.none,
                     ),
+                    contentPadding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 16.h), // Scaled
                   ),
-                  child: isLoading // MODIFICATION: Show loading indicator if true
-                      ? SizedBox(
-                    height: 20.h,
-                    width: 20.h,
-                    child: const CircularProgressIndicator(color: Colors.white, strokeWidth: 2),
-                  )
-                      : Text(
-                    "Log in",
-                    style: TextStyle(
-                        fontSize: 18.sp, // Scaled
-                        fontWeight: FontWeight.w600,
-                        color: Colors.white // Better contrast for premium blue
+                ),
+
+                SizedBox(height: 30.h), // Scaled
+
+                /// Password Label
+                Text(
+                  "Password",
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 16.sp, // Scaled
+                  ),
+                ),
+
+                SizedBox(height: 12.h), // Scaled
+
+                /// Password Field
+                TextField(
+                  controller: passwordController,
+                  obscureText: _obscurePassword,
+                  style: TextStyle(color: Colors.black, fontSize: 16.sp), // Scaled
+                  decoration: InputDecoration(
+                    hintText: "********",
+                    hintStyle: TextStyle(color: Colors.black54, fontSize: 16.sp), // Scaled
+                    filled: true,
+                    fillColor: const Color(0xFFE0E0E0),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(16.r), // Scaled
+                      borderSide: BorderSide.none,
+                    ),
+                    contentPadding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 16.h), // Scaled
+                    suffixIcon: IconButton(
+                      icon: Icon(
+                        _obscurePassword ? Icons.visibility_off : Icons.visibility,
+                        color: Colors.grey,
+                        size: 24.sp, // Scaled
+                      ),
+                      onPressed: () {
+                        HapticFeedback.selectionClick(); // iOS UX toggle
+                        setState(() {
+                          _obscurePassword = !_obscurePassword;
+                        });
+                      },
                     ),
                   ),
                 ),
-              ),
 
-              SizedBox(height: 30.h), // Scaled
-            ],
+                SizedBox(height: 60.h), // Scaled
+
+                /// Login Button
+                SizedBox(
+                  width: double.infinity,
+                  height: 56.h, // Scaled
+                  child: ElevatedButton(
+                    onPressed: isLoading ? null : handleLogin, // MODIFICATION: Disable while loading
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: const Color(0xFF1877F2), // Premium Blue
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(16.r), // Scaled
+                      ),
+                    ),
+                    child: isLoading // MODIFICATION: Show loading indicator if true
+                        ? SizedBox(
+                      height: 20.h,
+                      width: 20.h,
+                      child: const CircularProgressIndicator(color: Colors.white, strokeWidth: 2),
+                    )
+                        : Text(
+                      "Log in",
+                      style: TextStyle(
+                          fontSize: 18.sp, // Scaled
+                          fontWeight: FontWeight.w600,
+                          color: Colors.white // Better contrast for premium blue
+                      ),
+                    ),
+                  ),
+                ),
+
+                SizedBox(height: 30.h), // Scaled
+              ],
+            ),
           ),
         ),
       ),

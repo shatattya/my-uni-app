@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/cupertino.dart'; // ADDED: For iOS Action Sheet
+import 'package:flutter/services.dart'; // ADDED: For Haptic Feedback
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:intl/intl.dart';
@@ -84,6 +86,7 @@ class _NoticeTabState extends ConsumerState<NoticeTab> {
             elevation: 4,
             child: Icon(Icons.add, color: Colors.white, size: 28.sp),
             onPressed: () {
+              HapticFeedback.lightImpact(); // iOS UX
               Navigator.push(
                 context,
                 MaterialPageRoute(
@@ -117,7 +120,10 @@ class _NoticeTabState extends ConsumerState<NoticeTab> {
 
               return RefreshIndicator(
                 color: const Color(0xFF1877F2),
-                onRefresh: () => ref.read(announcementRepositoryProvider).syncAnnouncements(),
+                onRefresh: () async {
+                  HapticFeedback.lightImpact(); // iOS UX
+                  await ref.read(announcementRepositoryProvider).syncAnnouncements();
+                },
                 child: ListView.builder(
                   padding: EdgeInsets.all(16.w), // Scaled padding
                   itemCount: notices.length,
@@ -240,6 +246,7 @@ class _NoticeTabState extends ConsumerState<NoticeTab> {
                               borderRadius: BorderRadius.circular(6.r),
                               splashColor: Colors.blueAccent.withValues(alpha: 0.1),
                               onTap: () {
+                                HapticFeedback.lightImpact(); // iOS UX
                                 Navigator.push(
                                   context,
                                   MaterialPageRoute(
@@ -268,7 +275,10 @@ class _NoticeTabState extends ConsumerState<NoticeTab> {
                             child: InkWell(
                               borderRadius: BorderRadius.circular(6.r),
                               splashColor: Colors.redAccent.withValues(alpha: 0.1),
-                              onTap: () => _showDeleteConfirmation(context, notice.id),
+                              onTap: () {
+                                HapticFeedback.mediumImpact(); // iOS UX
+                                _showDeleteConfirmation(context, notice.id);
+                              },
                               child: Padding(
                                 padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 4.h), // Scaled
                                 child: Row(
@@ -294,30 +304,26 @@ class _NoticeTabState extends ConsumerState<NoticeTab> {
     );
   }
 
+  // MODIFICATION: iOS Action Sheet Implementation
   void _showDeleteConfirmation(BuildContext context, String noticeId) {
-    showDialog(
+    showCupertinoModalPopup(
       context: context,
-      builder: (context) => AlertDialog(
-        backgroundColor: const Color(0xFF1E1E1E),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16.r)), // Scaled
+      builder: (BuildContext context) => CupertinoActionSheet(
         title: Text(
           "Delete Announcement?",
-          style: TextStyle(color: Colors.white, fontSize: 18.sp),
+          style: TextStyle(fontSize: 16.sp, fontWeight: FontWeight.w600),
         ),
-        content: Text(
-          "This will remove the announcement from the feed.",
-          style: TextStyle(color: Colors.white70, fontSize: 14.sp),
+        message: Text(
+          "This will remove the announcement from the feed permanently.",
+          style: TextStyle(fontSize: 14.sp),
         ),
         actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: Text("Cancel", style: TextStyle(color: Colors.white54, fontSize: 16.sp)),
-          ),
-          TextButton(
+          CupertinoActionSheetAction(
+            isDestructiveAction: true,
             onPressed: () async {
-              Navigator.pop(context); // Close dialog first
+              HapticFeedback.heavyImpact(); // iOS UX - Confirm Destructive Action
+              Navigator.pop(context); // Close sheet first
 
-              // MODIFICATION: Added bug-fix for silent deletion handling
               try {
                 await ref.read(announcementRepositoryProvider).softDeleteAnnouncement(noticeId);
                 if (context.mounted) {
@@ -333,9 +339,16 @@ class _NoticeTabState extends ConsumerState<NoticeTab> {
                 }
               }
             },
-            child: Text("Delete", style: TextStyle(color: Colors.redAccent, fontSize: 16.sp)),
+            child: Text("Delete", style: TextStyle(fontSize: 18.sp)),
           ),
         ],
+        cancelButton: CupertinoActionSheetAction(
+          isDefaultAction: true,
+          onPressed: () {
+            Navigator.pop(context);
+          },
+          child: Text("Cancel", style: TextStyle(fontSize: 18.sp, color: const Color(0xFF1877F2))),
+        ),
       ),
     );
   }

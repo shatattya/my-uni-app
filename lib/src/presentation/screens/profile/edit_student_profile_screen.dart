@@ -94,10 +94,12 @@ class _EditStudentProfileScreenState extends ConsumerState<EditStudentProfileScr
         setState(() => _isUpdating = false); // Release the lock
 
         if (next.hasError) {
+          if (!context.mounted) return; // Prevent crash if user swiped back
           ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(content: Text(next.error.toString().replaceAll("Exception: ", "")), backgroundColor: Colors.redAccent)
           );
         } else if (next.hasValue) {
+          if (!context.mounted) return; // Prevent crash if user swiped back
           Navigator.pop(context);
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(content: Text("Profile updated successfully!"), backgroundColor: Colors.green),
@@ -106,86 +108,90 @@ class _EditStudentProfileScreenState extends ConsumerState<EditStudentProfileScr
       }
     });
 
-    return Scaffold(
-      backgroundColor: Colors.black,
-      appBar: AppBar(backgroundColor: Colors.black, elevation: 0),
-      body: SingleChildScrollView(
-        padding: EdgeInsets.symmetric(horizontal: 28.w),
-        child: Column(
-          children: [
-            Center(
-              child: Stack(
-                alignment: Alignment.center,
-                children: [
-                  CircleAvatar(
-                    radius: 60.r,
-                    backgroundColor: Colors.white,
-                    child: CircleAvatar(
-                      radius: 58.r,
-                      backgroundColor: Colors.black,
-                      backgroundImage: AssetImage("assets/avatars/$formattedAvatarId.png"),
+    // iOS UX FIX: Wrap Scaffold in GestureDetector to dismiss keyboard on tap outside
+    return GestureDetector(
+      onTap: () => FocusScope.of(context).unfocus(),
+      child: Scaffold(
+        backgroundColor: Colors.black,
+        appBar: AppBar(backgroundColor: Colors.black, elevation: 0),
+        body: SingleChildScrollView(
+          padding: EdgeInsets.symmetric(horizontal: 28.w),
+          child: Column(
+            children: [
+              Center(
+                child: Stack(
+                  alignment: Alignment.center,
+                  children: [
+                    CircleAvatar(
+                      radius: 60.r,
+                      backgroundColor: Colors.white,
+                      child: CircleAvatar(
+                        radius: 58.r,
+                        backgroundColor: Colors.black,
+                        backgroundImage: AssetImage("assets/avatars/$formattedAvatarId.png"),
+                      ),
                     ),
-                  ),
-                ],
-              ),
-            ),
-            SizedBox(height: 16.h),
-            GestureDetector(
-              onTap: () {
-                AvatarPickerSheet.show(context, userRole, (id) {
-                  setState(() => currentAvatarId = id);
-                });
-              },
-              child: Text("Change Picture", style: TextStyle(color: const Color(0xFF1877F2), fontSize: 16.sp)),
-            ),
-            SizedBox(height: 30.h),
-
-            _buildField("Full Name", nameController),
-            _buildField("Semester", semesterController, isNumber: true),
-            _buildField("Section", sectionController),
-
-            Divider(color: Colors.white24, thickness: 1, height: 40.h),
-
-            _buildField(
-                "Current Password (Required if changing password)",
-                currentPasswordController,
-                isPassword: true,
-                obscureText: _obscureCurrent,
-                onToggleVisibility: () => setState(() => _obscureCurrent = !_obscureCurrent)
-            ),
-            _buildField(
-                "New Password",
-                passwordController,
-                isPassword: true,
-                obscureText: _obscureNew,
-                onToggleVisibility: () => setState(() => _obscureNew = !_obscureNew)
-            ),
-            _buildField(
-                "Confirm New Password",
-                confirmPasswordController,
-                isPassword: true,
-                obscureText: _obscureConfirm,
-                onToggleVisibility: () => setState(() => _obscureConfirm = !_obscureConfirm)
-            ),
-
-            SizedBox(height: 40.h),
-
-            SizedBox(
-              width: double.infinity,
-              height: 56.h,
-              child: ElevatedButton(
-                onPressed: _isUpdating ? null : handleUpdate,
-                style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFF1877F2),
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16.r))
+                  ],
                 ),
-                child: _isUpdating
-                    ? SizedBox(height: 20.h, width: 20.h, child: const CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
-                    : Text("Update", style: TextStyle(color: Colors.white, fontSize: 18.sp, fontWeight: FontWeight.w600)),
               ),
-            ),
-            SizedBox(height: 40.h),
-          ],
+              SizedBox(height: 16.h),
+              GestureDetector(
+                onTap: () {
+                  AvatarPickerSheet.show(context, userRole, (id) {
+                    setState(() => currentAvatarId = id);
+                  });
+                },
+                child: Text("Change Picture", style: TextStyle(color: const Color(0xFF1877F2), fontSize: 16.sp)),
+              ),
+              SizedBox(height: 30.h),
+
+              _buildField("Full Name", nameController),
+              _buildField("Semester", semesterController, isNumber: true),
+              _buildField("Section", sectionController),
+
+              Divider(color: Colors.white24, thickness: 1, height: 40.h),
+
+              _buildField(
+                  "Current Password (Required if changing password)",
+                  currentPasswordController,
+                  isPassword: true,
+                  obscureText: _obscureCurrent,
+                  onToggleVisibility: () => setState(() => _obscureCurrent = !_obscureCurrent)
+              ),
+              _buildField(
+                  "New Password",
+                  passwordController,
+                  isPassword: true,
+                  obscureText: _obscureNew,
+                  onToggleVisibility: () => setState(() => _obscureNew = !_obscureNew)
+              ),
+              _buildField(
+                  "Confirm New Password",
+                  confirmPasswordController,
+                  isPassword: true,
+                  obscureText: _obscureConfirm,
+                  onToggleVisibility: () => setState(() => _obscureConfirm = !_obscureConfirm)
+              ),
+
+              SizedBox(height: 40.h),
+
+              SizedBox(
+                width: double.infinity,
+                height: 56.h,
+                child: ElevatedButton(
+                  onPressed: _isUpdating ? null : handleUpdate,
+                  style: ElevatedButton.styleFrom(
+                      backgroundColor: const Color(0xFF1877F2),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16.r))
+                  ),
+                  child: _isUpdating
+                      ? SizedBox(height: 20.h, width: 20.h, child: const CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
+                      : Text("Update", style: TextStyle(color: Colors.white, fontSize: 18.sp, fontWeight: FontWeight.w600)),
+                ),
+              ),
+              SizedBox(height: 40.h),
+            ],
+          ),
         ),
       ),
     );
