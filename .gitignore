@@ -44,3 +44,5 @@ android/app/build/
 
 .idea/
 *.xml
+
+assets/data/routine.json
