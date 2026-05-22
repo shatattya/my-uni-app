@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart'; // ADDED: For Haptic Feedback
+import 'package:flutter/services.dart'; // ADDED: For Haptic Feedback and InputFormatters
 import 'package:flutter_screenutil/flutter_screenutil.dart'; // Added
 import '../../../services/auth_service.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -36,9 +36,10 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
 
   void validateName(String value) {
     if (value.isEmpty) { setState(() => nameError = null); return; }
-    final regex = RegExp(r'^[a-zA-Z. ]+$');
+    // UX ENHANCEMENT: Restrict strictly to letters and spaces matching the input formatter
+    final regex = RegExp(r'^[a-zA-Z ]+$');
     if (!regex.hasMatch(value)) {
-      setState(() => nameError = "Name can only contain letters, spaces, and periods");
+      setState(() => nameError = "Name can only contain letters and spaces");
       return;
     }
     setState(() => nameError = null);
@@ -93,12 +94,8 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
 
   void validateSection(String value) {
     if (value.isEmpty) { setState(() => sectionError = null); return; }
-    String upper = value.toUpperCase();
-    sectionController.value = sectionController.value.copyWith(
-      text: upper,
-      selection: TextSelection.collapsed(offset: upper.length),
-    );
-    if (upper != "A" && upper != "B" && upper != "C") {
+    // UX FIX: Removed manual text replacement here as input formatter now handles capitalization safely
+    if (value != "A" && value != "B" && value != "C") {
       setState(() => sectionError = "Section must be A, B, or C");
     } else {
       setState(() => sectionError = null);
@@ -177,6 +174,8 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
     bool obscureText = false,
     bool showVisibilityToggle = false,
     VoidCallback? onToggleVisibility,
+    List<TextInputFormatter>? inputFormatters, // ADDED: For input restrictions
+    int? maxLength, // ADDED: For length restrictions
   }) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -188,8 +187,11 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
           obscureText: obscureText,
           keyboardType: keyboardType,
           onChanged: onChanged,
+          inputFormatters: inputFormatters,
+          maxLength: maxLength,
           style: TextStyle(color: Colors.black, fontSize: 16.sp),
           decoration: InputDecoration(
+            counterText: "", // UX ENHANCEMENT: Hide the character counter for a cleaner look
             hintText: hint,
             hintStyle: TextStyle(color: Colors.black54, fontSize: 16.sp),
             filled: true,
@@ -232,12 +234,17 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
               children: [
                 SizedBox(height: 20.h),
 
+                // UX ENHANCEMENT: Restrict name input
                 _buildTextField(
                   label: "Full Name",
                   hint: "Enter Your Full Name",
                   controller: nameController,
                   onChanged: validateName,
                   errorText: nameError,
+                  maxLength: 35,
+                  inputFormatters: [
+                    FilteringTextInputFormatter.allow(RegExp(r'[a-zA-Z ]')),
+                  ],
                 ),
 
                 _buildTextField(
@@ -280,12 +287,23 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
                   errorText: semesterError,
                 ),
 
+                // UX ENHANCEMENT: Restrict section input and auto-capitalize
                 _buildTextField(
                   label: "Section",
                   hint: "Enter Your Section",
                   controller: sectionController,
                   onChanged: validateSection,
                   errorText: sectionError,
+                  maxLength: 1,
+                  inputFormatters: [
+                    FilteringTextInputFormatter.allow(RegExp(r'[a-cA-C]')),
+                    TextInputFormatter.withFunction((oldValue, newValue) {
+                      return TextEditingValue(
+                        text: newValue.text.toUpperCase(),
+                        selection: newValue.selection,
+                      );
+                    }),
+                  ],
                 ),
 
                 // MODIFICATION: Privacy Policy Checkbox Row

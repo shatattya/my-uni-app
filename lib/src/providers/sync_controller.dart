@@ -1,10 +1,12 @@
 import 'dart:io';
+import 'dart:async'; // ADDED: Required for TimeoutException
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:path_provider/path_provider.dart'; // FIXED: Correct import path
+import 'package:path_provider/path_provider.dart';
 import '../data/repositories/user_repository.dart';
 import '../data/repositories/announcement_repository.dart';
-import '../data/repositories/routine_repository.dart'; // Added import for routine sync
+import '../data/repositories/routine_repository.dart';
+import '../data/repositories/exam_routine_repository.dart';
 
 final syncControllerProvider = AsyncNotifierProvider<SyncController, DateTime?>(() {
   return SyncController();
@@ -39,33 +41,34 @@ class SyncController extends AsyncNotifier<DateTime?> {
     final userRepo = ref.read(userRepositoryProvider);
     final localUser = await userRepo.getUserLocally(uid);
 
-    // Identify if the user has privileges to bypass the sync cooldown
-    final isPrivileged = localUser != null && (localUser.role == 'teacher' || localUser.isDev);
+    // Identify if the user has privileges to bypass the sync lock
+    final bool canBypassSyncLock = localUser != null && (localUser.role == 'teacher' || localUser.isDev == true);
 
-    // 1. Enforce 15-Minute Cooldown ONLY for non-privileged users
+    // 1. Enforce Cooldown Check ONLY for normal students
     final lastSync = state.value;
-    if (!isPrivileged && lastSync != null) {
-      final diff = DateTime.now().difference(lastSync);
-      if (diff.inMinutes < 15) {
-        final remaining = 15 - diff.inMinutes;
-        throw Exception("Sync on cooldown. Please wait $remaining minute(s).");
+    if (!canBypassSyncLock && lastSync != null) {
+      final difference = DateTime.now().difference(lastSync);
+      if (difference.inMinutes < 5) {
+        throw Exception("Sync is on cooldown to save data. Please try again in ${5 - difference.inMinutes} minutes.");
       }
     }
 
+    // Set state to loading immediately
     state = const AsyncLoading();
 
     try {
-      // 2. Pre-flight Internet Check (Catches offline state before suppressing errors)
-      bool hasInternet = await _checkInternet();
+      // 2. Network Check BEFORE starting Firestore sync
+      final hasInternet = await _checkInternet();
       if (!hasInternet) {
-        throw Exception("No internet connection. Cannot sync data.");
+        throw Exception("Slow or no internet connection. Please check your network and try again.");
       }
 
       // 3. Execute Full App Sync Concurrently
       await Future.wait([
         userRepo.syncUser(uid),
         ref.read(announcementRepositoryProvider).syncAnnouncements(),
-        ref.read(routineRepositoryProvider).syncRoutines(), // Added: Now syncs routine on demand
+        ref.read(routineRepositoryProvider).syncRoutines(),
+        ref.read(examRoutineRepositoryProvider).syncExamRoutines(),
       ]);
 
       // 4. Update the state and persist the timestamp to the file
@@ -89,12 +92,13 @@ class SyncController extends AsyncNotifier<DateTime?> {
   // Helper method to ping Google to guarantee an active connection exists
   Future<bool> _checkInternet() async {
     try {
-      // MODIFICATION: Changed from google.com to firestore.googleapis.com
-      // This prevents false "No Internet" errors on strict University Wi-Fi networks
-      // while still verifying that our specific database backend is reachable.
-      final result = await InternetAddress.lookup('firestore.googleapis.com');
+      // UX ENHANCEMENT: Added a 5-second timeout.
+      // Prevents infinite loading spinners if DNS resolution hangs on spotty networks.
+      final result = await InternetAddress.lookup('firestore.googleapis.com')
+          .timeout(const Duration(seconds: 5));
       return result.isNotEmpty && result[0].rawAddress.isNotEmpty;
-    } on SocketException catch (_) {
+    } catch (_) {
+      // Catches both SocketException (no network) and TimeoutException (slow network)
       return false;
     }
   }

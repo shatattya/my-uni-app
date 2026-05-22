@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../services/routine_uploader.dart';
 import '../../data/repositories/routine_repository.dart';
+import '../../data/repositories/exam_routine_repository.dart'; // ADDED: Import for exam sync
 
 class RoutineUploadSheet extends ConsumerStatefulWidget {
   const RoutineUploadSheet({super.key});
@@ -22,6 +23,7 @@ class RoutineUploadSheet extends ConsumerStatefulWidget {
 class _RoutineUploadSheetState extends ConsumerState<RoutineUploadSheet> {
   bool _isUploading = false;
   bool _isFinished = false;
+  bool _isExamMode = false; // ADDED: State for the segmented control
   String _statusText = "Ready to upload";
   double _progress = 0.0;
   String? _error;
@@ -33,7 +35,7 @@ class _RoutineUploadSheetState extends ConsumerState<RoutineUploadSheet> {
     });
 
     try {
-      // 1. Run the safe uploader
+      // 1. Run the safe uploader passing the mode
       await RoutineUploader.uploadRoutineJson((status, progress) {
         if (mounted) {
           setState(() {
@@ -41,13 +43,19 @@ class _RoutineUploadSheetState extends ConsumerState<RoutineUploadSheet> {
             _progress = progress;
           });
         }
-      });
+      }, isExamRoutine: _isExamMode);
 
-      // 2. Force local Drift sync immediately after upload
+      // 2. Force local Drift sync immediately after upload based on the selected mode
       if (mounted) {
         setState(() => _statusText = "Syncing to local device...");
       }
-      await ref.read(routineRepositoryProvider).syncRoutines();
+
+      if (_isExamMode) {
+        // We explicitly trigger the smart-cooldown override by calling sync directly
+        await ref.read(examRoutineRepositoryProvider).syncExamRoutines();
+      } else {
+        await ref.read(routineRepositoryProvider).syncRoutines();
+      }
 
       // 3. Complete
       if (mounted) {
@@ -85,9 +93,58 @@ class _RoutineUploadSheetState extends ConsumerState<RoutineUploadSheet> {
               "Routine Database Management",
               style: TextStyle(color: Colors.white, fontSize: 20, fontWeight: FontWeight.bold),
             ),
-            const SizedBox(height: 8),
+            const SizedBox(height: 16),
+
+            // ADDED: Segmented Control Toggle
+            Container(
+              decoration: BoxDecoration(
+                color: Colors.black.withValues(alpha: 0.2),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              padding: const EdgeInsets.all(4),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: GestureDetector(
+                      onTap: _isUploading ? null : () => setState(() => _isExamMode = false),
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(vertical: 12),
+                        decoration: BoxDecoration(
+                          color: !_isExamMode ? const Color(0xFF5667FD) : Colors.transparent,
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        alignment: Alignment.center,
+                        child: Text(
+                            "Regular Routine",
+                            style: TextStyle(color: !_isExamMode ? Colors.white : Colors.white54, fontWeight: FontWeight.bold)
+                        ),
+                      ),
+                    ),
+                  ),
+                  Expanded(
+                    child: GestureDetector(
+                      onTap: _isUploading ? null : () => setState(() => _isExamMode = true),
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(vertical: 12),
+                        decoration: BoxDecoration(
+                          color: _isExamMode ? const Color(0xFF5667FD) : Colors.transparent,
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        alignment: Alignment.center,
+                        child: Text(
+                            "Exam Routine",
+                            style: TextStyle(color: _isExamMode ? Colors.white : Colors.white54, fontWeight: FontWeight.bold)
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 16),
+
             Text(
-              "This action will completely wipe the existing global routine and replace it with the new assets/data/routine.json file.",
+              "This action will replace the global database with your local assets/data/${_isExamMode ? 'exam_routine.json' : 'routine.json'} file.",
               style: TextStyle(color: Colors.white.withValues(alpha: 0.7), fontSize: 14, height: 1.4),
             ),
             const SizedBox(height: 30),

@@ -1,0 +1,404 @@
+{
+  "examId": "final_spring2026",
+  "examTitle": "Final-Term Theory Examination Spring (January-June) 2026",
+  "examStartDate": "2026-06-14",
+  "examEndDate": "2026-06-29",
+  "data": [
+    {
+      "date": "2026-06-14",
+      "exams": [
+        {
+          "sem": 1,
+          "sec": "N/A",
+          "sub": "CF (07-0611-CF101)",
+          "room": "N/A",
+          "startTime": "10:30",
+          "endTime": "13:30"
+        },
+        {
+          "sem": 3,
+          "sec": "N/A",
+          "sub": "MATH-3 (07-0541 Math 305)",
+          "room": "N/A",
+          "startTime": "10:30",
+          "endTime": "13:30"
+        },
+        {
+          "sem": 5,
+          "sec": "N/A",
+          "sub": "DBMS (07-0612 DBMS 501)",
+          "room": "N/A",
+          "startTime": "10:30",
+          "endTime": "13:30"
+        }
+      ]
+    },
+    {
+      "date": "2026-06-15",
+      "exams": [
+        {
+          "sem": 2,
+          "sec": "N/A",
+          "sub": "PHY-2 (07-0533-PHY 204)",
+          "room": "N/A",
+          "startTime": "10:30",
+          "endTime": "13:30"
+        },
+        {
+          "sem": 4,
+          "sec": "N/A",
+          "sub": "NA (07-0619 NA-403)",
+          "room": "N/A",
+          "startTime": "10:30",
+          "endTime": "13:30"
+        },
+        {
+          "sem": 6,
+          "sec": "N/A",
+          "sub": "SE (07-0613- SE 606)",
+          "room": "N/A",
+          "startTime": "10:30",
+          "endTime": "13:30"
+        }
+      ]
+    },
+    {
+      "date": "2026-06-16",
+      "exams": [
+        {
+          "sem": 1,
+          "sec": "N/A",
+          "sub": "CP (07-0613-CP102)",
+          "room": "N/A",
+          "startTime": "10:30",
+          "endTime": "13:30"
+        },
+        {
+          "sem": 5,
+          "sec": "N/A",
+          "sub": "SAD (07-0613 SAD 505)",
+          "room": "N/A",
+          "startTime": "10:30",
+          "endTime": "13:30"
+        },
+        {
+          "sem": 7,
+          "sec": "N/A",
+          "sub": "ML (070613ML702)",
+          "room": "N/A",
+          "startTime": "10:30",
+          "endTime": "13:30"
+        }
+      ]
+    },
+    {
+      "date": "2026-06-17",
+      "exams": [
+        {
+          "sem": 2,
+          "sec": "N/A",
+          "sub": "C++ (07-0613-CPLUS 203)",
+          "room": "N/A",
+          "startTime": "10:30",
+          "endTime": "13:30"
+        },
+        {
+          "sem": 4,
+          "sec": "N/A",
+          "sub": "Math (07-0541 Math 405)",
+          "room": "N/A",
+          "startTime": "10:30",
+          "endTime": "13:30"
+        },
+        {
+          "sem": 6,
+          "sec": "N/A",
+          "sub": "AI (07-0619-AI 603)",
+          "room": "N/A",
+          "startTime": "10:30",
+          "endTime": "13:30"
+        }
+      ]
+    },
+    {
+      "date": "2026-06-18",
+      "exams": [
+        {
+          "sem": 1,
+          "sec": "N/A",
+          "sub": "ACC (07-0411-ACC106)",
+          "room": "N/A",
+          "startTime": "10:30",
+          "endTime": "13:30"
+        },
+        {
+          "sem": 3,
+          "sec": "N/A",
+          "sub": "BE (07-0714-BE 303)",
+          "room": "N/A",
+          "startTime": "10:30",
+          "endTime": "13:30"
+        },
+        {
+          "sem": 5,
+          "sec": "N/A",
+          "sub": "DC (07-0612 DC 502)",
+          "room": "N/A",
+          "startTime": "10:30",
+          "endTime": "13:30"
+        },
+        {
+          "sem": 7,
+          "sec": "N/A",
+          "sub": "CNS (07-0612CNS 704)",
+          "room": "N/A",
+          "startTime": "10:30",
+          "endTime": "13:30"
+        }
+      ]
+    },
+    {
+      "date": "2026-06-21",
+      "exams": [
+        {
+          "sem": 2,
+          "sec": "N/A",
+          "sub": "BEE (07-0713-BEE 201)",
+          "room": "N/A",
+          "startTime": "10:30",
+          "endTime": "13:30"
+        },
+        {
+          "sem": 4,
+          "sec": "N/A",
+          "sub": "INC (07-0612 INC 402)",
+          "room": "N/A",
+          "startTime": "10:30",
+          "endTime": "13:30"
+        },
+        {
+          "sem": 6,
+          "sec": "N/A",
+          "sub": "CPI (07-0714-CPI605)",
+          "room": "N/A",
+          "startTime": "10:30",
+          "endTime": "13:30"
+        }
+      ]
+    },
+    {
+      "date": "2026-06-22",
+      "exams": [
+        {
+          "sem": 1,
+          "sec": "N/A",
+          "sub": "BS (07-0222BS 107)",
+          "room": "N/A",
+          "startTime": "10:30",
+          "endTime": "13:30"
+        },
+        {
+          "sem": 3,
+          "sec": "N/A",
+          "sub": "STAT (07-0542-STAT306)",
+          "room": "N/A",
+          "startTime": "10:30",
+          "endTime": "13:30"
+        },
+        {
+          "sem": 5,
+          "sec": "N/A",
+          "sub": "OS (07-0613-OS 503)",
+          "room": "N/A",
+          "startTime": "10:30",
+          "endTime": "13:30"
+        },
+        {
+          "sem": 7,
+          "sec": "N/A",
+          "sub": "Compilers (070619COM 703)",
+          "room": "N/A",
+          "startTime": "10:30",
+          "endTime": "13:30"
+        }
+      ]
+    },
+    {
+      "date": "2026-06-23",
+      "exams": [
+        {
+          "sem": 2,
+          "sec": "N/A",
+          "sub": "DS (07-0613-DS 202)",
+          "room": "N/A",
+          "startTime": "10:30",
+          "endTime": "13:30"
+        },
+        {
+          "sem": 4,
+          "sec": "N/A",
+          "sub": "CSA (07-0613-CSA 404)",
+          "room": "N/A",
+          "startTime": "10:30",
+          "endTime": "13:30"
+        },
+        {
+          "sem": 6,
+          "sec": "N/A",
+          "sub": "CN (07-0612-CN 601)",
+          "room": "N/A",
+          "startTime": "10:30",
+          "endTime": "13:30"
+        }
+      ]
+    },
+    {
+      "date": "2026-06-24",
+      "exams": [
+        {
+          "sem": 1,
+          "sec": "N/A",
+          "sub": "Math 104 (07-0541-Math 104)",
+          "room": "N/A",
+          "startTime": "10:30",
+          "endTime": "13:30"
+        },
+        {
+          "sem": 3,
+          "sec": "N/A",
+          "sub": "JAVA (07-0613-JAVA 304)",
+          "room": "N/A",
+          "startTime": "10:30",
+          "endTime": "13:30"
+        },
+        {
+          "sem": 5,
+          "sec": "N/A",
+          "sub": "MP (07-0613 MP 504)",
+          "room": "N/A",
+          "startTime": "10:30",
+          "endTime": "13:30"
+        },
+        {
+          "sem": 7,
+          "sec": "N/A",
+          "sub": "DSD (07-0714 DS705)",
+          "room": "N/A",
+          "startTime": "10:30",
+          "endTime": "13:30"
+        }
+      ]
+    },
+    {
+      "date": "2026-06-25",
+      "exams": [
+        {
+          "sem": 2,
+          "sec": "N/A",
+          "sub": "MATH-2 (07-0541- MATH 205)",
+          "room": "N/A",
+          "startTime": "10:30",
+          "endTime": "13:30"
+        },
+        {
+          "sem": 4,
+          "sec": "N/A",
+          "sub": "CA (07-0613-CA 401)",
+          "room": "N/A",
+          "startTime": "10:30",
+          "endTime": "13:30"
+        },
+        {
+          "sem": 6,
+          "sec": "N/A",
+          "sub": "SIM (07-0619 SIM 604)",
+          "room": "N/A",
+          "startTime": "10:30",
+          "endTime": "13:30"
+        }
+      ]
+    },
+    {
+      "date": "2026-06-28",
+      "exams": [
+        {
+          "sem": 1,
+          "sec": "N/A",
+          "sub": "PHY (07-0533-PHY 103)",
+          "room": "N/A",
+          "startTime": "10:30",
+          "endTime": "13:30"
+        },
+        {
+          "sem": 2,
+          "sec": "N/A",
+          "sub": "Econ (ECON211)",
+          "room": "N/A",
+          "startTime": "10:30",
+          "endTime": "13:30"
+        },
+        {
+          "sem": 3,
+          "sec": "N/A",
+          "sub": "DLD (07-0714-DLD 301)",
+          "room": "N/A",
+          "startTime": "10:30",
+          "endTime": "13:30"
+        },
+        {
+          "sem": 5,
+          "sec": "N/A",
+          "sub": "BLL (07-0631 BLL 510)",
+          "room": "N/A",
+          "startTime": "10:30",
+          "endTime": "13:30"
+        },
+        {
+          "sem": 7,
+          "sec": "N/A",
+          "sub": "ELECT (07-0612ELECT 706)",
+          "room": "N/A",
+          "startTime": "10:30",
+          "endTime": "13:30"
+        }
+      ]
+    },
+    {
+      "date": "2026-06-29",
+      "exams": [
+        {
+          "sem": 1,
+          "sec": "N/A",
+          "sub": "ELC (07-0231-ELC105)",
+          "room": "N/A",
+          "startTime": "10:30",
+          "endTime": "13:30"
+        },
+        {
+          "sem": 2,
+          "sec": "N/A",
+          "sub": "PE (07-0619-PE 206)",
+          "room": "N/A",
+          "startTime": "10:30",
+          "endTime": "13:30"
+        },
+        {
+          "sem": 4,
+          "sec": "N/A",
+          "sub": "HEB (07-0222-HEB 409)",
+          "room": "N/A",
+          "startTime": "10:30",
+          "endTime": "13:30"
+        },
+        {
+          "sem": 6,
+          "sec": "N/A",
+          "sub": "TOC (07-0613 TOC 602)",
+          "room": "N/A",
+          "startTime": "10:30",
+          "endTime": "13:30"
+        }
+      ]
+    }
+  ]
+}

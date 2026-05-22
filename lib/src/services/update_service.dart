@@ -19,7 +19,11 @@ class AppUpdateInfo {
 }
 
 class UpdateService {
-  final Dio _dio = Dio();
+  // UX ENHANCEMENT: Added strict timeouts to prevent infinite UI hangs on slow networks
+  final Dio _dio = Dio(BaseOptions(
+    connectTimeout: const Duration(seconds: 5),
+    receiveTimeout: const Duration(seconds: 5),
+  ));
 
   // Connects directly to your GitHub repository API
   final String _githubApiUrl = "https://api.github.com/repos/shatattya/my-uni-app/releases/latest";
@@ -56,15 +60,21 @@ class UpdateService {
 
   bool _isVersionGreater(String latest, String current) {
     try {
-      List<int> v1 = latest.split('.').map(int.parse).toList();
-      List<int> v2 = current.split('.').map(int.parse).toList();
+      // UX ENHANCEMENT: Sanitize version strings to prevent crashes if tags contain suffixes like "-beta"
+      String cleanLatest = latest.split('-').first.split('+').first;
+      String cleanCurrent = current.split('-').first.split('+').first;
+
+      List<int> v1 = cleanLatest.split('.').map((e) => int.tryParse(e) ?? 0).toList();
+      List<int> v2 = cleanCurrent.split('.').map((e) => int.tryParse(e) ?? 0).toList();
 
       for (int i = 0; i < v1.length; i++) {
         if (i >= v2.length) return true;
         if (v1[i] > v2[i]) return true;
         if (v1[i] < v2[i]) return false;
       }
-    } catch (_) {}
+    } catch (e) {
+      print("DEBUG: Version parsing failed: $e");
+    }
     return false;
   }
 }

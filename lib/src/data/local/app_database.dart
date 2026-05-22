@@ -54,6 +54,22 @@ class Routines extends Table {
   Set<Column> get primaryKey => {id};
 }
 
+// ADDED: New table for Exam Routines
+class ExamRoutines extends Table {
+  TextColumn get id => text()();
+  DateTimeColumn get date => dateTime()();
+  TextColumn get subjectName => text()();
+  TextColumn get roomNumber => text()();
+  TextColumn get startTime => text()();
+  TextColumn get endTime => text()();
+  IntColumn get semester => integer()();
+  TextColumn get section => text()();
+  TextColumn get examType => text()();
+
+  @override
+  Set<Column> get primaryKey => {id};
+}
+
 class CachedStudents extends Table {
   TextColumn get studentId => text()();
   TextColumn get name => text()();
@@ -81,12 +97,14 @@ class AttendanceRecords extends Table {
   Set<Column> get primaryKey => {attendanceId};
 }
 
-@DriftDatabase(tables: [Users, Announcements, Routines, CachedStudents, AttendanceRecords])
+// MODIFICATION: Added ExamRoutines to the tables list
+@DriftDatabase(tables: [Users, Announcements, Routines, ExamRoutines, CachedStudents, AttendanceRecords])
 class AppDatabase extends _$AppDatabase {
   AppDatabase() : super(_openConnection());
 
+  // MODIFICATION: Bumped schema version to 7
   @override
-  int get schemaVersion => 6;
+  int get schemaVersion => 7;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -115,6 +133,10 @@ class AppDatabase extends _$AppDatabase {
       if (from < 6) {
         try { await m.addColumn(attendanceRecords, attendanceRecords.isSynced); } catch (_) {}
       }
+      // MODIFICATION: Migration for schema 7 to create the new ExamRoutines table
+      if (from < 7) {
+        try { await m.createTable(examRoutines); } catch (_) {}
+      }
     },
   );
 
@@ -123,6 +145,7 @@ class AppDatabase extends _$AppDatabase {
       await delete(users).go();
       await delete(announcements).go();
       await delete(routines).go();
+      await delete(examRoutines).go(); // MODIFICATION: Clear exam routines on logout
       await delete(cachedStudents).go();
       await delete(attendanceRecords).go();
     });

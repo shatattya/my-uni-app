@@ -1543,6 +1543,478 @@ class RoutinesCompanion extends UpdateCompanion<Routine> {
   }
 }
 
+class $ExamRoutinesTable extends ExamRoutines
+    with TableInfo<$ExamRoutinesTable, ExamRoutine> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $ExamRoutinesTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<String> id = GeneratedColumn<String>(
+      'id', aliasedName, false,
+      type: DriftSqlType.string, requiredDuringInsert: true);
+  static const VerificationMeta _dateMeta = const VerificationMeta('date');
+  @override
+  late final GeneratedColumn<DateTime> date = GeneratedColumn<DateTime>(
+      'date', aliasedName, false,
+      type: DriftSqlType.dateTime, requiredDuringInsert: true);
+  static const VerificationMeta _subjectNameMeta =
+      const VerificationMeta('subjectName');
+  @override
+  late final GeneratedColumn<String> subjectName = GeneratedColumn<String>(
+      'subject_name', aliasedName, false,
+      type: DriftSqlType.string, requiredDuringInsert: true);
+  static const VerificationMeta _roomNumberMeta =
+      const VerificationMeta('roomNumber');
+  @override
+  late final GeneratedColumn<String> roomNumber = GeneratedColumn<String>(
+      'room_number', aliasedName, false,
+      type: DriftSqlType.string, requiredDuringInsert: true);
+  static const VerificationMeta _startTimeMeta =
+      const VerificationMeta('startTime');
+  @override
+  late final GeneratedColumn<String> startTime = GeneratedColumn<String>(
+      'start_time', aliasedName, false,
+      type: DriftSqlType.string, requiredDuringInsert: true);
+  static const VerificationMeta _endTimeMeta =
+      const VerificationMeta('endTime');
+  @override
+  late final GeneratedColumn<String> endTime = GeneratedColumn<String>(
+      'end_time', aliasedName, false,
+      type: DriftSqlType.string, requiredDuringInsert: true);
+  static const VerificationMeta _semesterMeta =
+      const VerificationMeta('semester');
+  @override
+  late final GeneratedColumn<int> semester = GeneratedColumn<int>(
+      'semester', aliasedName, false,
+      type: DriftSqlType.int, requiredDuringInsert: true);
+  static const VerificationMeta _sectionMeta =
+      const VerificationMeta('section');
+  @override
+  late final GeneratedColumn<String> section = GeneratedColumn<String>(
+      'section', aliasedName, false,
+      type: DriftSqlType.string, requiredDuringInsert: true);
+  static const VerificationMeta _examTypeMeta =
+      const VerificationMeta('examType');
+  @override
+  late final GeneratedColumn<String> examType = GeneratedColumn<String>(
+      'exam_type', aliasedName, false,
+      type: DriftSqlType.string, requiredDuringInsert: true);
+  @override
+  List<GeneratedColumn> get $columns => [
+        id,
+        date,
+        subjectName,
+        roomNumber,
+        startTime,
+        endTime,
+        semester,
+        section,
+        examType
+      ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'exam_routines';
+  @override
+  VerificationContext validateIntegrity(Insertable<ExamRoutine> instance,
+      {bool isInserting = false}) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    } else if (isInserting) {
+      context.missing(_idMeta);
+    }
+    if (data.containsKey('date')) {
+      context.handle(
+          _dateMeta, date.isAcceptableOrUnknown(data['date']!, _dateMeta));
+    } else if (isInserting) {
+      context.missing(_dateMeta);
+    }
+    if (data.containsKey('subject_name')) {
+      context.handle(
+          _subjectNameMeta,
+          subjectName.isAcceptableOrUnknown(
+              data['subject_name']!, _subjectNameMeta));
+    } else if (isInserting) {
+      context.missing(_subjectNameMeta);
+    }
+    if (data.containsKey('room_number')) {
+      context.handle(
+          _roomNumberMeta,
+          roomNumber.isAcceptableOrUnknown(
+              data['room_number']!, _roomNumberMeta));
+    } else if (isInserting) {
+      context.missing(_roomNumberMeta);
+    }
+    if (data.containsKey('start_time')) {
+      context.handle(_startTimeMeta,
+          startTime.isAcceptableOrUnknown(data['start_time']!, _startTimeMeta));
+    } else if (isInserting) {
+      context.missing(_startTimeMeta);
+    }
+    if (data.containsKey('end_time')) {
+      context.handle(_endTimeMeta,
+          endTime.isAcceptableOrUnknown(data['end_time']!, _endTimeMeta));
+    } else if (isInserting) {
+      context.missing(_endTimeMeta);
+    }
+    if (data.containsKey('semester')) {
+      context.handle(_semesterMeta,
+          semester.isAcceptableOrUnknown(data['semester']!, _semesterMeta));
+    } else if (isInserting) {
+      context.missing(_semesterMeta);
+    }
+    if (data.containsKey('section')) {
+      context.handle(_sectionMeta,
+          section.isAcceptableOrUnknown(data['section']!, _sectionMeta));
+    } else if (isInserting) {
+      context.missing(_sectionMeta);
+    }
+    if (data.containsKey('exam_type')) {
+      context.handle(_examTypeMeta,
+          examType.isAcceptableOrUnknown(data['exam_type']!, _examTypeMeta));
+    } else if (isInserting) {
+      context.missing(_examTypeMeta);
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  ExamRoutine map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return ExamRoutine(
+      id: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}id'])!,
+      date: attachedDatabase.typeMapping
+          .read(DriftSqlType.dateTime, data['${effectivePrefix}date'])!,
+      subjectName: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}subject_name'])!,
+      roomNumber: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}room_number'])!,
+      startTime: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}start_time'])!,
+      endTime: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}end_time'])!,
+      semester: attachedDatabase.typeMapping
+          .read(DriftSqlType.int, data['${effectivePrefix}semester'])!,
+      section: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}section'])!,
+      examType: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}exam_type'])!,
+    );
+  }
+
+  @override
+  $ExamRoutinesTable createAlias(String alias) {
+    return $ExamRoutinesTable(attachedDatabase, alias);
+  }
+}
+
+class ExamRoutine extends DataClass implements Insertable<ExamRoutine> {
+  final String id;
+  final DateTime date;
+  final String subjectName;
+  final String roomNumber;
+  final String startTime;
+  final String endTime;
+  final int semester;
+  final String section;
+  final String examType;
+  const ExamRoutine(
+      {required this.id,
+      required this.date,
+      required this.subjectName,
+      required this.roomNumber,
+      required this.startTime,
+      required this.endTime,
+      required this.semester,
+      required this.section,
+      required this.examType});
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<String>(id);
+    map['date'] = Variable<DateTime>(date);
+    map['subject_name'] = Variable<String>(subjectName);
+    map['room_number'] = Variable<String>(roomNumber);
+    map['start_time'] = Variable<String>(startTime);
+    map['end_time'] = Variable<String>(endTime);
+    map['semester'] = Variable<int>(semester);
+    map['section'] = Variable<String>(section);
+    map['exam_type'] = Variable<String>(examType);
+    return map;
+  }
+
+  ExamRoutinesCompanion toCompanion(bool nullToAbsent) {
+    return ExamRoutinesCompanion(
+      id: Value(id),
+      date: Value(date),
+      subjectName: Value(subjectName),
+      roomNumber: Value(roomNumber),
+      startTime: Value(startTime),
+      endTime: Value(endTime),
+      semester: Value(semester),
+      section: Value(section),
+      examType: Value(examType),
+    );
+  }
+
+  factory ExamRoutine.fromJson(Map<String, dynamic> json,
+      {ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return ExamRoutine(
+      id: serializer.fromJson<String>(json['id']),
+      date: serializer.fromJson<DateTime>(json['date']),
+      subjectName: serializer.fromJson<String>(json['subjectName']),
+      roomNumber: serializer.fromJson<String>(json['roomNumber']),
+      startTime: serializer.fromJson<String>(json['startTime']),
+      endTime: serializer.fromJson<String>(json['endTime']),
+      semester: serializer.fromJson<int>(json['semester']),
+      section: serializer.fromJson<String>(json['section']),
+      examType: serializer.fromJson<String>(json['examType']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<String>(id),
+      'date': serializer.toJson<DateTime>(date),
+      'subjectName': serializer.toJson<String>(subjectName),
+      'roomNumber': serializer.toJson<String>(roomNumber),
+      'startTime': serializer.toJson<String>(startTime),
+      'endTime': serializer.toJson<String>(endTime),
+      'semester': serializer.toJson<int>(semester),
+      'section': serializer.toJson<String>(section),
+      'examType': serializer.toJson<String>(examType),
+    };
+  }
+
+  ExamRoutine copyWith(
+          {String? id,
+          DateTime? date,
+          String? subjectName,
+          String? roomNumber,
+          String? startTime,
+          String? endTime,
+          int? semester,
+          String? section,
+          String? examType}) =>
+      ExamRoutine(
+        id: id ?? this.id,
+        date: date ?? this.date,
+        subjectName: subjectName ?? this.subjectName,
+        roomNumber: roomNumber ?? this.roomNumber,
+        startTime: startTime ?? this.startTime,
+        endTime: endTime ?? this.endTime,
+        semester: semester ?? this.semester,
+        section: section ?? this.section,
+        examType: examType ?? this.examType,
+      );
+  ExamRoutine copyWithCompanion(ExamRoutinesCompanion data) {
+    return ExamRoutine(
+      id: data.id.present ? data.id.value : this.id,
+      date: data.date.present ? data.date.value : this.date,
+      subjectName:
+          data.subjectName.present ? data.subjectName.value : this.subjectName,
+      roomNumber:
+          data.roomNumber.present ? data.roomNumber.value : this.roomNumber,
+      startTime: data.startTime.present ? data.startTime.value : this.startTime,
+      endTime: data.endTime.present ? data.endTime.value : this.endTime,
+      semester: data.semester.present ? data.semester.value : this.semester,
+      section: data.section.present ? data.section.value : this.section,
+      examType: data.examType.present ? data.examType.value : this.examType,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('ExamRoutine(')
+          ..write('id: $id, ')
+          ..write('date: $date, ')
+          ..write('subjectName: $subjectName, ')
+          ..write('roomNumber: $roomNumber, ')
+          ..write('startTime: $startTime, ')
+          ..write('endTime: $endTime, ')
+          ..write('semester: $semester, ')
+          ..write('section: $section, ')
+          ..write('examType: $examType')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(id, date, subjectName, roomNumber, startTime,
+      endTime, semester, section, examType);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is ExamRoutine &&
+          other.id == this.id &&
+          other.date == this.date &&
+          other.subjectName == this.subjectName &&
+          other.roomNumber == this.roomNumber &&
+          other.startTime == this.startTime &&
+          other.endTime == this.endTime &&
+          other.semester == this.semester &&
+          other.section == this.section &&
+          other.examType == this.examType);
+}
+
+class ExamRoutinesCompanion extends UpdateCompanion<ExamRoutine> {
+  final Value<String> id;
+  final Value<DateTime> date;
+  final Value<String> subjectName;
+  final Value<String> roomNumber;
+  final Value<String> startTime;
+  final Value<String> endTime;
+  final Value<int> semester;
+  final Value<String> section;
+  final Value<String> examType;
+  final Value<int> rowid;
+  const ExamRoutinesCompanion({
+    this.id = const Value.absent(),
+    this.date = const Value.absent(),
+    this.subjectName = const Value.absent(),
+    this.roomNumber = const Value.absent(),
+    this.startTime = const Value.absent(),
+    this.endTime = const Value.absent(),
+    this.semester = const Value.absent(),
+    this.section = const Value.absent(),
+    this.examType = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  ExamRoutinesCompanion.insert({
+    required String id,
+    required DateTime date,
+    required String subjectName,
+    required String roomNumber,
+    required String startTime,
+    required String endTime,
+    required int semester,
+    required String section,
+    required String examType,
+    this.rowid = const Value.absent(),
+  })  : id = Value(id),
+        date = Value(date),
+        subjectName = Value(subjectName),
+        roomNumber = Value(roomNumber),
+        startTime = Value(startTime),
+        endTime = Value(endTime),
+        semester = Value(semester),
+        section = Value(section),
+        examType = Value(examType);
+  static Insertable<ExamRoutine> custom({
+    Expression<String>? id,
+    Expression<DateTime>? date,
+    Expression<String>? subjectName,
+    Expression<String>? roomNumber,
+    Expression<String>? startTime,
+    Expression<String>? endTime,
+    Expression<int>? semester,
+    Expression<String>? section,
+    Expression<String>? examType,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (date != null) 'date': date,
+      if (subjectName != null) 'subject_name': subjectName,
+      if (roomNumber != null) 'room_number': roomNumber,
+      if (startTime != null) 'start_time': startTime,
+      if (endTime != null) 'end_time': endTime,
+      if (semester != null) 'semester': semester,
+      if (section != null) 'section': section,
+      if (examType != null) 'exam_type': examType,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  ExamRoutinesCompanion copyWith(
+      {Value<String>? id,
+      Value<DateTime>? date,
+      Value<String>? subjectName,
+      Value<String>? roomNumber,
+      Value<String>? startTime,
+      Value<String>? endTime,
+      Value<int>? semester,
+      Value<String>? section,
+      Value<String>? examType,
+      Value<int>? rowid}) {
+    return ExamRoutinesCompanion(
+      id: id ?? this.id,
+      date: date ?? this.date,
+      subjectName: subjectName ?? this.subjectName,
+      roomNumber: roomNumber ?? this.roomNumber,
+      startTime: startTime ?? this.startTime,
+      endTime: endTime ?? this.endTime,
+      semester: semester ?? this.semester,
+      section: section ?? this.section,
+      examType: examType ?? this.examType,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<String>(id.value);
+    }
+    if (date.present) {
+      map['date'] = Variable<DateTime>(date.value);
+    }
+    if (subjectName.present) {
+      map['subject_name'] = Variable<String>(subjectName.value);
+    }
+    if (roomNumber.present) {
+      map['room_number'] = Variable<String>(roomNumber.value);
+    }
+    if (startTime.present) {
+      map['start_time'] = Variable<String>(startTime.value);
+    }
+    if (endTime.present) {
+      map['end_time'] = Variable<String>(endTime.value);
+    }
+    if (semester.present) {
+      map['semester'] = Variable<int>(semester.value);
+    }
+    if (section.present) {
+      map['section'] = Variable<String>(section.value);
+    }
+    if (examType.present) {
+      map['exam_type'] = Variable<String>(examType.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('ExamRoutinesCompanion(')
+          ..write('id: $id, ')
+          ..write('date: $date, ')
+          ..write('subjectName: $subjectName, ')
+          ..write('roomNumber: $roomNumber, ')
+          ..write('startTime: $startTime, ')
+          ..write('endTime: $endTime, ')
+          ..write('semester: $semester, ')
+          ..write('section: $section, ')
+          ..write('examType: $examType, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
 class $CachedStudentsTable extends CachedStudents
     with TableInfo<$CachedStudentsTable, CachedStudent> {
   @override
@@ -2377,6 +2849,7 @@ abstract class _$AppDatabase extends GeneratedDatabase {
   late final $UsersTable users = $UsersTable(this);
   late final $AnnouncementsTable announcements = $AnnouncementsTable(this);
   late final $RoutinesTable routines = $RoutinesTable(this);
+  late final $ExamRoutinesTable examRoutines = $ExamRoutinesTable(this);
   late final $CachedStudentsTable cachedStudents = $CachedStudentsTable(this);
   late final $AttendanceRecordsTable attendanceRecords =
       $AttendanceRecordsTable(this);
@@ -2384,8 +2857,14 @@ abstract class _$AppDatabase extends GeneratedDatabase {
   Iterable<TableInfo<Table, Object?>> get allTables =>
       allSchemaEntities.whereType<TableInfo<Table, Object?>>();
   @override
-  List<DatabaseSchemaEntity> get allSchemaEntities =>
-      [users, announcements, routines, cachedStudents, attendanceRecords];
+  List<DatabaseSchemaEntity> get allSchemaEntities => [
+        users,
+        announcements,
+        routines,
+        examRoutines,
+        cachedStudents,
+        attendanceRecords
+      ];
 }
 
 typedef $$UsersTableCreateCompanionBuilder = UsersCompanion Function({
@@ -3008,6 +3487,198 @@ class $$RoutinesTableOrderingComposer
           ColumnOrderings(column, joinBuilders: joinBuilders));
 }
 
+typedef $$ExamRoutinesTableCreateCompanionBuilder = ExamRoutinesCompanion
+    Function({
+  required String id,
+  required DateTime date,
+  required String subjectName,
+  required String roomNumber,
+  required String startTime,
+  required String endTime,
+  required int semester,
+  required String section,
+  required String examType,
+  Value<int> rowid,
+});
+typedef $$ExamRoutinesTableUpdateCompanionBuilder = ExamRoutinesCompanion
+    Function({
+  Value<String> id,
+  Value<DateTime> date,
+  Value<String> subjectName,
+  Value<String> roomNumber,
+  Value<String> startTime,
+  Value<String> endTime,
+  Value<int> semester,
+  Value<String> section,
+  Value<String> examType,
+  Value<int> rowid,
+});
+
+class $$ExamRoutinesTableTableManager extends RootTableManager<
+    _$AppDatabase,
+    $ExamRoutinesTable,
+    ExamRoutine,
+    $$ExamRoutinesTableFilterComposer,
+    $$ExamRoutinesTableOrderingComposer,
+    $$ExamRoutinesTableCreateCompanionBuilder,
+    $$ExamRoutinesTableUpdateCompanionBuilder> {
+  $$ExamRoutinesTableTableManager(_$AppDatabase db, $ExamRoutinesTable table)
+      : super(TableManagerState(
+          db: db,
+          table: table,
+          filteringComposer:
+              $$ExamRoutinesTableFilterComposer(ComposerState(db, table)),
+          orderingComposer:
+              $$ExamRoutinesTableOrderingComposer(ComposerState(db, table)),
+          updateCompanionCallback: ({
+            Value<String> id = const Value.absent(),
+            Value<DateTime> date = const Value.absent(),
+            Value<String> subjectName = const Value.absent(),
+            Value<String> roomNumber = const Value.absent(),
+            Value<String> startTime = const Value.absent(),
+            Value<String> endTime = const Value.absent(),
+            Value<int> semester = const Value.absent(),
+            Value<String> section = const Value.absent(),
+            Value<String> examType = const Value.absent(),
+            Value<int> rowid = const Value.absent(),
+          }) =>
+              ExamRoutinesCompanion(
+            id: id,
+            date: date,
+            subjectName: subjectName,
+            roomNumber: roomNumber,
+            startTime: startTime,
+            endTime: endTime,
+            semester: semester,
+            section: section,
+            examType: examType,
+            rowid: rowid,
+          ),
+          createCompanionCallback: ({
+            required String id,
+            required DateTime date,
+            required String subjectName,
+            required String roomNumber,
+            required String startTime,
+            required String endTime,
+            required int semester,
+            required String section,
+            required String examType,
+            Value<int> rowid = const Value.absent(),
+          }) =>
+              ExamRoutinesCompanion.insert(
+            id: id,
+            date: date,
+            subjectName: subjectName,
+            roomNumber: roomNumber,
+            startTime: startTime,
+            endTime: endTime,
+            semester: semester,
+            section: section,
+            examType: examType,
+            rowid: rowid,
+          ),
+        ));
+}
+
+class $$ExamRoutinesTableFilterComposer
+    extends FilterComposer<_$AppDatabase, $ExamRoutinesTable> {
+  $$ExamRoutinesTableFilterComposer(super.$state);
+  ColumnFilters<String> get id => $state.composableBuilder(
+      column: $state.table.id,
+      builder: (column, joinBuilders) =>
+          ColumnFilters(column, joinBuilders: joinBuilders));
+
+  ColumnFilters<DateTime> get date => $state.composableBuilder(
+      column: $state.table.date,
+      builder: (column, joinBuilders) =>
+          ColumnFilters(column, joinBuilders: joinBuilders));
+
+  ColumnFilters<String> get subjectName => $state.composableBuilder(
+      column: $state.table.subjectName,
+      builder: (column, joinBuilders) =>
+          ColumnFilters(column, joinBuilders: joinBuilders));
+
+  ColumnFilters<String> get roomNumber => $state.composableBuilder(
+      column: $state.table.roomNumber,
+      builder: (column, joinBuilders) =>
+          ColumnFilters(column, joinBuilders: joinBuilders));
+
+  ColumnFilters<String> get startTime => $state.composableBuilder(
+      column: $state.table.startTime,
+      builder: (column, joinBuilders) =>
+          ColumnFilters(column, joinBuilders: joinBuilders));
+
+  ColumnFilters<String> get endTime => $state.composableBuilder(
+      column: $state.table.endTime,
+      builder: (column, joinBuilders) =>
+          ColumnFilters(column, joinBuilders: joinBuilders));
+
+  ColumnFilters<int> get semester => $state.composableBuilder(
+      column: $state.table.semester,
+      builder: (column, joinBuilders) =>
+          ColumnFilters(column, joinBuilders: joinBuilders));
+
+  ColumnFilters<String> get section => $state.composableBuilder(
+      column: $state.table.section,
+      builder: (column, joinBuilders) =>
+          ColumnFilters(column, joinBuilders: joinBuilders));
+
+  ColumnFilters<String> get examType => $state.composableBuilder(
+      column: $state.table.examType,
+      builder: (column, joinBuilders) =>
+          ColumnFilters(column, joinBuilders: joinBuilders));
+}
+
+class $$ExamRoutinesTableOrderingComposer
+    extends OrderingComposer<_$AppDatabase, $ExamRoutinesTable> {
+  $$ExamRoutinesTableOrderingComposer(super.$state);
+  ColumnOrderings<String> get id => $state.composableBuilder(
+      column: $state.table.id,
+      builder: (column, joinBuilders) =>
+          ColumnOrderings(column, joinBuilders: joinBuilders));
+
+  ColumnOrderings<DateTime> get date => $state.composableBuilder(
+      column: $state.table.date,
+      builder: (column, joinBuilders) =>
+          ColumnOrderings(column, joinBuilders: joinBuilders));
+
+  ColumnOrderings<String> get subjectName => $state.composableBuilder(
+      column: $state.table.subjectName,
+      builder: (column, joinBuilders) =>
+          ColumnOrderings(column, joinBuilders: joinBuilders));
+
+  ColumnOrderings<String> get roomNumber => $state.composableBuilder(
+      column: $state.table.roomNumber,
+      builder: (column, joinBuilders) =>
+          ColumnOrderings(column, joinBuilders: joinBuilders));
+
+  ColumnOrderings<String> get startTime => $state.composableBuilder(
+      column: $state.table.startTime,
+      builder: (column, joinBuilders) =>
+          ColumnOrderings(column, joinBuilders: joinBuilders));
+
+  ColumnOrderings<String> get endTime => $state.composableBuilder(
+      column: $state.table.endTime,
+      builder: (column, joinBuilders) =>
+          ColumnOrderings(column, joinBuilders: joinBuilders));
+
+  ColumnOrderings<int> get semester => $state.composableBuilder(
+      column: $state.table.semester,
+      builder: (column, joinBuilders) =>
+          ColumnOrderings(column, joinBuilders: joinBuilders));
+
+  ColumnOrderings<String> get section => $state.composableBuilder(
+      column: $state.table.section,
+      builder: (column, joinBuilders) =>
+          ColumnOrderings(column, joinBuilders: joinBuilders));
+
+  ColumnOrderings<String> get examType => $state.composableBuilder(
+      column: $state.table.examType,
+      builder: (column, joinBuilders) =>
+          ColumnOrderings(column, joinBuilders: joinBuilders));
+}
+
 typedef $$CachedStudentsTableCreateCompanionBuilder = CachedStudentsCompanion
     Function({
   required String studentId,
@@ -3355,6 +4026,8 @@ class $AppDatabaseManager {
       $$AnnouncementsTableTableManager(_db, _db.announcements);
   $$RoutinesTableTableManager get routines =>
       $$RoutinesTableTableManager(_db, _db.routines);
+  $$ExamRoutinesTableTableManager get examRoutines =>
+      $$ExamRoutinesTableTableManager(_db, _db.examRoutines);
   $$CachedStudentsTableTableManager get cachedStudents =>
       $$CachedStudentsTableTableManager(_db, _db.cachedStudents);
   $$AttendanceRecordsTableTableManager get attendanceRecords =>

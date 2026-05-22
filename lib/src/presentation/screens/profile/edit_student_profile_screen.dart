@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart'; // ADDED: Required for input formatting
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../../../providers/profile_controller.dart';
@@ -145,9 +146,32 @@ class _EditStudentProfileScreenState extends ConsumerState<EditStudentProfileScr
               ),
               SizedBox(height: 30.h),
 
-              _buildField("Full Name", nameController),
+              // UX ENHANCEMENT: Restrict name to a-z, A-Z, spaces, and max 35 characters
+              _buildField(
+                "Full Name",
+                nameController,
+                maxLength: 35,
+                inputFormatters: [
+                  FilteringTextInputFormatter.allow(RegExp(r'[a-zA-Z ]')),
+                ],
+              ),
               _buildField("Semester", semesterController, isNumber: true),
-              _buildField("Section", sectionController),
+
+              // UX ENHANCEMENT: Restrict section to a, b, c and auto-capitalize
+              _buildField(
+                "Section",
+                sectionController,
+                maxLength: 1,
+                inputFormatters: [
+                  FilteringTextInputFormatter.allow(RegExp(r'[a-cA-C]')),
+                  TextInputFormatter.withFunction((oldValue, newValue) {
+                    return TextEditingValue(
+                      text: newValue.text.toUpperCase(),
+                      selection: newValue.selection,
+                    );
+                  }),
+                ],
+              ),
 
               Divider(color: Colors.white24, thickness: 1, height: 40.h),
 
@@ -197,7 +221,17 @@ class _EditStudentProfileScreenState extends ConsumerState<EditStudentProfileScr
     );
   }
 
-  Widget _buildField(String label, TextEditingController controller, {bool isNumber = false, bool isPassword = false, bool obscureText = false, VoidCallback? onToggleVisibility}) {
+  // MODIFIED: Added inputFormatters and maxLength parameters
+  Widget _buildField(
+      String label,
+      TextEditingController controller, {
+        bool isNumber = false,
+        bool isPassword = false,
+        bool obscureText = false,
+        VoidCallback? onToggleVisibility,
+        List<TextInputFormatter>? inputFormatters,
+        int? maxLength,
+      }) {
     return Padding(
       padding: EdgeInsets.only(bottom: 20.h),
       child: Column(
@@ -210,7 +244,10 @@ class _EditStudentProfileScreenState extends ConsumerState<EditStudentProfileScr
             obscureText: obscureText,
             keyboardType: isNumber ? TextInputType.number : TextInputType.text,
             style: TextStyle(color: Colors.white, fontSize: 16.sp),
+            inputFormatters: inputFormatters,
+            maxLength: maxLength,
             decoration: InputDecoration(
+              counterText: "", // UX ENHANCEMENT: Hide character counter to keep UI clean
               filled: false,
               enabledBorder: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(12.r),

@@ -8,8 +8,9 @@ import '../../../../data/repositories/user_repository.dart';
 import '../../../../services/update_service.dart';
 import '../../../widgets/update_notice_sheet.dart';
 import '../contact_us_screen.dart';
+import '../exam_routine_screen.dart'; // ADDED: Import the new Exam Routine screen
 import '../../attendance/attendance_setup_screen.dart';
-import '../../attendance/attendance_export_screen.dart'; // Added import for the export screen
+import '../../attendance/attendance_export_screen.dart';
 
 class HomeTab extends ConsumerStatefulWidget {
   const HomeTab({super.key});
@@ -76,12 +77,13 @@ class _HomeTabState extends ConsumerState<HomeTab> {
             ),
             SizedBox(height: 24.h),
             Expanded(
-              // MODIFICATION: Wrapped the grid in a StreamBuilder to dynamically hide/show tiles based on role
               child: StreamBuilder(
                   stream: userStream,
                   builder: (context, snapshot) {
                     final user = snapshot.data;
-                    final isTeacherOrDev = user != null && (user.role == 'teacher' || user.isDev);
+
+                    // MODIFICATION: Exact separation between teacher vs (student/dev)
+                    final isTeacher = user != null && user.role == 'teacher';
 
                     return Padding(
                       padding: EdgeInsets.symmetric(horizontal: 20.w),
@@ -95,14 +97,29 @@ class _HomeTabState extends ConsumerState<HomeTab> {
                         ),
                         children: [
                           const HomeFeatureTile(icon: Icons.calendar_today_outlined, label: "Academic\nCalendar"),
+
+                          // MODIFICATION: Hide Exam Routine for teachers
+                          if (!isTeacher)
+                            HomeFeatureTile(
+                              icon: Icons.assignment_outlined,
+                              label: "Exam\nRoutine",
+                              onTap: () {
+                                Navigator.push(context, MaterialPageRoute(builder: (_) => const ExamRoutineScreen()));
+                              },
+                            ),
+
                           const HomeFeatureTile(icon: Icons.picture_as_pdf_outlined, label: "Notes"),
                           const HomeFeatureTile(icon: Icons.menu_book_outlined, label: "Books"),
-                          const HomeFeatureTile(icon: Icons.directions_bus_outlined, label: "Bus\nSchedule"),
+
+                          // MODIFICATION: Hide Bus Schedule for teachers
+                          if (!isTeacher)
+                            const HomeFeatureTile(icon: Icons.directions_bus_outlined, label: "Bus\nSchedule"),
+
                           const HomeFeatureTile(icon: Icons.sports_score_outlined, label: "Clubs"),
                           const HomeFeatureTile(icon: Icons.directions_run_outlined, label: "Festivals"),
 
-                          // Render these tiles ONLY if the user is a teacher or developer
-                          if (isTeacherOrDev) ...[
+                          // MODIFICATION: Show Attendance features ONLY for teachers
+                          if (isTeacher) ...[
                             HomeFeatureTile(
                               icon: Icons.sentiment_satisfied_outlined,
                               label: "Attendance",
@@ -275,7 +292,6 @@ class _HomeTabState extends ConsumerState<HomeTab> {
           children: [
             Icon(icon, color: Colors.white, size: 22.sp),
             SizedBox(width: 16.w),
-            // MODIFICATION: Wrapped Text in Expanded to prevent right-side overflow
             Expanded(
               child: Text(
                 label,

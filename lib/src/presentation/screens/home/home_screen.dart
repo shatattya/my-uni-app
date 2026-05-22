@@ -1,16 +1,20 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart'; // Added for Provider access
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:firebase_auth/firebase_auth.dart' as firebase_auth; // ADDED: For Deep-Link metadata extraction
 
 import 'tabs/home_tab.dart';
 import 'tabs/routine_tab.dart';
 import 'tabs/notice_tab.dart';
 import 'tabs/profile_tab.dart';
-import '../../../services/update_service.dart'; // Added
-import '../../widgets/update_notice_sheet.dart'; // Added
+import '../../../services/update_service.dart';
+import '../../widgets/update_notice_sheet.dart';
+import '../../../data/repositories/announcement_repository.dart'; // ADDED: For syncing & querying notices
+import '../../../data/repositories/user_repository.dart'; // ADDED: For user scoping
+import 'announcement_detail_screen.dart'; // ADDED: For deep-link routing
 
-class HomeScreen extends ConsumerStatefulWidget { // Changed to ConsumerStatefulWidget
+class HomeScreen extends ConsumerStatefulWidget {
   const HomeScreen({super.key});
 
   @override
@@ -32,7 +36,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     super.initState();
     _setupInteractedMessage();
 
-    // MODIFICATION: Trigger automatic background update check on startup after a 7-second delay
+    // Trigger automatic background update check on startup after a 7-second delay
     Future.delayed(const Duration(seconds: 7), () {
       if (mounted) {
         _checkForUpdatesSilently();
@@ -54,13 +58,66 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   }
 
   Future<void> _setupInteractedMessage() async {
+    // MODIFICATION (BUG 2 FIX): Listen for foreground messages and auto-refresh the notices quietly
+    FirebaseMessaging.onMessage.listen((RemoteMessage message) {
+      ref.read(announcementRepositoryProvider).syncAnnouncements();
+    });
+
+    // Handle cold boot from a tapped notification
     RemoteMessage? initialMessage = await FirebaseMessaging.instance.getInitialMessage();
-    if (initialMessage != null) _navigateToNotices();
-    FirebaseMessaging.onMessageOpenedApp.listen((_) => _navigateToNotices());
+    if (initialMessage != null) _navigateToNotices(initialMessage);
+
+    // Handle background wakeup from a tapped notification
+    FirebaseMessaging.onMessageOpenedApp.listen((RemoteMessage message) {
+      _navigateToNotices(message);
+    });
   }
 
-  void _navigateToNotices() {
+  // MODIFICATION (BUG 1 FIX): Extract ID, fetch local data object, and push to the Detailed Screen
+  Future<void> _navigateToNotices(RemoteMessage message) async {
+    // 1. Immediately switch to Notice Tab, so popping the detail screen reveals the list
     setState(() => _currentIndex = 2);
+
+    final String? noticeId = message.data['id'] ?? message.data['noticeId'] ?? message.data['announcementId'];
+
+    if (noticeId != null) {
+      try {
+        // 2. Force an immediate sync to guarantee the tapped notice exists in SQLite
+        await ref.read(announcementRepositoryProvider).syncAnnouncements();
+
+        final uid = firebase_auth.FirebaseAuth.instance.currentUser?.uid;
+        if (uid == null) return;
+
+        // 3. Fetch localized user data for scope filtering
+        final user = await ref.read(userRepositoryProvider).watchUser(uid).first;
+        if (user == null) return;
+
+        // 4. Extract the exact notice target dynamically from the local repo
+        final notices = await ref.read(announcementRepositoryProvider)
+            .watchMyAnnouncements(user.semester, user.section, user.role, user.id)
+            .first;
+
+        dynamic targetNotice;
+        for (var n in notices) {
+          if (n.id == noticeId) {
+            targetNotice = n;
+            break;
+          }
+        }
+
+        // 5. Safely push the Detailed screen
+        if (targetNotice != null && mounted) {
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (_) => AnnouncementDetailScreen(notice: targetNotice),
+            ),
+          );
+        }
+      } catch (e) {
+        print("DEBUG: Deep link to AnnouncementDetailScreen failed: $e");
+      }
+    }
   }
 
   @override

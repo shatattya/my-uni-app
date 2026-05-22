@@ -1,10 +1,9 @@
 name: myuniapp
-description: "A sleek, offline-first campus companion for students and teachers.
- Built with Flutter and Firebase."
+description: "A sleek, offline-first campus companion for students and teachers. Built with Flutter and Firebase."
 
 publish_to: 'none'
 
-version: 3.2.3
+version: 3.7.0
 
 environment:
   sdk: ^3.10.8
@@ -24,12 +23,15 @@ dependencies:
   # Notifications
   firebase_messaging: ^14.9.1
   permission_handler: ^11.3.1
+  flutter_local_notifications: ^17.1.2 # ADDED: For offline exam scheduling
+  timezone: ^0.9.2 # ADDED: Required for scheduled local notifications
 
-  # Local database
+  # Local database & Storage
   drift: ^2.19.1+1
   drift_flutter: ^0.2.0
   sqlite3_flutter_libs: ^0.5.42
   path_provider: ^2.1.5
+  shared_preferences: ^2.2.3 # ADDED: For Smart Cooldown metadata
 
   # Networking
   dio: ^5.4.1
