@@ -25,7 +25,6 @@ class _ExamRoutineScreenState extends ConsumerState<ExamRoutineScreen> {
   List<String> _retakeIds = [];
   String _examTitle = "Loading...";
 
-  // MODIFICATION: Added vibrant card colors to match RoutineTab
   final List<Color> cardColors = [
     const Color(0xFF5C6BC0),
     const Color(0xFF9C27B0),
@@ -275,7 +274,10 @@ class _ExamRoutineScreenState extends ConsumerState<ExamRoutineScreen> {
                                         subtitle: Padding(
                                           padding: EdgeInsets.only(top: 6.h),
                                           child: Text(
-                                            "Sem ${exam.semester} '${exam.section}'  •  ${DateFormat('MMM dd').format(exam.date)} at ${exam.startTime}",
+                                            // MODIFICATION: Conditionally render the section if N/A
+                                            exam.section != "N/A"
+                                                ? "Sem ${exam.semester} '${exam.section}'  •  ${DateFormat('MMM dd').format(exam.date)} at ${exam.startTime}"
+                                                : "Sem ${exam.semester}  •  ${DateFormat('MMM dd').format(exam.date)} at ${exam.startTime}",
                                             style: TextStyle(color: Colors.white70, fontSize: 12.sp),
                                           ),
                                         ),
@@ -389,6 +391,7 @@ class _ExamRoutineScreenState extends ConsumerState<ExamRoutineScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
+                    _buildDisclaimerBanner(), // MODIFICATION: Added persistent disclaimer banner
                     _buildCountdownCard(nextExam, timeRemaining, hasConflict: conflictingIds.contains(nextExam.id)),
                     SizedBox(height: 24.h),
 
@@ -434,7 +437,6 @@ class _ExamRoutineScreenState extends ConsumerState<ExamRoutineScreen> {
                         itemCount: remainingExams.length,
                         itemBuilder: (context, index) {
                           final currentExam = remainingExams[index];
-                          // MODIFICATION: Pass dynamic color based on index
                           final cardColor = cardColors[index % cardColors.length];
 
                           return _buildExamTile(
@@ -451,6 +453,32 @@ class _ExamRoutineScreenState extends ConsumerState<ExamRoutineScreen> {
             },
           );
         },
+      ),
+    );
+  }
+
+  // MODIFICATION: iOS-styled disclaimer banner to warn against blind reliance
+  Widget _buildDisclaimerBanner() {
+    return Container(
+      margin: EdgeInsets.symmetric(horizontal: 20.w, vertical: 8.h),
+      padding: EdgeInsets.all(12.r),
+      decoration: BoxDecoration(
+        color: Colors.amber.withValues(alpha: 0.1),
+        borderRadius: BorderRadius.circular(12.r),
+        border: Border.all(color: Colors.red.withValues(alpha: 0.75)),
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Icon(Icons.info_outline_rounded, color: Colors.red, size: 20.r),
+          SizedBox(width: 10.w),
+          Expanded(
+            child: Text(
+              "Disclaimer: Always cross-check with the official university routine. Do not follow our routine blindly. The app authority is not responsible for any mishaps.",
+              style: TextStyle(color: Colors.white, fontSize: 15.sp, height: 1.4),
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -525,7 +553,10 @@ class _ExamRoutineScreenState extends ConsumerState<ExamRoutineScreen> {
                         ),
                         SizedBox(height: 4.h),
                         Text(
-                          "${_formatWeekday(exam.date)}, ${DateFormat('MMM dd, yyyy').format(exam.date)}  \nRoom ${exam.roomNumber}",
+                          // MODIFICATION: Conditionally render room number if it's not "N/A"
+                          exam.roomNumber != "N/A"
+                              ? "${_formatWeekday(exam.date)}, ${DateFormat('MMM dd, yyyy').format(exam.date)}  \nRoom ${exam.roomNumber}"
+                              : "${_formatWeekday(exam.date)}, ${DateFormat('MMM dd, yyyy').format(exam.date)}",
                           style: TextStyle(color: Colors.white.withValues(alpha: 0.8), fontSize: 13.sp),
                         ),
                         if (hasConflict) ...[
@@ -563,7 +594,6 @@ class _ExamRoutineScreenState extends ConsumerState<ExamRoutineScreen> {
     );
   }
 
-  // MODIFICATION: Accepts dynamic color and adjusts contrast for readability
   Widget _buildExamTile(ExamRoutine exam, Color cardColor, {bool hasConflict = false}) {
     final isRetake = _retakeIds.contains(exam.id);
 
@@ -571,7 +601,7 @@ class _ExamRoutineScreenState extends ConsumerState<ExamRoutineScreen> {
       margin: EdgeInsets.only(bottom: 12.h),
       padding: EdgeInsets.all(16.r),
       decoration: BoxDecoration(
-        color: cardColor, // Applied dynamic color
+        color: cardColor,
         borderRadius: BorderRadius.circular(16.r),
         border: hasConflict
             ? Border.all(color: Colors.redAccent.withValues(alpha: 0.8), width: 1.5)
@@ -582,7 +612,7 @@ class _ExamRoutineScreenState extends ConsumerState<ExamRoutineScreen> {
           Container(
             padding: EdgeInsets.symmetric(vertical: 8.h, horizontal: 12.w),
             decoration: BoxDecoration(
-              color: Colors.white.withValues(alpha: 0.2), // Whitened for contrast
+              color: Colors.white.withValues(alpha: 0.2),
               borderRadius: BorderRadius.circular(10.r),
             ),
             child: Column(
@@ -616,22 +646,25 @@ class _ExamRoutineScreenState extends ConsumerState<ExamRoutineScreen> {
                 SizedBox(height: 6.h),
                 Row(
                   children: [
-                    Icon(Icons.access_time_rounded, color: Colors.white70, size: 14.r), // Whitened for contrast
+                    Icon(Icons.access_time_rounded, color: Colors.white70, size: 14.r),
                     SizedBox(width: 4.w),
                     Text(
                       "${exam.startTime} - ${exam.endTime}",
                       style: TextStyle(color: Colors.white70, fontSize: 12.sp),
                     ),
-                    SizedBox(width: 8.w),
-                    Icon(Icons.room_rounded, color: Colors.white70, size: 14.r), // Whitened for contrast
-                    SizedBox(width: 4.w),
-                    Expanded(
-                      child: Text(
-                        exam.roomNumber,
-                        style: TextStyle(color: Colors.white70, fontSize: 12.sp),
-                        overflow: TextOverflow.ellipsis,
+                    // MODIFICATION: Conditionally render room icon and text if not "N/A"
+                    if (exam.roomNumber != "N/A") ...[
+                      SizedBox(width: 8.w),
+                      Icon(Icons.room_rounded, color: Colors.white70, size: 14.r),
+                      SizedBox(width: 4.w),
+                      Expanded(
+                        child: Text(
+                          exam.roomNumber,
+                          style: TextStyle(color: Colors.white70, fontSize: 12.sp),
+                          overflow: TextOverflow.ellipsis,
+                        ),
                       ),
-                    ),
+                    ]
                   ],
                 ),
                 if (hasConflict) ...[
@@ -639,7 +672,7 @@ class _ExamRoutineScreenState extends ConsumerState<ExamRoutineScreen> {
                   Container(
                     padding: EdgeInsets.symmetric(horizontal: 6.w, vertical: 2.h),
                     decoration: BoxDecoration(
-                      color: Colors.black.withValues(alpha: 0.25), // Pill background guarantees contrast
+                      color: Colors.black.withValues(alpha: 0.25),
                       borderRadius: BorderRadius.circular(4.r),
                     ),
                     child: Row(
@@ -662,7 +695,7 @@ class _ExamRoutineScreenState extends ConsumerState<ExamRoutineScreen> {
             Container(
               padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 4.h),
               decoration: BoxDecoration(
-                color: Colors.black.withValues(alpha: 0.25), // Pill background guarantees contrast
+                color: Colors.black.withValues(alpha: 0.25),
                 borderRadius: BorderRadius.circular(6.r),
               ),
               child: Text(

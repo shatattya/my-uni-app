@@ -9,7 +9,7 @@ This is a high-performance, offline-first mobile application designed to streaml
 * **Instant Notices:** Real-time push notifications for university announcements with targeted filtering (Semester/Section).
 * **Developer Panel:** A hidden administrative suite for managing the routine database and system insights.
 * **Zero-Cost Lifecycle:** Integrated auto-update system utilizing the GitHub REST API for version management.
-* **Premium UI:** Elegant "FaceBook Blue" aesthetic with full responsive scaling for all device sizes.
+* **Premium UI:** Elegant "Blue" aesthetic with full responsive scaling for all device sizes.
 
 ## 🛠 Tech Stack
 * **Framework:** [Flutter](https://flutter.dev) (v3.x)

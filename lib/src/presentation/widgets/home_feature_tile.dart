@@ -22,17 +22,19 @@ class HomeFeatureTile extends StatelessWidget {
         mainAxisAlignment: MainAxisAlignment.start,
         children: [
           Container(
-            // Use .r for a perfect, compact square that matches the mockup
-            height: 56.r,
-            width: 56.r,
+            // MODIFICATION: Bumped size to maintain a comfortable tap target under the new global scale
+            height: 64.r,
+            width: 64.r,
             decoration: BoxDecoration(
               color: const Color(0xFF1877F2), // Premium Blue
               borderRadius: BorderRadius.circular(16.r),
             ),
-            child: Icon(icon, color: Colors.white, size: 28.r), // Elegant icon sizing
+            // MODIFICATION: Scaled icon up slightly
+            child: Icon(icon, color: Colors.white, size: 32.r),
           ),
 
-          SizedBox(height: 8.h),
+          // MODIFICATION: Increased gap slightly
+          SizedBox(height: 10.h),
 
           Expanded( // Expanded forces the text into its own safe zone, preventing overlap
             child: Text(
@@ -42,7 +44,8 @@ class HomeFeatureTile extends StatelessWidget {
               overflow: TextOverflow.visible,
               style: TextStyle(
                 color: Colors.white,
-                fontSize: 12.sp, // Crisp, premium font size
+                // MODIFICATION: Bumped font size up to preserve legibility
+                fontSize: 14.sp,
                 fontWeight: FontWeight.w500,
                 height: 1.2, // Tighter line height looks cleaner
               ),

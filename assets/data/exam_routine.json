@@ -1,8 +1,18 @@
 {
-  "examId": "final_spring2026",
-  "examTitle": "Final-Term Theory Examination Spring (January-June) 2026",
+  "examId": "final_2026",
+  "examTitle": "Final Exam January-June 2026",
   "examStartDate": "2026-06-14",
-  "examEndDate": "2026-06-29",
+  "examEndDate": "2026-07-01",
+  "roomAllocations": {
+    "1A": "N/A", "1B": "N/A", "1C": "N/A",
+    "2A": "N/A", "2B": "N/A", "2C": "N/A",
+    "3A": "N/A", "3B": "N/A", "3C": "N/A",
+    "4A": "N/A", "4B": "N/A", "4C": "N/A",
+    "5A": "N/A", "5B": "N/A", "5C": "N/A",
+    "6A": "N/A", "6B": "N/A", "6C": "N/A",
+    "7A": "N/A", "7B": "N/A", "7C": "N/A",
+    "8A": "N/A", "8B": "N/A", "8C": "N/A"
+  },
   "data": [
     {
       "date": "2026-06-14",
@@ -10,24 +20,21 @@
         {
           "sem": 1,
           "sec": "N/A",
-          "sub": "CF (07-0611-CF101)",
-          "room": "N/A",
+          "sub": "CF (CF 101)",
           "startTime": "10:30",
           "endTime": "13:30"
         },
         {
           "sem": 3,
           "sec": "N/A",
-          "sub": "MATH-3 (07-0541 Math 305)",
-          "room": "N/A",
+          "sub": "MATH 3 (Math 305)",
           "startTime": "10:30",
           "endTime": "13:30"
         },
         {
           "sem": 5,
           "sec": "N/A",
-          "sub": "DBMS (07-0612 DBMS 501)",
-          "room": "N/A",
+          "sub": "DBMS (DBMS 501)",
           "startTime": "10:30",
           "endTime": "13:30"
         }
@@ -39,24 +46,21 @@
         {
           "sem": 2,
           "sec": "N/A",
-          "sub": "PHY-2 (07-0533-PHY 204)",
-          "room": "N/A",
+          "sub": "PHY 2 (PHY 204)",
           "startTime": "10:30",
           "endTime": "13:30"
         },
         {
           "sem": 4,
           "sec": "N/A",
-          "sub": "NA (07-0619 NA-403)",
-          "room": "N/A",
+          "sub": "NA (NA 403)",
           "startTime": "10:30",
           "endTime": "13:30"
         },
         {
           "sem": 6,
           "sec": "N/A",
-          "sub": "SE (07-0613- SE 606)",
-          "room": "N/A",
+          "sub": "SE (SE 606)",
           "startTime": "10:30",
           "endTime": "13:30"
         }
@@ -68,24 +72,28 @@
         {
           "sem": 1,
           "sec": "N/A",
-          "sub": "CP (07-0613-CP102)",
-          "room": "N/A",
+          "sub": "CP (CP 102)",
+          "startTime": "10:30",
+          "endTime": "13:30"
+        },
+        {
+          "sem": 3,
+          "sec": "N/A",
+          "sub": "DM (CP 302)",
           "startTime": "10:30",
           "endTime": "13:30"
         },
         {
           "sem": 5,
           "sec": "N/A",
-          "sub": "SAD (07-0613 SAD 505)",
-          "room": "N/A",
+          "sub": "SAD (SAD 505)",
           "startTime": "10:30",
           "endTime": "13:30"
         },
         {
           "sem": 7,
           "sec": "N/A",
-          "sub": "ML (070613ML702)",
-          "room": "N/A",
+          "sub": "CNS (CNS 704)",
           "startTime": "10:30",
           "endTime": "13:30"
         }
@@ -97,24 +105,21 @@
         {
           "sem": 2,
           "sec": "N/A",
-          "sub": "C++ (07-0613-CPLUS 203)",
-          "room": "N/A",
+          "sub": "C++ (CPLUS 203)",
           "startTime": "10:30",
           "endTime": "13:30"
         },
         {
           "sem": 4,
           "sec": "N/A",
-          "sub": "Math (07-0541 Math 405)",
-          "room": "N/A",
+          "sub": "MATH 4(MATH 405)",
           "startTime": "10:30",
           "endTime": "13:30"
         },
         {
           "sem": 6,
           "sec": "N/A",
-          "sub": "AI (07-0619-AI 603)",
-          "room": "N/A",
+          "sub": "AI (AI 603)",
           "startTime": "10:30",
           "endTime": "13:30"
         }
@@ -126,32 +131,28 @@
         {
           "sem": 1,
           "sec": "N/A",
-          "sub": "ACC (07-0411-ACC106)",
-          "room": "N/A",
+          "sub": "ACC (ACC 106)",
           "startTime": "10:30",
           "endTime": "13:30"
         },
         {
           "sem": 3,
           "sec": "N/A",
-          "sub": "BE (07-0714-BE 303)",
-          "room": "N/A",
+          "sub": "BE (BE 303)",
           "startTime": "10:30",
           "endTime": "13:30"
         },
         {
           "sem": 5,
           "sec": "N/A",
-          "sub": "DC (07-0612 DC 502)",
-          "room": "N/A",
+          "sub": "DC (DC 502)",
           "startTime": "10:30",
           "endTime": "13:30"
         },
         {
           "sem": 7,
           "sec": "N/A",
-          "sub": "CNS (07-0612CNS 704)",
-          "room": "N/A",
+          "sub": "ML & FN (MLFN 702)",
           "startTime": "10:30",
           "endTime": "13:30"
         }
@@ -163,24 +164,21 @@
         {
           "sem": 2,
           "sec": "N/A",
-          "sub": "BEE (07-0713-BEE 201)",
-          "room": "N/A",
+          "sub": "BEE (BEE 201)",
           "startTime": "10:30",
           "endTime": "13:30"
         },
         {
           "sem": 4,
           "sec": "N/A",
-          "sub": "INC (07-0612 INC 402)",
-          "room": "N/A",
+          "sub": "INC (INC 402)",
           "startTime": "10:30",
           "endTime": "13:30"
         },
         {
           "sem": 6,
           "sec": "N/A",
-          "sub": "CPI (07-0714-CPI605)",
-          "room": "N/A",
+          "sub": "CPI (CPI 605)",
           "startTime": "10:30",
           "endTime": "13:30"
         }
@@ -192,32 +190,28 @@
         {
           "sem": 1,
           "sec": "N/A",
-          "sub": "BS (07-0222BS 107)",
-          "room": "N/A",
+          "sub": "BS (BS 107)",
           "startTime": "10:30",
           "endTime": "13:30"
         },
         {
           "sem": 3,
           "sec": "N/A",
-          "sub": "STAT (07-0542-STAT306)",
-          "room": "N/A",
+          "sub": "STAT (STAT 306)",
           "startTime": "10:30",
           "endTime": "13:30"
         },
         {
           "sem": 5,
           "sec": "N/A",
-          "sub": "OS (07-0613-OS 503)",
-          "room": "N/A",
+          "sub": "OS (OS 503)",
           "startTime": "10:30",
           "endTime": "13:30"
         },
         {
           "sem": 7,
           "sec": "N/A",
-          "sub": "Compilers (070619COM 703)",
-          "room": "N/A",
+          "sub": "COM (COM 703)",
           "startTime": "10:30",
           "endTime": "13:30"
         }
@@ -229,24 +223,21 @@
         {
           "sem": 2,
           "sec": "N/A",
-          "sub": "DS (07-0613-DS 202)",
-          "room": "N/A",
+          "sub": "DS (DS 202)",
           "startTime": "10:30",
           "endTime": "13:30"
         },
         {
           "sem": 4,
           "sec": "N/A",
-          "sub": "CSA (07-0613-CSA 404)",
-          "room": "N/A",
+          "sub": "CSA (CSA 404)",
           "startTime": "10:30",
           "endTime": "13:30"
         },
         {
           "sem": 6,
           "sec": "N/A",
-          "sub": "CN (07-0612-CN 601)",
-          "room": "N/A",
+          "sub": "CN (CN 601)",
           "startTime": "10:30",
           "endTime": "13:30"
         }
@@ -258,32 +249,21 @@
         {
           "sem": 1,
           "sec": "N/A",
-          "sub": "Math 104 (07-0541-Math 104)",
-          "room": "N/A",
-          "startTime": "10:30",
-          "endTime": "13:30"
-        },
-        {
-          "sem": 3,
-          "sec": "N/A",
-          "sub": "JAVA (07-0613-JAVA 304)",
-          "room": "N/A",
+          "sub": "MATH 1 (MATH 104)",
           "startTime": "10:30",
           "endTime": "13:30"
         },
         {
           "sem": 5,
           "sec": "N/A",
-          "sub": "MP (07-0613 MP 504)",
-          "room": "N/A",
+          "sub": "MP (MP 504)",
           "startTime": "10:30",
           "endTime": "13:30"
         },
         {
           "sem": 7,
           "sec": "N/A",
-          "sub": "DSD (07-0714 DS705)",
-          "room": "N/A",
+          "sub": "DSD (DSD 705)",
           "startTime": "10:30",
           "endTime": "13:30"
         }
@@ -295,24 +275,21 @@
         {
           "sem": 2,
           "sec": "N/A",
-          "sub": "MATH-2 (07-0541- MATH 205)",
-          "room": "N/A",
+          "sub": "MATH 2 (MATH 205)",
           "startTime": "10:30",
           "endTime": "13:30"
         },
         {
           "sem": 4,
           "sec": "N/A",
-          "sub": "CA (07-0613-CA 401)",
-          "room": "N/A",
+          "sub": "HEB (HEB 409)",
           "startTime": "10:30",
           "endTime": "13:30"
         },
         {
           "sem": 6,
           "sec": "N/A",
-          "sub": "SIM (07-0619 SIM 604)",
-          "room": "N/A",
+          "sub": "SIM (SIM 604)",
           "startTime": "10:30",
           "endTime": "13:30"
         }
@@ -324,40 +301,35 @@
         {
           "sem": 1,
           "sec": "N/A",
-          "sub": "PHY (07-0533-PHY 103)",
-          "room": "N/A",
+          "sub": "PHY 1 (PHY 103)",
           "startTime": "10:30",
           "endTime": "13:30"
         },
         {
           "sem": 2,
           "sec": "N/A",
-          "sub": "Econ (ECON211)",
-          "room": "N/A",
+          "sub": "ECON (ECON 211)",
           "startTime": "10:30",
           "endTime": "13:30"
         },
         {
           "sem": 3,
           "sec": "N/A",
-          "sub": "DLD (07-0714-DLD 301)",
-          "room": "N/A",
+          "sub": "DLD (DLD 301)",
           "startTime": "10:30",
           "endTime": "13:30"
         },
         {
           "sem": 5,
           "sec": "N/A",
-          "sub": "BLL (07-0631 BLL 510)",
-          "room": "N/A",
+          "sub": "BLL (BLL 510)",
           "startTime": "10:30",
           "endTime": "13:30"
         },
         {
           "sem": 7,
           "sec": "N/A",
-          "sub": "ELECT (07-0612ELECT 706)",
-          "room": "N/A",
+          "sub": "ELECT (ELECT 706)",
           "startTime": "10:30",
           "endTime": "13:30"
         }
@@ -367,34 +339,96 @@
       "date": "2026-06-29",
       "exams": [
         {
-          "sem": 1,
-          "sec": "N/A",
-          "sub": "ELC (07-0231-ELC105)",
-          "room": "N/A",
-          "startTime": "10:30",
-          "endTime": "13:30"
-        },
-        {
-          "sem": 2,
-          "sec": "N/A",
-          "sub": "PE (07-0619-PE 206)",
-          "room": "N/A",
-          "startTime": "10:30",
-          "endTime": "13:30"
-        },
-        {
           "sem": 4,
           "sec": "N/A",
-          "sub": "HEB (07-0222-HEB 409)",
-          "room": "N/A",
+          "sub": "CA (CA 401)",
           "startTime": "10:30",
           "endTime": "13:30"
         },
         {
           "sem": 6,
           "sec": "N/A",
-          "sub": "TOC (07-0613 TOC 602)",
-          "room": "N/A",
+          "sub": "TOC (TOC 602)",
+          "startTime": "10:30",
+          "endTime": "13:30"
+        }
+      ]
+    },
+    {
+      "date": "2026-06-30",
+      "exams": [
+        {
+          "sem": 1,
+          "sec": "N/A",
+          "sub": "ELC (ELC 105)",
+          "startTime": "10:30",
+          "endTime": "13:30"
+        },
+        {
+          "sem": 2,
+          "sec": "N/A",
+          "sub": "PE (PE 206)",
+          "startTime": "10:30",
+          "endTime": "13:30"
+        },
+        {
+          "sem": 3,
+          "sec": "N/A",
+          "sub": "JAVA (JAVA 304)",
+          "startTime": "10:30",
+          "endTime": "13:30"
+        },
+        {
+          "sem": 4,
+          "sec": "N/A",
+          "sub": "Viva Voce",
+          "startTime": "10:30",
+          "endTime": "13:30"
+        },
+        {
+          "sem": 5,
+          "sec": "N/A",
+          "sub": "Viva Voce",
+          "startTime": "10:30",
+          "endTime": "13:30"
+        },
+        {
+          "sem": 6,
+          "sec": "N/A",
+          "sub": "Viva Voce",
+          "startTime": "10:30",
+          "endTime": "13:30"
+        },
+        {
+          "sem": 7,
+          "sec": "N/A",
+          "sub": "Viva Voce",
+          "startTime": "10:30",
+          "endTime": "13:30"
+        }
+      ]
+    },
+    {
+      "date": "2026-07-01",
+      "exams": [
+        {
+          "sem": 1,
+          "sec": "N/A",
+          "sub": "Viva Voce",
+          "startTime": "10:30",
+          "endTime": "13:30"
+        },
+        {
+          "sem": 2,
+          "sec": "N/A",
+          "sub": "Viva Voce",
+          "startTime": "10:30",
+          "endTime": "13:30"
+        },
+        {
+          "sem": 3,
+          "sec": "N/A",
+          "sub": "Viva Voce",
           "startTime": "10:30",
           "endTime": "13:30"
         }

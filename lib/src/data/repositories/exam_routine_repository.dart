@@ -1,4 +1,4 @@
-import 'dart:convert'; // ADDED: Required to decode the raw JSON string from Firestore
+import 'dart:convert';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:drift/drift.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -18,7 +18,8 @@ class ExamRoutineRepository {
 
   static const String _prefExamEndDate = 'examEndDate';
   static const String _prefExamId = 'currentExamId';
-  static const String _prefExamTitle = 'currentExamTitle'; // ADDED: To display in the UI
+  static const String _prefExamTitle = 'currentExamTitle';
+  static const String _prefRoomAllocations = 'roomAllocations'; // ADDED: Key for global rooms
 
   ExamRoutineRepository(this._db, this._firestore);
 
@@ -48,11 +49,11 @@ class ExamRoutineRepository {
     await prefs.setStringList('retakes_$currentExamId', ids);
   }
 
-  /// OFFLINE FIRST: Watch exams for a specific student's semester/section PLUS any added retakes
+  /// OFFLINE FIRST: Watch exams for a specific student's semester/section PLUS any added retakes.
+  /// MODIFICATION: Intercepts the DB stream to dynamically inject room allocations or hide retake rooms.
   Stream<List<ExamRoutine>> watchStudentExams(int semester, String section, List<String> retakeIds) {
     return (_db.select(_db.examRoutines)
       ..where((r) {
-        // MODIFICATION: Handle explicit sections OR "N/A" / "NA" for universal semester exams
         final isMainExam = r.semester.equals(semester) &
         (r.section.equals(section) | r.section.equals('N/A') | r.section.equals('NA'));
         final isRetake = retakeIds.isNotEmpty ? r.id.isIn(retakeIds) : const Constant(false);
@@ -62,17 +63,44 @@ class ExamRoutineRepository {
             (t) => OrderingTerm(expression: t.date),
             (t) => OrderingTerm(expression: t.startTime)
       ])
-    ).watch();
+    ).watch().asyncMap((exams) async {
+      // Fetch dynamic room allocations map
+      final prefs = await SharedPreferences.getInstance();
+      final allocationsStr = prefs.getString(_prefRoomAllocations) ?? '{}';
+      Map<String, dynamic> allocations = {};
+      try {
+        allocations = json.decode(allocationsStr) as Map<String, dynamic>;
+      } catch (_) {}
+
+      // Map over the database results to apply business logic
+      return exams.map((e) {
+        final isRetake = retakeIds.contains(e.id);
+
+        if (isRetake) {
+          // Rule: Retakes never show room or section. Override to N/A.
+          return e.copyWith(roomNumber: "N/A", section: "N/A");
+        } else {
+          // Rule: Match main exam with global room allocation
+          final allocKey = "$semester$section"; // e.g., "1A"
+          final mappedRoom = allocations[allocKey];
+
+          if (mappedRoom != null && mappedRoom.toString().trim() != "N/A" && mappedRoom.toString().trim().isNotEmpty) {
+            // Apply the specific room and reveal the true section
+            return e.copyWith(roomNumber: mappedRoom.toString().trim(), section: section);
+          } else {
+            // Data missing/not provided yet: Mask both to hide in UI
+            return e.copyWith(roomNumber: "N/A", section: "N/A");
+          }
+        }
+      }).toList();
+    });
   }
 
   /// OFFLINE FIRST: Watch all OTHER exams to populate the "Add Retake" selection screen
-  /// MODIFICATION: Now strictly filters out future semesters (semester > currentSemester)
   Stream<List<ExamRoutine>> watchOtherExams(int currentSemester, String currentSection) {
     return (_db.select(_db.examRoutines)
       ..where((r) {
-        // Guardrail: Must be less than or equal to current semester
         final isValidSem = r.semester.isSmallerOrEqualValue(currentSemester);
-        // Exclude the student's main routine (including universal N/A exams for their semester)
         final isNotMain = (r.semester.equals(currentSemester) &
         (r.section.equals(currentSection) | r.section.equals('N/A') | r.section.equals('NA'))).not();
         return isValidSem & isNotMain;
@@ -88,13 +116,12 @@ class ExamRoutineRepository {
   Future<bool> areExamsOver() async {
     final prefs = await SharedPreferences.getInstance();
     final endDateStr = prefs.getString(_prefExamEndDate);
-    if (endDateStr == null) return true; // Default to 'over' if no data exists
+    if (endDateStr == null) return true;
 
     final endDate = DateTime.tryParse(endDateStr);
     if (endDate == null) return true;
 
     final today = DateTime.now();
-    // Normalize to midnight to ensure exact day comparisons
     final normalizedToday = DateTime(today.year, today.month, today.day);
     final normalizedEnd = DateTime(endDate.year, endDate.month, endDate.day);
 
@@ -102,7 +129,6 @@ class ExamRoutineRepository {
   }
 
   /// SYNC: Fetch the master exam data from Firestore and safely replace SQLite
-  /// MODIFICATION: Removed smart cooldown. It now fetches unconditionally when called.
   Future<void> syncExamRoutines() async {
     if (_isSyncing) return;
     _isSyncing = true;
@@ -118,7 +144,6 @@ class ExamRoutineRepository {
       final docData = docSnapshot.data();
       if (docData == null || !docData.containsKey("data")) return;
 
-      // MODIFICATION: Decode the raw JSON string stored in the 'data' field
       final String rawJsonString = docData["data"];
       final Map<String, dynamic> data = json.decode(rawJsonString);
 
@@ -133,6 +158,11 @@ class ExamRoutineRepository {
 
       final String globalExamTitle = (data["examTitle"]?.toString() ?? "Final Examination").trim();
       await prefs.setString(_prefExamTitle, globalExamTitle);
+
+      // MODIFICATION: Save decoupled room allocations to SharedPreferences
+      if (data.containsKey("roomAllocations")) {
+        await prefs.setString(_prefRoomAllocations, json.encode(data["roomAllocations"]));
+      }
 
       if (!data.containsKey("data")) return;
 
@@ -150,13 +180,15 @@ class ExamRoutineRepository {
 
         for (var exam in exams) {
           final int parsedSem = int.tryParse(exam["sem"]?.toString() ?? "1") ?? 1;
-          final String parsedSec = (exam["sec"]?.toString() ?? "A").trim().toUpperCase();
+          final String parsedSec = (exam["sec"]?.toString() ?? "N/A").trim().toUpperCase();
           final String subject = (exam["sub"]?.toString() ?? "Unknown Subject").trim();
-          final String roomNum = (exam["room"]?.toString() ?? "TBA").trim();
+
+          // MODIFICATION: Hardcode default DB room to "N/A" since logic is handled on stream output
+          final String roomNum = "N/A";
+
           final String startTime = (exam["startTime"]?.toString() ?? "00:00").trim();
           final String endTime = (exam["endTime"]?.toString() ?? "00:00").trim();
 
-          // Bind the primary key to the root examId to prevent future ghost retakes
           final uniqueId = "${masterExamId}_${dateStr}_${parsedSem}_${parsedSec}_${subject}_$roomNum";
 
           companions.add(
@@ -175,7 +207,6 @@ class ExamRoutineRepository {
         }
       }
 
-      // Safe Wipe & Replace Transaction
       await _db.transaction(() async {
         await _db.delete(_db.examRoutines).go();
         await _db.batch((batch) {

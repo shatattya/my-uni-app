@@ -13,38 +13,42 @@ class ContactUsScreen extends StatelessWidget {
         elevation: 0,
         iconTheme: const IconThemeData(color: Colors.white),
       ),
-      body: SingleChildScrollView(
-        padding: EdgeInsets.symmetric(horizontal: 24.w, vertical: 20.h),
-        child: Column(
-          children: [
-            _buildContactRow(
-              imagePath: "assets/avatars/24.png",
-              name: "Shimanta Dey",
-              id: "230241110",
-              role: "Full Stack Developer",
-              email: "shimantadey77@gmail.com",
-              phone: "+8801848-497083",
-            ),
-            Divider(color: Colors.white30, thickness: 1, height: 40.h),
-            _buildContactRow(
-              imagePath: "assets/avatars/23.png",
-              name: "Shatattya Barua",
-              id: "230241123",
-              role: "Flutter & Backend Developer",
-              email: "shatattya@proton.me",
-              phone: "+8801740-698959",
-            ),
-            Divider(color: Colors.white30, thickness: 1, height: 40.h),
-            _buildContactRow(
-              imagePath: "assets/avatars/25.png",
-              name: "Kamrul Islam Rony",
-              id: "230241119",
-              role: "Front End & Database Developer",
-              email: "kamrulislam2089@gmail.com",
-              phone: "+8801964-815852",
-            ),
-            Divider(color: Colors.white30, thickness: 1, height: 40.h),
-          ],
+      // MODIFICATION: Wrapped in Center to align content in the middle vertically
+      body: Center(
+        child: SingleChildScrollView(
+          padding: EdgeInsets.symmetric(horizontal: 28.w, vertical: 24.h), // MODIFICATION: Bumped padding
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center, // MODIFICATION: Centers items perfectly
+            children: [
+              _buildContactRow(
+                imagePath: "assets/avatars/24.png",
+                name: "Shimanta Dey",
+                id: "230241110",
+                role: "Full Stack Developer",
+                email: "shimantadey77@gmail.com",
+                phone: "+8801848-497083",
+              ),
+              Divider(color: Colors.white30, thickness: 1, height: 48.h), // MODIFICATION: Bumped
+              _buildContactRow(
+                imagePath: "assets/avatars/23.png",
+                name: "Shatattya Barua",
+                id: "230241123",
+                role: "Flutter & Backend Developer",
+                email: "shatattya@proton.me",
+                phone: "+8801740-698959",
+              ),
+              Divider(color: Colors.white30, thickness: 1, height: 48.h), // MODIFICATION: Bumped
+              _buildContactRow(
+                imagePath: "assets/avatars/25.png",
+                name: "Kamrul Islam Rony",
+                id: "230241119",
+                role: "Front End & Database Developer",
+                email: "kamrulislam2089@gmail.com",
+                phone: "+8801964-815852",
+              ),
+              Divider(color: Colors.white30, thickness: 1, height: 48.h), // MODIFICATION: Bumped
+            ],
+          ),
         ),
       ),
     );
@@ -62,24 +66,24 @@ class ContactUsScreen extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.center,
       children: [
         CircleAvatar(
-          radius: 40.r,
+          radius: 48.r, // MODIFICATION: Bumped avatar size to remain prominent
           backgroundColor: Colors.white12,
           backgroundImage: AssetImage(imagePath),
         ),
-        SizedBox(width: 20.w),
+        SizedBox(width: 24.w), // MODIFICATION: Bumped horizontal spacing
         Expanded(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(name, style: TextStyle(color: Colors.white, fontSize: 16.sp, fontWeight: FontWeight.w500)),
+              Text(name, style: TextStyle(color: Colors.white, fontSize: 18.sp, fontWeight: FontWeight.w500)), // MODIFICATION: Bumped
               SizedBox(height: 2.h),
-              Text(id, style: TextStyle(color: Colors.white, fontSize: 14.sp)),
+              Text(id, style: TextStyle(color: Colors.white, fontSize: 16.sp)), // MODIFICATION: Bumped
               SizedBox(height: 2.h),
-              Text(role, style: TextStyle(color: Colors.white, fontSize: 13.sp)),
+              Text(role, style: TextStyle(color: Colors.white, fontSize: 15.sp)), // MODIFICATION: Bumped
               SizedBox(height: 2.h),
-              Text(email, style: TextStyle(color: Colors.white, fontSize: 13.sp)),
+              Text(email, style: TextStyle(color: Colors.white, fontSize: 15.sp)), // MODIFICATION: Bumped
               SizedBox(height: 2.h),
-              Text(phone, style: TextStyle(color: Colors.white, fontSize: 13.sp)),
+              Text(phone, style: TextStyle(color: Colors.white, fontSize: 15.sp)), // MODIFICATION: Bumped
             ],
           ),
         ),

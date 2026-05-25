@@ -8,7 +8,7 @@ import '../../../../data/repositories/user_repository.dart';
 import '../../../../services/update_service.dart';
 import '../../../widgets/update_notice_sheet.dart';
 import '../contact_us_screen.dart';
-import '../exam_routine_screen.dart'; // ADDED: Import the new Exam Routine screen
+import '../exam_routine_screen.dart';
 import '../../attendance/attendance_setup_screen.dart';
 import '../../attendance/attendance_export_screen.dart';
 
@@ -49,7 +49,7 @@ class _HomeTabState extends ConsumerState<HomeTab> {
         : const Stream.empty();
 
     return Scaffold(
-      backgroundColor: Colors.transparent, // Keeps the underlying black background from IndexedStack
+      backgroundColor: Colors.transparent,
       drawer: _buildDrawer(context, ref),
       body: SafeArea(
         child: Column(
@@ -58,10 +58,10 @@ class _HomeTabState extends ConsumerState<HomeTab> {
               padding: EdgeInsets.only(left: 20.w, top: 10.h, bottom: 10.h),
               child: Align(
                 alignment: Alignment.centerLeft,
-                // Wrapped the icon in a Builder so it can find the Scaffold context to open the drawer
                 child: Builder(
                   builder: (ctx) => IconButton(
-                    icon: Icon(Icons.menu, color: Colors.white, size: 28.r),
+                    // MODIFICATION: Bumped icon size slightly to keep the hamburger menu easy to tap
+                    icon: Icon(Icons.menu, color: Colors.white, size: 30.r),
                     onPressed: () => Scaffold.of(ctx).openDrawer(),
                   ),
                 ),
@@ -71,7 +71,8 @@ class _HomeTabState extends ConsumerState<HomeTab> {
               padding: EdgeInsets.symmetric(horizontal: 20.w),
               child: SizedBox(
                 width: double.infinity,
-                height: 200.h,
+                // MODIFICATION: Compensated for global scale down to prevent the banner from getting too short
+                height: 230.h,
                 child: _buildBannerContainer(),
               ),
             ),
@@ -81,8 +82,6 @@ class _HomeTabState extends ConsumerState<HomeTab> {
                   stream: userStream,
                   builder: (context, snapshot) {
                     final user = snapshot.data;
-
-                    // MODIFICATION: Exact separation between teacher vs (student/dev)
                     final isTeacher = user != null && user.role == 'teacher';
 
                     return Padding(
@@ -91,14 +90,14 @@ class _HomeTabState extends ConsumerState<HomeTab> {
                         physics: const BouncingScrollPhysics(),
                         gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
                           crossAxisCount: 4,
-                          crossAxisSpacing: 12.w,
-                          mainAxisSpacing: 16.h,
-                          mainAxisExtent: 100.h,
+                          // MODIFICATION: Increased spacing and extent to avoid cramped tiles under the new scale
+                          crossAxisSpacing: 14.w,
+                          mainAxisSpacing: 18.h,
+                          mainAxisExtent: 115.h,
                         ),
                         children: [
                           const HomeFeatureTile(icon: Icons.calendar_today_outlined, label: "Academic\nCalendar"),
 
-                          // MODIFICATION: Hide Exam Routine for teachers
                           if (!isTeacher)
                             HomeFeatureTile(
                               icon: Icons.assignment_outlined,
@@ -111,14 +110,12 @@ class _HomeTabState extends ConsumerState<HomeTab> {
                           const HomeFeatureTile(icon: Icons.picture_as_pdf_outlined, label: "Notes"),
                           const HomeFeatureTile(icon: Icons.menu_book_outlined, label: "Books"),
 
-                          // MODIFICATION: Hide Bus Schedule for teachers
                           if (!isTeacher)
                             const HomeFeatureTile(icon: Icons.directions_bus_outlined, label: "Bus\nSchedule"),
 
                           const HomeFeatureTile(icon: Icons.sports_score_outlined, label: "Clubs"),
                           const HomeFeatureTile(icon: Icons.directions_run_outlined, label: "Festivals"),
 
-                          // MODIFICATION: Show Attendance features ONLY for teachers
                           if (isTeacher) ...[
                             HomeFeatureTile(
                               icon: Icons.sentiment_satisfied_outlined,
@@ -168,12 +165,14 @@ class _HomeTabState extends ConsumerState<HomeTab> {
           children: [
             Text(
               "All In One\nAcademics",
-              style: TextStyle(fontSize: 28.sp, fontWeight: FontWeight.bold, color: Colors.white, height: 1.1),
+              // MODIFICATION: Bumped up text size to preserve impact
+              style: TextStyle(fontSize: 32.sp, fontWeight: FontWeight.bold, color: Colors.white, height: 1.1),
             ),
             SizedBox(height: 8.h),
             Text(
               "Look What Is Going On In Campus –\nNotices, Events & Academics",
-              style: TextStyle(fontSize: 13.sp, color: Colors.white.withValues(alpha: 0.9), height: 1.3),
+              // MODIFICATION: Bumped up text size for legibility
+              style: TextStyle(fontSize: 15.sp, color: Colors.white.withValues(alpha: 0.9), height: 1.3),
             ),
           ],
         ),
@@ -181,7 +180,6 @@ class _HomeTabState extends ConsumerState<HomeTab> {
     );
   }
 
-  // The Drawer Menu based on your mockup
   Widget _buildDrawer(BuildContext context, WidgetRef ref) {
     final firebaseUser = firebase_auth.FirebaseAuth.instance.currentUser;
     final userStream = firebaseUser != null
@@ -189,20 +187,19 @@ class _HomeTabState extends ConsumerState<HomeTab> {
         : const Stream.empty();
 
     return Drawer(
-      backgroundColor: const Color(0xFF1E1E1E), // Dark grey background
+      backgroundColor: const Color(0xFF1E1E1E),
       child: SafeArea(
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Close Button Row
             Padding(
               padding: EdgeInsets.only(left: 20.w, right: 10.w, top: 10.h),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Text("Menu", style: TextStyle(color: Colors.white, fontSize: 20.sp, fontWeight: FontWeight.bold)),
+                  Text("Menu", style: TextStyle(color: Colors.white, fontSize: 22.sp, fontWeight: FontWeight.bold)), // Modified
                   IconButton(
-                    icon: Icon(Icons.cancel_outlined, color: Colors.white, size: 28.r),
+                    icon: Icon(Icons.cancel_outlined, color: Colors.white, size: 30.r), // Modified
                     onPressed: () => Navigator.pop(context),
                   ),
                 ],
@@ -210,7 +207,6 @@ class _HomeTabState extends ConsumerState<HomeTab> {
             ),
             SizedBox(height: 20.h),
 
-            // Profile Header
             StreamBuilder(
               stream: userStream,
               builder: (context, snapshot) {
@@ -223,7 +219,7 @@ class _HomeTabState extends ConsumerState<HomeTab> {
                   child: Row(
                     children: [
                       CircleAvatar(
-                        radius: 30.r,
+                        radius: 34.r, // MODIFICATION: Bumped up to keep avatar prominent
                         backgroundColor: Colors.transparent,
                         backgroundImage: AssetImage("assets/avatars/$formattedAvatarId.png"),
                       ),
@@ -232,9 +228,9 @@ class _HomeTabState extends ConsumerState<HomeTab> {
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Text(user?.name ?? "User", style: TextStyle(color: Colors.white, fontSize: 18.sp, fontWeight: FontWeight.bold)),
+                            Text(user?.name ?? "User", style: TextStyle(color: Colors.white, fontSize: 20.sp, fontWeight: FontWeight.bold)), // Modified
                             SizedBox(height: 4.h),
-                            Text(user?.internalId ?? "", style: TextStyle(color: Colors.white54, fontSize: 14.sp)),
+                            Text(user?.internalId ?? "", style: TextStyle(color: Colors.white54, fontSize: 15.sp)), // Modified
                           ],
                         ),
                       )
@@ -246,7 +242,6 @@ class _HomeTabState extends ConsumerState<HomeTab> {
 
             SizedBox(height: 40.h),
 
-            // Drawer Action Buttons
             Padding(
               padding: EdgeInsets.symmetric(horizontal: 20.w),
               child: Column(
@@ -255,8 +250,8 @@ class _HomeTabState extends ConsumerState<HomeTab> {
                     icon: Icons.sync,
                     label: _isCheckingUpdate ? "Checking..." : "Check For Updates",
                     onTap: _isCheckingUpdate ? null : () {
-                      Navigator.pop(context); // Close drawer
-                      _manualUpdateCheck(); // Trigger check
+                      Navigator.pop(context);
+                      _manualUpdateCheck();
                     },
                   ),
                   SizedBox(height: 16.h),
@@ -283,19 +278,20 @@ class _HomeTabState extends ConsumerState<HomeTab> {
       borderRadius: BorderRadius.circular(12.r),
       child: Container(
         width: double.infinity,
-        padding: EdgeInsets.symmetric(vertical: 14.h, horizontal: 16.w),
+        // MODIFICATION: Increased padding to ensure it remains a large, tap-friendly iOS style button
+        padding: EdgeInsets.symmetric(vertical: 16.h, horizontal: 16.w),
         decoration: BoxDecoration(
-          color: const Color(0xFF1877F2), // Premium Blue
+          color: const Color(0xFF1877F2),
           borderRadius: BorderRadius.circular(12.r),
         ),
         child: Row(
           children: [
-            Icon(icon, color: Colors.white, size: 22.sp),
+            Icon(icon, color: Colors.white, size: 24.sp), // Modified
             SizedBox(width: 16.w),
             Expanded(
               child: Text(
                 label,
-                style: TextStyle(color: Colors.white, fontSize: 16.sp, fontWeight: FontWeight.w500),
+                style: TextStyle(color: Colors.white, fontSize: 18.sp, fontWeight: FontWeight.w500), // Modified
               ),
             ),
           ],

@@ -30,7 +30,8 @@ void main() async {
   runApp(
     const ProviderScope(
       child: ScreenUtilInit(
-        designSize: Size(375, 812),
+        // MODIFICATION: Increased design size by ~18% to scale down all UI elements globally
+        designSize: Size(440, 960),
         minTextAdapt: true,
         splitScreenMode: true,
         child: MyApp(),

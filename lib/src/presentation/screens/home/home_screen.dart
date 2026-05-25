@@ -126,8 +126,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
       backgroundColor: Colors.black,
       body: IndexedStack(index: _currentIndex, children: _screens),
       bottomNavigationBar: Container(
-        height: 85.h,
-        padding: EdgeInsets.only(top: 8.h, bottom: 8.h),
+        height: 95.h, // MODIFICATION: Slightly increased to compensate for global scale down
+        padding: EdgeInsets.only(top: 10.h, bottom: 12.h), // MODIFICATION: Adjusted padding to center interactive items better
         color: Colors.black,
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -160,14 +160,14 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
             children: [
               Icon(
                 isActive ? activeIcon : inactiveIcon,
-                size: 26.r,
+                size: 28.r, // MODIFICATION: Bumped up slightly to prevent icon from getting too small
                 color: isActive ? const Color(0xFFFFFFFF) : Colors.white54,
               ),
               SizedBox(height: 4.h),
               Text(
                 label,
                 style: TextStyle(
-                  fontSize: 11.sp,
+                  fontSize: 12.sp, // MODIFICATION: Bumped up by 1 point for legibility under new global scale
                   fontWeight: isActive ? FontWeight.bold : FontWeight.normal,
                   color: isActive ? const Color(0xFFFFFFFF) : Colors.white54,
                 ),
