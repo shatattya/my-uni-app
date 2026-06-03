@@ -97,14 +97,41 @@ class AttendanceRecords extends Table {
   Set<Column> get primaryKey => {attendanceId};
 }
 
-// MODIFICATION: Added ExamRoutines to the tables list
-@DriftDatabase(tables: [Users, Announcements, Routines, ExamRoutines, CachedStudents, AttendanceRecords])
+class Books extends Table {
+  TextColumn get id => text()();
+  TextColumn get title => text()();
+  TextColumn get author => text()();
+  TextColumn get coverUrl => text()();
+  TextColumn get downloadUrl => text()();
+  IntColumn get semester => integer()();
+
+  @override
+  Set<Column> get primaryKey => {id};
+}
+
+class Notes extends Table {
+  TextColumn get id => text()();
+  TextColumn get title => text()();
+  TextColumn get subjectName => text()();
+  TextColumn get authorName => text()();
+  TextColumn get fileUrl => text()();
+  IntColumn get semester => integer()();
+  TextColumn get section => text()();
+  DateTimeColumn get createdAt => dateTime()();
+  BoolColumn get isSynced => boolean().withDefault(const Constant(false))();
+
+  @override
+  Set<Column> get primaryKey => {id};
+}
+
+// MODIFICATION: Added Books and Notes to the tables list
+@DriftDatabase(tables: [Users, Announcements, Routines, ExamRoutines, CachedStudents, AttendanceRecords, Books, Notes])
 class AppDatabase extends _$AppDatabase {
   AppDatabase() : super(_openConnection());
 
-  // MODIFICATION: Bumped schema version to 7
+  // MODIFICATION: Bumped schema version to 8
   @override
-  int get schemaVersion => 7;
+  int get schemaVersion => 8;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -137,6 +164,11 @@ class AppDatabase extends _$AppDatabase {
       if (from < 7) {
         try { await m.createTable(examRoutines); } catch (_) {}
       }
+      // MODIFICATION: Migration for schema 8 to create Books and Notes tables
+      if (from < 8) {
+        try { await m.createTable(books); } catch (_) {}
+        try { await m.createTable(notes); } catch (_) {}
+      }
     },
   );
 
@@ -148,6 +180,8 @@ class AppDatabase extends _$AppDatabase {
       await delete(examRoutines).go(); // MODIFICATION: Clear exam routines on logout
       await delete(cachedStudents).go();
       await delete(attendanceRecords).go();
+      await delete(books).go(); // MODIFICATION: Clear books on logout
+      await delete(notes).go(); // MODIFICATION: Clear notes on logout
     });
   }
 }

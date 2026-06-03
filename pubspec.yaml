@@ -3,7 +3,7 @@ description: "A sleek, offline-first campus companion for students and teachers.
 
 publish_to: 'none'
 
-version: 3.8.0
+version: 4.0.0
 
 environment:
   sdk: ^3.10.8

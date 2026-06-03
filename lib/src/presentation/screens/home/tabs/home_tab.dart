@@ -11,6 +11,9 @@ import '../contact_us_screen.dart';
 import '../exam_routine_screen.dart';
 import '../../attendance/attendance_setup_screen.dart';
 import '../../attendance/attendance_export_screen.dart';
+import '../developer_triage_screen.dart'; // ADDED: Developer Dashboard
+import '../../books_catalog_screen.dart'; // ADDED: Books feature
+import '../../notes_catalog_screen.dart'; // ADDED: Notes feature
 
 class HomeTab extends ConsumerStatefulWidget {
   const HomeTab({super.key});
@@ -83,6 +86,7 @@ class _HomeTabState extends ConsumerState<HomeTab> {
                   builder: (context, snapshot) {
                     final user = snapshot.data;
                     final isTeacher = user != null && user.role == 'teacher';
+                    final isDev = user != null && user.isDev == true; // MODIFICATION: Check for Developer role
 
                     return Padding(
                       padding: EdgeInsets.symmetric(horizontal: 20.w),
@@ -107,8 +111,21 @@ class _HomeTabState extends ConsumerState<HomeTab> {
                               },
                             ),
 
-                          const HomeFeatureTile(icon: Icons.picture_as_pdf_outlined, label: "Notes"),
-                          const HomeFeatureTile(icon: Icons.menu_book_outlined, label: "Books"),
+                          // MODIFICATION: Wired up the Notes and Books screens natively
+                          HomeFeatureTile(
+                            icon: Icons.picture_as_pdf_outlined,
+                            label: "Notes",
+                            onTap: () {
+                              Navigator.push(context, MaterialPageRoute(builder: (_) => const NotesCatalogScreen()));
+                            },
+                          ),
+                          HomeFeatureTile(
+                            icon: Icons.menu_book_outlined,
+                            label: "Books",
+                            onTap: () {
+                              Navigator.push(context, MaterialPageRoute(builder: (_) => const BooksCatalogScreen()));
+                            },
+                          ),
 
                           if (!isTeacher)
                             const HomeFeatureTile(icon: Icons.directions_bus_outlined, label: "Bus\nSchedule"),
@@ -132,6 +149,16 @@ class _HomeTabState extends ConsumerState<HomeTab> {
                               },
                             ),
                           ],
+
+                          // MODIFICATION: Appended the strictly controlled Developer Pending panel
+                          if (isDev)
+                            HomeFeatureTile(
+                              icon: Icons.pending_actions_outlined,
+                              label: "Pending",
+                              onTap: () {
+                                Navigator.push(context, MaterialPageRoute(builder: (_) => const DeveloperTriageScreen()));
+                              },
+                            ),
                         ],
                       ),
                     );

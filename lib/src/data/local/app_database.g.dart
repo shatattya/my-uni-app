@@ -2843,6 +2843,825 @@ class AttendanceRecordsCompanion extends UpdateCompanion<AttendanceRecord> {
   }
 }
 
+class $BooksTable extends Books with TableInfo<$BooksTable, Book> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $BooksTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<String> id = GeneratedColumn<String>(
+      'id', aliasedName, false,
+      type: DriftSqlType.string, requiredDuringInsert: true);
+  static const VerificationMeta _titleMeta = const VerificationMeta('title');
+  @override
+  late final GeneratedColumn<String> title = GeneratedColumn<String>(
+      'title', aliasedName, false,
+      type: DriftSqlType.string, requiredDuringInsert: true);
+  static const VerificationMeta _authorMeta = const VerificationMeta('author');
+  @override
+  late final GeneratedColumn<String> author = GeneratedColumn<String>(
+      'author', aliasedName, false,
+      type: DriftSqlType.string, requiredDuringInsert: true);
+  static const VerificationMeta _coverUrlMeta =
+      const VerificationMeta('coverUrl');
+  @override
+  late final GeneratedColumn<String> coverUrl = GeneratedColumn<String>(
+      'cover_url', aliasedName, false,
+      type: DriftSqlType.string, requiredDuringInsert: true);
+  static const VerificationMeta _downloadUrlMeta =
+      const VerificationMeta('downloadUrl');
+  @override
+  late final GeneratedColumn<String> downloadUrl = GeneratedColumn<String>(
+      'download_url', aliasedName, false,
+      type: DriftSqlType.string, requiredDuringInsert: true);
+  static const VerificationMeta _semesterMeta =
+      const VerificationMeta('semester');
+  @override
+  late final GeneratedColumn<int> semester = GeneratedColumn<int>(
+      'semester', aliasedName, false,
+      type: DriftSqlType.int, requiredDuringInsert: true);
+  @override
+  List<GeneratedColumn> get $columns =>
+      [id, title, author, coverUrl, downloadUrl, semester];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'books';
+  @override
+  VerificationContext validateIntegrity(Insertable<Book> instance,
+      {bool isInserting = false}) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    } else if (isInserting) {
+      context.missing(_idMeta);
+    }
+    if (data.containsKey('title')) {
+      context.handle(
+          _titleMeta, title.isAcceptableOrUnknown(data['title']!, _titleMeta));
+    } else if (isInserting) {
+      context.missing(_titleMeta);
+    }
+    if (data.containsKey('author')) {
+      context.handle(_authorMeta,
+          author.isAcceptableOrUnknown(data['author']!, _authorMeta));
+    } else if (isInserting) {
+      context.missing(_authorMeta);
+    }
+    if (data.containsKey('cover_url')) {
+      context.handle(_coverUrlMeta,
+          coverUrl.isAcceptableOrUnknown(data['cover_url']!, _coverUrlMeta));
+    } else if (isInserting) {
+      context.missing(_coverUrlMeta);
+    }
+    if (data.containsKey('download_url')) {
+      context.handle(
+          _downloadUrlMeta,
+          downloadUrl.isAcceptableOrUnknown(
+              data['download_url']!, _downloadUrlMeta));
+    } else if (isInserting) {
+      context.missing(_downloadUrlMeta);
+    }
+    if (data.containsKey('semester')) {
+      context.handle(_semesterMeta,
+          semester.isAcceptableOrUnknown(data['semester']!, _semesterMeta));
+    } else if (isInserting) {
+      context.missing(_semesterMeta);
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  Book map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return Book(
+      id: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}id'])!,
+      title: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}title'])!,
+      author: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}author'])!,
+      coverUrl: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}cover_url'])!,
+      downloadUrl: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}download_url'])!,
+      semester: attachedDatabase.typeMapping
+          .read(DriftSqlType.int, data['${effectivePrefix}semester'])!,
+    );
+  }
+
+  @override
+  $BooksTable createAlias(String alias) {
+    return $BooksTable(attachedDatabase, alias);
+  }
+}
+
+class Book extends DataClass implements Insertable<Book> {
+  final String id;
+  final String title;
+  final String author;
+  final String coverUrl;
+  final String downloadUrl;
+  final int semester;
+  const Book(
+      {required this.id,
+      required this.title,
+      required this.author,
+      required this.coverUrl,
+      required this.downloadUrl,
+      required this.semester});
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<String>(id);
+    map['title'] = Variable<String>(title);
+    map['author'] = Variable<String>(author);
+    map['cover_url'] = Variable<String>(coverUrl);
+    map['download_url'] = Variable<String>(downloadUrl);
+    map['semester'] = Variable<int>(semester);
+    return map;
+  }
+
+  BooksCompanion toCompanion(bool nullToAbsent) {
+    return BooksCompanion(
+      id: Value(id),
+      title: Value(title),
+      author: Value(author),
+      coverUrl: Value(coverUrl),
+      downloadUrl: Value(downloadUrl),
+      semester: Value(semester),
+    );
+  }
+
+  factory Book.fromJson(Map<String, dynamic> json,
+      {ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return Book(
+      id: serializer.fromJson<String>(json['id']),
+      title: serializer.fromJson<String>(json['title']),
+      author: serializer.fromJson<String>(json['author']),
+      coverUrl: serializer.fromJson<String>(json['coverUrl']),
+      downloadUrl: serializer.fromJson<String>(json['downloadUrl']),
+      semester: serializer.fromJson<int>(json['semester']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<String>(id),
+      'title': serializer.toJson<String>(title),
+      'author': serializer.toJson<String>(author),
+      'coverUrl': serializer.toJson<String>(coverUrl),
+      'downloadUrl': serializer.toJson<String>(downloadUrl),
+      'semester': serializer.toJson<int>(semester),
+    };
+  }
+
+  Book copyWith(
+          {String? id,
+          String? title,
+          String? author,
+          String? coverUrl,
+          String? downloadUrl,
+          int? semester}) =>
+      Book(
+        id: id ?? this.id,
+        title: title ?? this.title,
+        author: author ?? this.author,
+        coverUrl: coverUrl ?? this.coverUrl,
+        downloadUrl: downloadUrl ?? this.downloadUrl,
+        semester: semester ?? this.semester,
+      );
+  Book copyWithCompanion(BooksCompanion data) {
+    return Book(
+      id: data.id.present ? data.id.value : this.id,
+      title: data.title.present ? data.title.value : this.title,
+      author: data.author.present ? data.author.value : this.author,
+      coverUrl: data.coverUrl.present ? data.coverUrl.value : this.coverUrl,
+      downloadUrl:
+          data.downloadUrl.present ? data.downloadUrl.value : this.downloadUrl,
+      semester: data.semester.present ? data.semester.value : this.semester,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('Book(')
+          ..write('id: $id, ')
+          ..write('title: $title, ')
+          ..write('author: $author, ')
+          ..write('coverUrl: $coverUrl, ')
+          ..write('downloadUrl: $downloadUrl, ')
+          ..write('semester: $semester')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode =>
+      Object.hash(id, title, author, coverUrl, downloadUrl, semester);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is Book &&
+          other.id == this.id &&
+          other.title == this.title &&
+          other.author == this.author &&
+          other.coverUrl == this.coverUrl &&
+          other.downloadUrl == this.downloadUrl &&
+          other.semester == this.semester);
+}
+
+class BooksCompanion extends UpdateCompanion<Book> {
+  final Value<String> id;
+  final Value<String> title;
+  final Value<String> author;
+  final Value<String> coverUrl;
+  final Value<String> downloadUrl;
+  final Value<int> semester;
+  final Value<int> rowid;
+  const BooksCompanion({
+    this.id = const Value.absent(),
+    this.title = const Value.absent(),
+    this.author = const Value.absent(),
+    this.coverUrl = const Value.absent(),
+    this.downloadUrl = const Value.absent(),
+    this.semester = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  BooksCompanion.insert({
+    required String id,
+    required String title,
+    required String author,
+    required String coverUrl,
+    required String downloadUrl,
+    required int semester,
+    this.rowid = const Value.absent(),
+  })  : id = Value(id),
+        title = Value(title),
+        author = Value(author),
+        coverUrl = Value(coverUrl),
+        downloadUrl = Value(downloadUrl),
+        semester = Value(semester);
+  static Insertable<Book> custom({
+    Expression<String>? id,
+    Expression<String>? title,
+    Expression<String>? author,
+    Expression<String>? coverUrl,
+    Expression<String>? downloadUrl,
+    Expression<int>? semester,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (title != null) 'title': title,
+      if (author != null) 'author': author,
+      if (coverUrl != null) 'cover_url': coverUrl,
+      if (downloadUrl != null) 'download_url': downloadUrl,
+      if (semester != null) 'semester': semester,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  BooksCompanion copyWith(
+      {Value<String>? id,
+      Value<String>? title,
+      Value<String>? author,
+      Value<String>? coverUrl,
+      Value<String>? downloadUrl,
+      Value<int>? semester,
+      Value<int>? rowid}) {
+    return BooksCompanion(
+      id: id ?? this.id,
+      title: title ?? this.title,
+      author: author ?? this.author,
+      coverUrl: coverUrl ?? this.coverUrl,
+      downloadUrl: downloadUrl ?? this.downloadUrl,
+      semester: semester ?? this.semester,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<String>(id.value);
+    }
+    if (title.present) {
+      map['title'] = Variable<String>(title.value);
+    }
+    if (author.present) {
+      map['author'] = Variable<String>(author.value);
+    }
+    if (coverUrl.present) {
+      map['cover_url'] = Variable<String>(coverUrl.value);
+    }
+    if (downloadUrl.present) {
+      map['download_url'] = Variable<String>(downloadUrl.value);
+    }
+    if (semester.present) {
+      map['semester'] = Variable<int>(semester.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('BooksCompanion(')
+          ..write('id: $id, ')
+          ..write('title: $title, ')
+          ..write('author: $author, ')
+          ..write('coverUrl: $coverUrl, ')
+          ..write('downloadUrl: $downloadUrl, ')
+          ..write('semester: $semester, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
+class $NotesTable extends Notes with TableInfo<$NotesTable, Note> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $NotesTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<String> id = GeneratedColumn<String>(
+      'id', aliasedName, false,
+      type: DriftSqlType.string, requiredDuringInsert: true);
+  static const VerificationMeta _titleMeta = const VerificationMeta('title');
+  @override
+  late final GeneratedColumn<String> title = GeneratedColumn<String>(
+      'title', aliasedName, false,
+      type: DriftSqlType.string, requiredDuringInsert: true);
+  static const VerificationMeta _subjectNameMeta =
+      const VerificationMeta('subjectName');
+  @override
+  late final GeneratedColumn<String> subjectName = GeneratedColumn<String>(
+      'subject_name', aliasedName, false,
+      type: DriftSqlType.string, requiredDuringInsert: true);
+  static const VerificationMeta _authorNameMeta =
+      const VerificationMeta('authorName');
+  @override
+  late final GeneratedColumn<String> authorName = GeneratedColumn<String>(
+      'author_name', aliasedName, false,
+      type: DriftSqlType.string, requiredDuringInsert: true);
+  static const VerificationMeta _fileUrlMeta =
+      const VerificationMeta('fileUrl');
+  @override
+  late final GeneratedColumn<String> fileUrl = GeneratedColumn<String>(
+      'file_url', aliasedName, false,
+      type: DriftSqlType.string, requiredDuringInsert: true);
+  static const VerificationMeta _semesterMeta =
+      const VerificationMeta('semester');
+  @override
+  late final GeneratedColumn<int> semester = GeneratedColumn<int>(
+      'semester', aliasedName, false,
+      type: DriftSqlType.int, requiredDuringInsert: true);
+  static const VerificationMeta _sectionMeta =
+      const VerificationMeta('section');
+  @override
+  late final GeneratedColumn<String> section = GeneratedColumn<String>(
+      'section', aliasedName, false,
+      type: DriftSqlType.string, requiredDuringInsert: true);
+  static const VerificationMeta _createdAtMeta =
+      const VerificationMeta('createdAt');
+  @override
+  late final GeneratedColumn<DateTime> createdAt = GeneratedColumn<DateTime>(
+      'created_at', aliasedName, false,
+      type: DriftSqlType.dateTime, requiredDuringInsert: true);
+  static const VerificationMeta _isSyncedMeta =
+      const VerificationMeta('isSynced');
+  @override
+  late final GeneratedColumn<bool> isSynced = GeneratedColumn<bool>(
+      'is_synced', aliasedName, false,
+      type: DriftSqlType.bool,
+      requiredDuringInsert: false,
+      defaultConstraints:
+          GeneratedColumn.constraintIsAlways('CHECK ("is_synced" IN (0, 1))'),
+      defaultValue: const Constant(false));
+  @override
+  List<GeneratedColumn> get $columns => [
+        id,
+        title,
+        subjectName,
+        authorName,
+        fileUrl,
+        semester,
+        section,
+        createdAt,
+        isSynced
+      ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'notes';
+  @override
+  VerificationContext validateIntegrity(Insertable<Note> instance,
+      {bool isInserting = false}) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    } else if (isInserting) {
+      context.missing(_idMeta);
+    }
+    if (data.containsKey('title')) {
+      context.handle(
+          _titleMeta, title.isAcceptableOrUnknown(data['title']!, _titleMeta));
+    } else if (isInserting) {
+      context.missing(_titleMeta);
+    }
+    if (data.containsKey('subject_name')) {
+      context.handle(
+          _subjectNameMeta,
+          subjectName.isAcceptableOrUnknown(
+              data['subject_name']!, _subjectNameMeta));
+    } else if (isInserting) {
+      context.missing(_subjectNameMeta);
+    }
+    if (data.containsKey('author_name')) {
+      context.handle(
+          _authorNameMeta,
+          authorName.isAcceptableOrUnknown(
+              data['author_name']!, _authorNameMeta));
+    } else if (isInserting) {
+      context.missing(_authorNameMeta);
+    }
+    if (data.containsKey('file_url')) {
+      context.handle(_fileUrlMeta,
+          fileUrl.isAcceptableOrUnknown(data['file_url']!, _fileUrlMeta));
+    } else if (isInserting) {
+      context.missing(_fileUrlMeta);
+    }
+    if (data.containsKey('semester')) {
+      context.handle(_semesterMeta,
+          semester.isAcceptableOrUnknown(data['semester']!, _semesterMeta));
+    } else if (isInserting) {
+      context.missing(_semesterMeta);
+    }
+    if (data.containsKey('section')) {
+      context.handle(_sectionMeta,
+          section.isAcceptableOrUnknown(data['section']!, _sectionMeta));
+    } else if (isInserting) {
+      context.missing(_sectionMeta);
+    }
+    if (data.containsKey('created_at')) {
+      context.handle(_createdAtMeta,
+          createdAt.isAcceptableOrUnknown(data['created_at']!, _createdAtMeta));
+    } else if (isInserting) {
+      context.missing(_createdAtMeta);
+    }
+    if (data.containsKey('is_synced')) {
+      context.handle(_isSyncedMeta,
+          isSynced.isAcceptableOrUnknown(data['is_synced']!, _isSyncedMeta));
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  Note map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return Note(
+      id: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}id'])!,
+      title: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}title'])!,
+      subjectName: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}subject_name'])!,
+      authorName: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}author_name'])!,
+      fileUrl: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}file_url'])!,
+      semester: attachedDatabase.typeMapping
+          .read(DriftSqlType.int, data['${effectivePrefix}semester'])!,
+      section: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}section'])!,
+      createdAt: attachedDatabase.typeMapping
+          .read(DriftSqlType.dateTime, data['${effectivePrefix}created_at'])!,
+      isSynced: attachedDatabase.typeMapping
+          .read(DriftSqlType.bool, data['${effectivePrefix}is_synced'])!,
+    );
+  }
+
+  @override
+  $NotesTable createAlias(String alias) {
+    return $NotesTable(attachedDatabase, alias);
+  }
+}
+
+class Note extends DataClass implements Insertable<Note> {
+  final String id;
+  final String title;
+  final String subjectName;
+  final String authorName;
+  final String fileUrl;
+  final int semester;
+  final String section;
+  final DateTime createdAt;
+  final bool isSynced;
+  const Note(
+      {required this.id,
+      required this.title,
+      required this.subjectName,
+      required this.authorName,
+      required this.fileUrl,
+      required this.semester,
+      required this.section,
+      required this.createdAt,
+      required this.isSynced});
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<String>(id);
+    map['title'] = Variable<String>(title);
+    map['subject_name'] = Variable<String>(subjectName);
+    map['author_name'] = Variable<String>(authorName);
+    map['file_url'] = Variable<String>(fileUrl);
+    map['semester'] = Variable<int>(semester);
+    map['section'] = Variable<String>(section);
+    map['created_at'] = Variable<DateTime>(createdAt);
+    map['is_synced'] = Variable<bool>(isSynced);
+    return map;
+  }
+
+  NotesCompanion toCompanion(bool nullToAbsent) {
+    return NotesCompanion(
+      id: Value(id),
+      title: Value(title),
+      subjectName: Value(subjectName),
+      authorName: Value(authorName),
+      fileUrl: Value(fileUrl),
+      semester: Value(semester),
+      section: Value(section),
+      createdAt: Value(createdAt),
+      isSynced: Value(isSynced),
+    );
+  }
+
+  factory Note.fromJson(Map<String, dynamic> json,
+      {ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return Note(
+      id: serializer.fromJson<String>(json['id']),
+      title: serializer.fromJson<String>(json['title']),
+      subjectName: serializer.fromJson<String>(json['subjectName']),
+      authorName: serializer.fromJson<String>(json['authorName']),
+      fileUrl: serializer.fromJson<String>(json['fileUrl']),
+      semester: serializer.fromJson<int>(json['semester']),
+      section: serializer.fromJson<String>(json['section']),
+      createdAt: serializer.fromJson<DateTime>(json['createdAt']),
+      isSynced: serializer.fromJson<bool>(json['isSynced']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<String>(id),
+      'title': serializer.toJson<String>(title),
+      'subjectName': serializer.toJson<String>(subjectName),
+      'authorName': serializer.toJson<String>(authorName),
+      'fileUrl': serializer.toJson<String>(fileUrl),
+      'semester': serializer.toJson<int>(semester),
+      'section': serializer.toJson<String>(section),
+      'createdAt': serializer.toJson<DateTime>(createdAt),
+      'isSynced': serializer.toJson<bool>(isSynced),
+    };
+  }
+
+  Note copyWith(
+          {String? id,
+          String? title,
+          String? subjectName,
+          String? authorName,
+          String? fileUrl,
+          int? semester,
+          String? section,
+          DateTime? createdAt,
+          bool? isSynced}) =>
+      Note(
+        id: id ?? this.id,
+        title: title ?? this.title,
+        subjectName: subjectName ?? this.subjectName,
+        authorName: authorName ?? this.authorName,
+        fileUrl: fileUrl ?? this.fileUrl,
+        semester: semester ?? this.semester,
+        section: section ?? this.section,
+        createdAt: createdAt ?? this.createdAt,
+        isSynced: isSynced ?? this.isSynced,
+      );
+  Note copyWithCompanion(NotesCompanion data) {
+    return Note(
+      id: data.id.present ? data.id.value : this.id,
+      title: data.title.present ? data.title.value : this.title,
+      subjectName:
+          data.subjectName.present ? data.subjectName.value : this.subjectName,
+      authorName:
+          data.authorName.present ? data.authorName.value : this.authorName,
+      fileUrl: data.fileUrl.present ? data.fileUrl.value : this.fileUrl,
+      semester: data.semester.present ? data.semester.value : this.semester,
+      section: data.section.present ? data.section.value : this.section,
+      createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
+      isSynced: data.isSynced.present ? data.isSynced.value : this.isSynced,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('Note(')
+          ..write('id: $id, ')
+          ..write('title: $title, ')
+          ..write('subjectName: $subjectName, ')
+          ..write('authorName: $authorName, ')
+          ..write('fileUrl: $fileUrl, ')
+          ..write('semester: $semester, ')
+          ..write('section: $section, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('isSynced: $isSynced')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(id, title, subjectName, authorName, fileUrl,
+      semester, section, createdAt, isSynced);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is Note &&
+          other.id == this.id &&
+          other.title == this.title &&
+          other.subjectName == this.subjectName &&
+          other.authorName == this.authorName &&
+          other.fileUrl == this.fileUrl &&
+          other.semester == this.semester &&
+          other.section == this.section &&
+          other.createdAt == this.createdAt &&
+          other.isSynced == this.isSynced);
+}
+
+class NotesCompanion extends UpdateCompanion<Note> {
+  final Value<String> id;
+  final Value<String> title;
+  final Value<String> subjectName;
+  final Value<String> authorName;
+  final Value<String> fileUrl;
+  final Value<int> semester;
+  final Value<String> section;
+  final Value<DateTime> createdAt;
+  final Value<bool> isSynced;
+  final Value<int> rowid;
+  const NotesCompanion({
+    this.id = const Value.absent(),
+    this.title = const Value.absent(),
+    this.subjectName = const Value.absent(),
+    this.authorName = const Value.absent(),
+    this.fileUrl = const Value.absent(),
+    this.semester = const Value.absent(),
+    this.section = const Value.absent(),
+    this.createdAt = const Value.absent(),
+    this.isSynced = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  NotesCompanion.insert({
+    required String id,
+    required String title,
+    required String subjectName,
+    required String authorName,
+    required String fileUrl,
+    required int semester,
+    required String section,
+    required DateTime createdAt,
+    this.isSynced = const Value.absent(),
+    this.rowid = const Value.absent(),
+  })  : id = Value(id),
+        title = Value(title),
+        subjectName = Value(subjectName),
+        authorName = Value(authorName),
+        fileUrl = Value(fileUrl),
+        semester = Value(semester),
+        section = Value(section),
+        createdAt = Value(createdAt);
+  static Insertable<Note> custom({
+    Expression<String>? id,
+    Expression<String>? title,
+    Expression<String>? subjectName,
+    Expression<String>? authorName,
+    Expression<String>? fileUrl,
+    Expression<int>? semester,
+    Expression<String>? section,
+    Expression<DateTime>? createdAt,
+    Expression<bool>? isSynced,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (title != null) 'title': title,
+      if (subjectName != null) 'subject_name': subjectName,
+      if (authorName != null) 'author_name': authorName,
+      if (fileUrl != null) 'file_url': fileUrl,
+      if (semester != null) 'semester': semester,
+      if (section != null) 'section': section,
+      if (createdAt != null) 'created_at': createdAt,
+      if (isSynced != null) 'is_synced': isSynced,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  NotesCompanion copyWith(
+      {Value<String>? id,
+      Value<String>? title,
+      Value<String>? subjectName,
+      Value<String>? authorName,
+      Value<String>? fileUrl,
+      Value<int>? semester,
+      Value<String>? section,
+      Value<DateTime>? createdAt,
+      Value<bool>? isSynced,
+      Value<int>? rowid}) {
+    return NotesCompanion(
+      id: id ?? this.id,
+      title: title ?? this.title,
+      subjectName: subjectName ?? this.subjectName,
+      authorName: authorName ?? this.authorName,
+      fileUrl: fileUrl ?? this.fileUrl,
+      semester: semester ?? this.semester,
+      section: section ?? this.section,
+      createdAt: createdAt ?? this.createdAt,
+      isSynced: isSynced ?? this.isSynced,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<String>(id.value);
+    }
+    if (title.present) {
+      map['title'] = Variable<String>(title.value);
+    }
+    if (subjectName.present) {
+      map['subject_name'] = Variable<String>(subjectName.value);
+    }
+    if (authorName.present) {
+      map['author_name'] = Variable<String>(authorName.value);
+    }
+    if (fileUrl.present) {
+      map['file_url'] = Variable<String>(fileUrl.value);
+    }
+    if (semester.present) {
+      map['semester'] = Variable<int>(semester.value);
+    }
+    if (section.present) {
+      map['section'] = Variable<String>(section.value);
+    }
+    if (createdAt.present) {
+      map['created_at'] = Variable<DateTime>(createdAt.value);
+    }
+    if (isSynced.present) {
+      map['is_synced'] = Variable<bool>(isSynced.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('NotesCompanion(')
+          ..write('id: $id, ')
+          ..write('title: $title, ')
+          ..write('subjectName: $subjectName, ')
+          ..write('authorName: $authorName, ')
+          ..write('fileUrl: $fileUrl, ')
+          ..write('semester: $semester, ')
+          ..write('section: $section, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('isSynced: $isSynced, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
 abstract class _$AppDatabase extends GeneratedDatabase {
   _$AppDatabase(QueryExecutor e) : super(e);
   $AppDatabaseManager get managers => $AppDatabaseManager(this);
@@ -2853,6 +3672,8 @@ abstract class _$AppDatabase extends GeneratedDatabase {
   late final $CachedStudentsTable cachedStudents = $CachedStudentsTable(this);
   late final $AttendanceRecordsTable attendanceRecords =
       $AttendanceRecordsTable(this);
+  late final $BooksTable books = $BooksTable(this);
+  late final $NotesTable notes = $NotesTable(this);
   @override
   Iterable<TableInfo<Table, Object?>> get allTables =>
       allSchemaEntities.whereType<TableInfo<Table, Object?>>();
@@ -2863,7 +3684,9 @@ abstract class _$AppDatabase extends GeneratedDatabase {
         routines,
         examRoutines,
         cachedStudents,
-        attendanceRecords
+        attendanceRecords,
+        books,
+        notes
       ];
 }
 
@@ -4017,6 +4840,338 @@ class $$AttendanceRecordsTableOrderingComposer
           ColumnOrderings(column, joinBuilders: joinBuilders));
 }
 
+typedef $$BooksTableCreateCompanionBuilder = BooksCompanion Function({
+  required String id,
+  required String title,
+  required String author,
+  required String coverUrl,
+  required String downloadUrl,
+  required int semester,
+  Value<int> rowid,
+});
+typedef $$BooksTableUpdateCompanionBuilder = BooksCompanion Function({
+  Value<String> id,
+  Value<String> title,
+  Value<String> author,
+  Value<String> coverUrl,
+  Value<String> downloadUrl,
+  Value<int> semester,
+  Value<int> rowid,
+});
+
+class $$BooksTableTableManager extends RootTableManager<
+    _$AppDatabase,
+    $BooksTable,
+    Book,
+    $$BooksTableFilterComposer,
+    $$BooksTableOrderingComposer,
+    $$BooksTableCreateCompanionBuilder,
+    $$BooksTableUpdateCompanionBuilder> {
+  $$BooksTableTableManager(_$AppDatabase db, $BooksTable table)
+      : super(TableManagerState(
+          db: db,
+          table: table,
+          filteringComposer:
+              $$BooksTableFilterComposer(ComposerState(db, table)),
+          orderingComposer:
+              $$BooksTableOrderingComposer(ComposerState(db, table)),
+          updateCompanionCallback: ({
+            Value<String> id = const Value.absent(),
+            Value<String> title = const Value.absent(),
+            Value<String> author = const Value.absent(),
+            Value<String> coverUrl = const Value.absent(),
+            Value<String> downloadUrl = const Value.absent(),
+            Value<int> semester = const Value.absent(),
+            Value<int> rowid = const Value.absent(),
+          }) =>
+              BooksCompanion(
+            id: id,
+            title: title,
+            author: author,
+            coverUrl: coverUrl,
+            downloadUrl: downloadUrl,
+            semester: semester,
+            rowid: rowid,
+          ),
+          createCompanionCallback: ({
+            required String id,
+            required String title,
+            required String author,
+            required String coverUrl,
+            required String downloadUrl,
+            required int semester,
+            Value<int> rowid = const Value.absent(),
+          }) =>
+              BooksCompanion.insert(
+            id: id,
+            title: title,
+            author: author,
+            coverUrl: coverUrl,
+            downloadUrl: downloadUrl,
+            semester: semester,
+            rowid: rowid,
+          ),
+        ));
+}
+
+class $$BooksTableFilterComposer
+    extends FilterComposer<_$AppDatabase, $BooksTable> {
+  $$BooksTableFilterComposer(super.$state);
+  ColumnFilters<String> get id => $state.composableBuilder(
+      column: $state.table.id,
+      builder: (column, joinBuilders) =>
+          ColumnFilters(column, joinBuilders: joinBuilders));
+
+  ColumnFilters<String> get title => $state.composableBuilder(
+      column: $state.table.title,
+      builder: (column, joinBuilders) =>
+          ColumnFilters(column, joinBuilders: joinBuilders));
+
+  ColumnFilters<String> get author => $state.composableBuilder(
+      column: $state.table.author,
+      builder: (column, joinBuilders) =>
+          ColumnFilters(column, joinBuilders: joinBuilders));
+
+  ColumnFilters<String> get coverUrl => $state.composableBuilder(
+      column: $state.table.coverUrl,
+      builder: (column, joinBuilders) =>
+          ColumnFilters(column, joinBuilders: joinBuilders));
+
+  ColumnFilters<String> get downloadUrl => $state.composableBuilder(
+      column: $state.table.downloadUrl,
+      builder: (column, joinBuilders) =>
+          ColumnFilters(column, joinBuilders: joinBuilders));
+
+  ColumnFilters<int> get semester => $state.composableBuilder(
+      column: $state.table.semester,
+      builder: (column, joinBuilders) =>
+          ColumnFilters(column, joinBuilders: joinBuilders));
+}
+
+class $$BooksTableOrderingComposer
+    extends OrderingComposer<_$AppDatabase, $BooksTable> {
+  $$BooksTableOrderingComposer(super.$state);
+  ColumnOrderings<String> get id => $state.composableBuilder(
+      column: $state.table.id,
+      builder: (column, joinBuilders) =>
+          ColumnOrderings(column, joinBuilders: joinBuilders));
+
+  ColumnOrderings<String> get title => $state.composableBuilder(
+      column: $state.table.title,
+      builder: (column, joinBuilders) =>
+          ColumnOrderings(column, joinBuilders: joinBuilders));
+
+  ColumnOrderings<String> get author => $state.composableBuilder(
+      column: $state.table.author,
+      builder: (column, joinBuilders) =>
+          ColumnOrderings(column, joinBuilders: joinBuilders));
+
+  ColumnOrderings<String> get coverUrl => $state.composableBuilder(
+      column: $state.table.coverUrl,
+      builder: (column, joinBuilders) =>
+          ColumnOrderings(column, joinBuilders: joinBuilders));
+
+  ColumnOrderings<String> get downloadUrl => $state.composableBuilder(
+      column: $state.table.downloadUrl,
+      builder: (column, joinBuilders) =>
+          ColumnOrderings(column, joinBuilders: joinBuilders));
+
+  ColumnOrderings<int> get semester => $state.composableBuilder(
+      column: $state.table.semester,
+      builder: (column, joinBuilders) =>
+          ColumnOrderings(column, joinBuilders: joinBuilders));
+}
+
+typedef $$NotesTableCreateCompanionBuilder = NotesCompanion Function({
+  required String id,
+  required String title,
+  required String subjectName,
+  required String authorName,
+  required String fileUrl,
+  required int semester,
+  required String section,
+  required DateTime createdAt,
+  Value<bool> isSynced,
+  Value<int> rowid,
+});
+typedef $$NotesTableUpdateCompanionBuilder = NotesCompanion Function({
+  Value<String> id,
+  Value<String> title,
+  Value<String> subjectName,
+  Value<String> authorName,
+  Value<String> fileUrl,
+  Value<int> semester,
+  Value<String> section,
+  Value<DateTime> createdAt,
+  Value<bool> isSynced,
+  Value<int> rowid,
+});
+
+class $$NotesTableTableManager extends RootTableManager<
+    _$AppDatabase,
+    $NotesTable,
+    Note,
+    $$NotesTableFilterComposer,
+    $$NotesTableOrderingComposer,
+    $$NotesTableCreateCompanionBuilder,
+    $$NotesTableUpdateCompanionBuilder> {
+  $$NotesTableTableManager(_$AppDatabase db, $NotesTable table)
+      : super(TableManagerState(
+          db: db,
+          table: table,
+          filteringComposer:
+              $$NotesTableFilterComposer(ComposerState(db, table)),
+          orderingComposer:
+              $$NotesTableOrderingComposer(ComposerState(db, table)),
+          updateCompanionCallback: ({
+            Value<String> id = const Value.absent(),
+            Value<String> title = const Value.absent(),
+            Value<String> subjectName = const Value.absent(),
+            Value<String> authorName = const Value.absent(),
+            Value<String> fileUrl = const Value.absent(),
+            Value<int> semester = const Value.absent(),
+            Value<String> section = const Value.absent(),
+            Value<DateTime> createdAt = const Value.absent(),
+            Value<bool> isSynced = const Value.absent(),
+            Value<int> rowid = const Value.absent(),
+          }) =>
+              NotesCompanion(
+            id: id,
+            title: title,
+            subjectName: subjectName,
+            authorName: authorName,
+            fileUrl: fileUrl,
+            semester: semester,
+            section: section,
+            createdAt: createdAt,
+            isSynced: isSynced,
+            rowid: rowid,
+          ),
+          createCompanionCallback: ({
+            required String id,
+            required String title,
+            required String subjectName,
+            required String authorName,
+            required String fileUrl,
+            required int semester,
+            required String section,
+            required DateTime createdAt,
+            Value<bool> isSynced = const Value.absent(),
+            Value<int> rowid = const Value.absent(),
+          }) =>
+              NotesCompanion.insert(
+            id: id,
+            title: title,
+            subjectName: subjectName,
+            authorName: authorName,
+            fileUrl: fileUrl,
+            semester: semester,
+            section: section,
+            createdAt: createdAt,
+            isSynced: isSynced,
+            rowid: rowid,
+          ),
+        ));
+}
+
+class $$NotesTableFilterComposer
+    extends FilterComposer<_$AppDatabase, $NotesTable> {
+  $$NotesTableFilterComposer(super.$state);
+  ColumnFilters<String> get id => $state.composableBuilder(
+      column: $state.table.id,
+      builder: (column, joinBuilders) =>
+          ColumnFilters(column, joinBuilders: joinBuilders));
+
+  ColumnFilters<String> get title => $state.composableBuilder(
+      column: $state.table.title,
+      builder: (column, joinBuilders) =>
+          ColumnFilters(column, joinBuilders: joinBuilders));
+
+  ColumnFilters<String> get subjectName => $state.composableBuilder(
+      column: $state.table.subjectName,
+      builder: (column, joinBuilders) =>
+          ColumnFilters(column, joinBuilders: joinBuilders));
+
+  ColumnFilters<String> get authorName => $state.composableBuilder(
+      column: $state.table.authorName,
+      builder: (column, joinBuilders) =>
+          ColumnFilters(column, joinBuilders: joinBuilders));
+
+  ColumnFilters<String> get fileUrl => $state.composableBuilder(
+      column: $state.table.fileUrl,
+      builder: (column, joinBuilders) =>
+          ColumnFilters(column, joinBuilders: joinBuilders));
+
+  ColumnFilters<int> get semester => $state.composableBuilder(
+      column: $state.table.semester,
+      builder: (column, joinBuilders) =>
+          ColumnFilters(column, joinBuilders: joinBuilders));
+
+  ColumnFilters<String> get section => $state.composableBuilder(
+      column: $state.table.section,
+      builder: (column, joinBuilders) =>
+          ColumnFilters(column, joinBuilders: joinBuilders));
+
+  ColumnFilters<DateTime> get createdAt => $state.composableBuilder(
+      column: $state.table.createdAt,
+      builder: (column, joinBuilders) =>
+          ColumnFilters(column, joinBuilders: joinBuilders));
+
+  ColumnFilters<bool> get isSynced => $state.composableBuilder(
+      column: $state.table.isSynced,
+      builder: (column, joinBuilders) =>
+          ColumnFilters(column, joinBuilders: joinBuilders));
+}
+
+class $$NotesTableOrderingComposer
+    extends OrderingComposer<_$AppDatabase, $NotesTable> {
+  $$NotesTableOrderingComposer(super.$state);
+  ColumnOrderings<String> get id => $state.composableBuilder(
+      column: $state.table.id,
+      builder: (column, joinBuilders) =>
+          ColumnOrderings(column, joinBuilders: joinBuilders));
+
+  ColumnOrderings<String> get title => $state.composableBuilder(
+      column: $state.table.title,
+      builder: (column, joinBuilders) =>
+          ColumnOrderings(column, joinBuilders: joinBuilders));
+
+  ColumnOrderings<String> get subjectName => $state.composableBuilder(
+      column: $state.table.subjectName,
+      builder: (column, joinBuilders) =>
+          ColumnOrderings(column, joinBuilders: joinBuilders));
+
+  ColumnOrderings<String> get authorName => $state.composableBuilder(
+      column: $state.table.authorName,
+      builder: (column, joinBuilders) =>
+          ColumnOrderings(column, joinBuilders: joinBuilders));
+
+  ColumnOrderings<String> get fileUrl => $state.composableBuilder(
+      column: $state.table.fileUrl,
+      builder: (column, joinBuilders) =>
+          ColumnOrderings(column, joinBuilders: joinBuilders));
+
+  ColumnOrderings<int> get semester => $state.composableBuilder(
+      column: $state.table.semester,
+      builder: (column, joinBuilders) =>
+          ColumnOrderings(column, joinBuilders: joinBuilders));
+
+  ColumnOrderings<String> get section => $state.composableBuilder(
+      column: $state.table.section,
+      builder: (column, joinBuilders) =>
+          ColumnOrderings(column, joinBuilders: joinBuilders));
+
+  ColumnOrderings<DateTime> get createdAt => $state.composableBuilder(
+      column: $state.table.createdAt,
+      builder: (column, joinBuilders) =>
+          ColumnOrderings(column, joinBuilders: joinBuilders));
+
+  ColumnOrderings<bool> get isSynced => $state.composableBuilder(
+      column: $state.table.isSynced,
+      builder: (column, joinBuilders) =>
+          ColumnOrderings(column, joinBuilders: joinBuilders));
+}
+
 class $AppDatabaseManager {
   final _$AppDatabase _db;
   $AppDatabaseManager(this._db);
@@ -4032,4 +5187,8 @@ class $AppDatabaseManager {
       $$CachedStudentsTableTableManager(_db, _db.cachedStudents);
   $$AttendanceRecordsTableTableManager get attendanceRecords =>
       $$AttendanceRecordsTableTableManager(_db, _db.attendanceRecords);
+  $$BooksTableTableManager get books =>
+      $$BooksTableTableManager(_db, _db.books);
+  $$NotesTableTableManager get notes =>
+      $$NotesTableTableManager(_db, _db.notes);
 }

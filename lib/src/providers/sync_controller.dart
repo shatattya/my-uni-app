@@ -7,6 +7,8 @@ import '../data/repositories/user_repository.dart';
 import '../data/repositories/announcement_repository.dart';
 import '../data/repositories/routine_repository.dart';
 import '../data/repositories/exam_routine_repository.dart';
+import '../data/repositories/book_repository.dart'; // ADDED: For Books sync
+import '../data/repositories/note_repository.dart'; // ADDED: For Notes sync
 
 final syncControllerProvider = AsyncNotifierProvider<SyncController, DateTime?>(() {
   return SyncController();
@@ -69,6 +71,8 @@ class SyncController extends AsyncNotifier<DateTime?> {
         ref.read(announcementRepositoryProvider).syncAnnouncements(),
         ref.read(routineRepositoryProvider).syncRoutines(),
         ref.read(examRoutineRepositoryProvider).syncExamRoutines(),
+        ref.read(bookRepositoryProvider).syncBooks(), // MODIFICATION: Added Book Sync
+        if (localUser != null) ref.read(noteRepositoryProvider).syncNotes(localUser.semester, localUser.section), // MODIFICATION: Added Note Sync with safe user properties
       ]);
 
       // 4. Update the state and persist the timestamp to the file
