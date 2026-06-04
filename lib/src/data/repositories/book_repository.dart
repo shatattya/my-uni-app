@@ -18,14 +18,10 @@ class BookRepository {
 
   BookRepository(this._db);
 
-  /// Watches the local SQLite database for books filtered by semester.
-  /// Returns a stream to automatically update the UI without network latency.
   Stream<List<Book>> watchBooksForSemester(int semester) {
     return (_db.select(_db.books)..where((b) => b.semester.equals(semester))).watch();
   }
 
-  /// Fetches the stringified Master JSON catalog from Firestore and writes it to SQLite.
-  /// Matches the highly-optimized single-document read pattern used for routines.
   Future<void> syncBooks() async {
     try {
       final doc = await _firestore.collection('metadata').doc('books_catalog').get();
@@ -35,23 +31,32 @@ class BookRepository {
       if (data == null || !data.containsKey('data')) return;
 
       final rawJson = data['data'] as String;
-      final List<dynamic> decoded = jsonDecode(rawJson);
+
+      // MODIFICATION: Decode as a Map since the JSON structure is now grouped by semester keys
+      final Map<String, dynamic> decoded = jsonDecode(rawJson);
 
       await _db.batch((batch) {
-        for (var item in decoded) {
-          batch.insert(
-            _db.books,
-            BooksCompanion.insert(
-              id: item['id'] as String,
-              title: item['title'] as String,
-              author: item['author'] as String,
-              coverUrl: item['coverUrl'] as String,
-              downloadUrl: item['downloadUrl'] as String,
-              semester: item['semester'] as int,
-            ),
-            mode: InsertMode.insertOrReplace,
-          );
-        }
+        decoded.forEach((semesterKey, bookList) {
+          // Robust extraction: Pulls the integer from keys like "1", "semester 1", or "sem_1"
+          final int semester = int.tryParse(semesterKey.replaceAll(RegExp(r'[^0-9]'), '')) ?? 1;
+
+          if (bookList is List) {
+            for (var item in bookList) {
+              batch.insert(
+                _db.books,
+                BooksCompanion.insert(
+                  id: item['id'] as String,
+                  title: item['title'] as String,
+                  author: item['author'] as String,
+                  coverUrl: item['coverUrl'] as String,
+                  downloadUrl: item['downloadUrl'] as String,
+                  semester: semester, // Extracted dynamically from the parent JSON key
+                ),
+                mode: InsertMode.insertOrReplace,
+              );
+            }
+          }
+        });
       });
     } catch (e) {
       print("DEBUG: Error syncing books catalog: $e");
@@ -59,8 +64,6 @@ class BookRepository {
     }
   }
 
-  /// Submits a request to the developer triage panel.
-  /// Uses a deterministic Document ID to enforce the 1-per-day cooldown at the Firestore Rule level.
   Future<void> submitBookRequest({
     required String name,
     required String author,
@@ -70,11 +73,9 @@ class BookRepository {
     final uid = _auth.currentUser?.uid;
     if (uid == null) throw Exception("User not logged in");
 
-    // Format: YYYY-MM-DD
     final today = DateTime.now();
     final dateString = "${today.year}-${today.month.toString().padLeft(2, '0')}-${today.day.toString().padLeft(2, '0')}";
 
-    // Deterministic ID prevents multiple requests on the same day even if local cache is cleared
     final docId = "${uid}_book_$dateString";
 
     await _firestore.collection('requests').doc(docId).set({
@@ -84,7 +85,7 @@ class BookRepository {
       'authorName': author,
       'semester': semester,
       'isbn': isbn,
-      'status': 'pending', // States: pending, uploaded, rejected
+      'status': 'pending',
       'createdAt': FieldValue.serverTimestamp(),
     });
   }

@@ -18,14 +18,10 @@ class NoteRepository {
 
   NoteRepository(this._db);
 
-  /// Watches the local SQLite database for notes filtered by semester.
-  /// Returns a stream to automatically update the UI without network latency.
   Stream<List<Note>> watchNotesForSemester(int semester) {
     return (_db.select(_db.notes)..where((n) => n.semester.equals(semester))).watch();
   }
 
-  /// Fetches the stringified Master JSON catalog for Notes from Firestore and writes it to SQLite.
-  /// Matches the highly-optimized single-document read pattern used for routines and books.
   Future<void> syncNotes(int userSemester, String userSection) async {
     try {
       final doc = await _firestore.collection('metadata').doc('notes_catalog').get();
@@ -35,26 +31,35 @@ class NoteRepository {
       if (data == null || !data.containsKey('data')) return;
 
       final rawJson = data['data'] as String;
-      final List<dynamic> decoded = jsonDecode(rawJson);
+
+      // MODIFICATION: Decode as a Map since the JSON structure is now grouped by semester keys
+      final Map<String, dynamic> decoded = jsonDecode(rawJson);
 
       await _db.batch((batch) {
-        for (var item in decoded) {
-          batch.insert(
-            _db.notes,
-            NotesCompanion.insert(
-              id: item['id'] as String,
-              title: item['title'] as String? ?? 'Untitled',
-              subjectName: item['subjectName'] as String,
-              authorName: item['authorName'] as String? ?? 'Unknown',
-              fileUrl: item['fileUrl'] as String,
-              semester: item['semester'] as int,
-              section: item['section'] as String? ?? 'All',
-              createdAt: DateTime.now(),
-              isSynced: const Value(true), // Synced successfully from remote
-            ),
-            mode: InsertMode.insertOrReplace,
-          );
-        }
+        decoded.forEach((semesterKey, noteList) {
+          // Robust extraction: Pulls the integer from keys like "1", "semester 1", or "sem_1"
+          final int semester = int.tryParse(semesterKey.replaceAll(RegExp(r'[^0-9]'), '')) ?? 1;
+
+          if (noteList is List) {
+            for (var item in noteList) {
+              batch.insert(
+                _db.notes,
+                NotesCompanion.insert(
+                  id: item['id'] as String,
+                  title: item['title'] as String? ?? 'Untitled',
+                  subjectName: item['subjectName'] as String,
+                  authorName: item['authorName'] as String? ?? 'Unknown',
+                  fileUrl: item['fileUrl'] as String,
+                  semester: semester, // Extracted dynamically from the parent JSON key
+                  section: item['section'] as String? ?? 'All',
+                  createdAt: DateTime.now(),
+                  isSynced: const Value(true), // Synced successfully from remote
+                ),
+                mode: InsertMode.insertOrReplace,
+              );
+            }
+          }
+        });
       });
     } catch (e) {
       print("DEBUG: Error syncing notes catalog: $e");
@@ -62,8 +67,6 @@ class NoteRepository {
     }
   }
 
-  /// Submits a request to the developer triage panel for a Note.
-  /// Uses a deterministic Document ID to enforce the 1-per-day cooldown at the Firestore Rule level.
   Future<void> submitNoteRequest({
     required String subjectName,
     required int semester,
@@ -71,11 +74,9 @@ class NoteRepository {
     final uid = _auth.currentUser?.uid;
     if (uid == null) throw Exception("User not logged in");
 
-    // Format: YYYY-MM-DD
     final today = DateTime.now();
     final dateString = "${today.year}-${today.month.toString().padLeft(2, '0')}-${today.day.toString().padLeft(2, '0')}";
 
-    // Deterministic ID prevents multiple note requests on the same day even if local cache is cleared
     final docId = "${uid}_note_$dateString";
 
     await _firestore.collection('requests').doc(docId).set({
@@ -83,7 +84,7 @@ class NoteRepository {
       'requesterUid': uid,
       'subjectName': subjectName,
       'semester': semester,
-      'status': 'pending', // States: pending, uploaded, rejected
+      'status': 'pending',
       'createdAt': FieldValue.serverTimestamp(),
     });
   }

@@ -43,7 +43,6 @@ class _NotesCatalogScreenState extends ConsumerState<NotesCatalogScreen>
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
     if (state == AppLifecycleState.resumed) {
-      // Trigger a safe UI redraw if returning from Google Drive
       setState(() {});
     }
   }
@@ -51,7 +50,6 @@ class _NotesCatalogScreenState extends ConsumerState<NotesCatalogScreen>
   Future<void> _openDriveLink(String url) async {
     final uri = Uri.parse(url);
     try {
-      // MODIFICATION: Removed canLaunchUrl() check to bypass Android 11+ package visibility constraints
       await launchUrl(uri, mode: LaunchMode.externalApplication);
     } catch (e) {
       if (mounted) {
@@ -60,6 +58,64 @@ class _NotesCatalogScreenState extends ConsumerState<NotesCatalogScreen>
         );
       }
     }
+  }
+
+  // MODIFICATION: Added Download Confirmation Popup for Ad Integration
+  void _showDownloadDialog(Note note) {
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: const Color(0xFF1E1E1E),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16.r)),
+        title: Row(
+          children: [
+            const Icon(Icons.cloud_download_outlined, color: Colors.orangeAccent),
+            SizedBox(width: 10.w),
+            const Text('Download Note', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+          ],
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+                'Do you want to download "${note.title}"?',
+                style: const TextStyle(color: Colors.white70)
+            ),
+            SizedBox(height: 16.h),
+            Container(
+              padding: EdgeInsets.all(12.w),
+              decoration: BoxDecoration(
+                color: Colors.black26,
+                borderRadius: BorderRadius.circular(8.r),
+                border: Border.all(color: Colors.orangeAccent.withOpacity(0.3)),
+              ),
+              child: const Text(
+                'Note: In future updates, supporting our app by viewing a short sponsor message may be required before downloading.',
+                style: TextStyle(color: Colors.orangeAccent, fontSize: 12, fontStyle: FontStyle.italic),
+              ),
+            )
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: const Text('Cancel', style: TextStyle(color: Colors.grey)),
+          ),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.orangeAccent,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8.r)),
+            ),
+            onPressed: () {
+              Navigator.pop(ctx);
+              _openDriveLink(note.fileUrl);
+            },
+            child: const Text('Continue to Download', style: TextStyle(color: Colors.white)),
+          ),
+        ],
+      ),
+    );
   }
 
   void _showRequestBottomSheet() {
@@ -87,11 +143,10 @@ class _NotesCatalogScreenState extends ConsumerState<NotesCatalogScreen>
         slivers: [
           SliverAppBar(
             backgroundColor: Colors.black,
-            title: const Text('Notes Library', style: TextStyle(color: Colors.white)),
+            title: const Text('Notes Library', style: TextStyle(color: Colors.white, fontWeight: FontWeight.w800)),
             pinned: true,
             iconTheme: const IconThemeData(color: Colors.white),
             actions: [
-              // MODIFICATION: Replaced icon-only button with clear TextButton
               Padding(
                 padding: EdgeInsets.only(right: 8.w),
                 child: TextButton.icon(
@@ -108,7 +163,6 @@ class _NotesCatalogScreenState extends ConsumerState<NotesCatalogScreen>
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // MODIFICATION: Replaced CupertinoSearchTextField with sleek Material TextField
                   TextField(
                     controller: _searchController,
                     style: const TextStyle(color: Colors.white),
@@ -117,10 +171,10 @@ class _NotesCatalogScreenState extends ConsumerState<NotesCatalogScreen>
                       hintStyle: const TextStyle(color: Colors.grey),
                       prefixIcon: const Icon(Icons.search, color: Colors.grey),
                       filled: true,
-                      fillColor: const Color(0xFF1E1E1E),
+                      fillColor: const Color(0xFF1A1A1A),
                       contentPadding: EdgeInsets.symmetric(vertical: 0, horizontal: 16.w),
                       border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(10.r),
+                        borderRadius: BorderRadius.circular(12.r),
                         borderSide: BorderSide.none,
                       ),
                     ),
@@ -128,7 +182,7 @@ class _NotesCatalogScreenState extends ConsumerState<NotesCatalogScreen>
                   ),
                   SizedBox(height: 20.h),
                   SizedBox(
-                    height: 40.h,
+                    height: 42.h,
                     child: ListView.builder(
                       scrollDirection: Axis.horizontal,
                       physics: const BouncingScrollPhysics(),
@@ -138,12 +192,21 @@ class _NotesCatalogScreenState extends ConsumerState<NotesCatalogScreen>
                         final isSelected = currentSemester == semester;
                         return GestureDetector(
                           onTap: () => ref.read(noteSemesterProvider.notifier).state = semester,
-                          child: Container(
-                            margin: EdgeInsets.only(right: 10.w),
-                            padding: EdgeInsets.symmetric(horizontal: 20.w),
+                          child: AnimatedContainer(
+                            duration: const Duration(milliseconds: 250),
+                            margin: EdgeInsets.only(right: 12.w),
+                            padding: EdgeInsets.symmetric(horizontal: 24.w),
                             decoration: BoxDecoration(
-                              color: isSelected ? Colors.blueAccent : const Color(0xFF1E1E1E),
+                              // MODIFICATION: Added vibrant gradient for selected state
+                              gradient: isSelected
+                                  ? const LinearGradient(colors: [Color(0xFF4B7BFF), Color(0xFF00C9A7)])
+                                  : null,
+                              color: isSelected ? null : const Color(0xFF1A1A1A),
                               borderRadius: BorderRadius.circular(20.r),
+                              border: Border.all(
+                                color: isSelected ? Colors.transparent : Colors.grey.shade800,
+                                width: 1,
+                              ),
                             ),
                             alignment: Alignment.center,
                             child: Text(
@@ -168,8 +231,7 @@ class _NotesCatalogScreenState extends ConsumerState<NotesCatalogScreen>
             builder: (context, snapshot) {
               if (snapshot.connectionState == ConnectionState.waiting) {
                 return const SliverFillRemaining(
-                  // MODIFICATION: Replaced CupertinoActivityIndicator
-                  child: Center(child: CircularProgressIndicator(color: Colors.white)),
+                  child: Center(child: CircularProgressIndicator(color: Colors.orangeAccent)),
                 );
               }
               if (snapshot.hasError) {
@@ -185,8 +247,17 @@ class _NotesCatalogScreenState extends ConsumerState<NotesCatalogScreen>
               }).toList();
 
               if (filteredNotes.isEmpty) {
-                return const SliverFillRemaining(
-                  child: Center(child: Text('No notes found.', style: TextStyle(color: Colors.grey))),
+                return SliverFillRemaining(
+                  child: Center(
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(Icons.description, color: Colors.grey.shade800, size: 64.sp),
+                          SizedBox(height: 16.h),
+                          const Text('No notes found.', style: TextStyle(color: Colors.grey)),
+                        ],
+                      )
+                  ),
                 );
               }
 
@@ -198,7 +269,8 @@ class _NotesCatalogScreenState extends ConsumerState<NotesCatalogScreen>
                       final note = filteredNotes[index];
                       return _NoteTile(
                         note: note,
-                        onTap: () => _openDriveLink(note.fileUrl),
+                        // MODIFICATION: Intercepted link open to trigger popup
+                        onTap: () => _showDownloadDialog(note),
                       );
                     },
                     childCount: filteredNotes.length,
@@ -214,7 +286,7 @@ class _NotesCatalogScreenState extends ConsumerState<NotesCatalogScreen>
 }
 
 // -----------------------------------------------------------------
-// Note Tile UI Component
+// Vibrant Note Tile UI Component
 // -----------------------------------------------------------------
 class _NoteTile extends StatelessWidget {
   final Note note;
@@ -222,27 +294,57 @@ class _NoteTile extends StatelessWidget {
 
   const _NoteTile({required this.note, required this.onTap});
 
+  // Helper to generate a vibrant color based on the note's subject name
+  Color _getVibrantColor(String text) {
+    final colors = [
+      const Color(0xFFFF4B4B), // Red
+      const Color(0xFF4B7BFF), // Blue
+      const Color(0xFF00C9A7), // Teal
+      const Color(0xFFFF8F00), // Orange
+      const Color(0xFFB54BFF), // Purple
+      const Color(0xFFFF4B91), // Pink
+    ];
+    return colors[text.hashCode.abs() % colors.length];
+  }
+
   @override
   Widget build(BuildContext context) {
+    final accentColor = _getVibrantColor(note.subjectName);
+
     return GestureDetector(
       onTap: onTap,
       child: Container(
         margin: EdgeInsets.only(bottom: 12.h),
         padding: EdgeInsets.all(16.w),
         decoration: BoxDecoration(
-          color: const Color(0xFF1E1E1E),
-          borderRadius: BorderRadius.circular(12.r),
+          color: const Color(0xFF161616),
+          borderRadius: BorderRadius.circular(16.r),
+          // MODIFICATION: Added subtle colorful glow matching the accent color
+          boxShadow: [
+            BoxShadow(
+              color: accentColor.withOpacity(0.08),
+              blurRadius: 10,
+              offset: const Offset(0, 4),
+            )
+          ],
         ),
         child: Row(
           children: [
             Container(
               padding: EdgeInsets.all(12.w),
               decoration: BoxDecoration(
-                color: Colors.orangeAccent.withOpacity(0.2),
-                borderRadius: BorderRadius.circular(10.r),
+                // MODIFICATION: Vibrant gradient background for the icon
+                gradient: LinearGradient(
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                  colors: [
+                    accentColor.withOpacity(0.8),
+                    accentColor.withOpacity(0.3),
+                  ],
+                ),
+                borderRadius: BorderRadius.circular(12.r),
               ),
-              // MODIFICATION: Replaced CupertinoIcons
-              child: const Icon(Icons.description, color: Colors.orangeAccent),
+              child: const Icon(Icons.description, color: Colors.white),
             ),
             SizedBox(width: 16.w),
             Expanded(
@@ -258,15 +360,21 @@ class _NoteTile extends StatelessWidget {
                   SizedBox(height: 4.h),
                   Text(
                     '${note.subjectName} • ${note.authorName}',
-                    style: TextStyle(color: Colors.grey, fontSize: 13.sp),
+                    style: TextStyle(color: Colors.grey.shade400, fontSize: 13.sp),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                   ),
                 ],
               ),
             ),
-            // MODIFICATION: Replaced CupertinoIcons
-            Icon(Icons.chevron_right, color: Colors.grey, size: 24.sp),
+            Container(
+              padding: const EdgeInsets.all(6),
+              decoration: BoxDecoration(
+                color: Colors.white.withOpacity(0.05),
+                shape: BoxShape.circle,
+              ),
+              child: Icon(Icons.download, color: accentColor, size: 20.sp),
+            ),
           ],
         ),
       ),
@@ -346,20 +454,19 @@ class _NoteRequestFormState extends ConsumerState<_NoteRequestForm> {
       if (mounted) {
         Navigator.pop(context);
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Note request submitted successfully!')),
+          const SnackBar(content: Text('Note request submitted successfully!', style: TextStyle(color: Colors.white)), backgroundColor: Colors.green),
         );
       }
     } catch (e) {
       setState(() => _isSubmitting = false);
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Failed to submit request.')),
+          const SnackBar(content: Text('Failed to submit request.'), backgroundColor: Colors.red),
         );
       }
     }
   }
 
-  // MODIFICATION: Helper method to generate unified iOS-style Material TextFields
   Widget _buildFormTextField({
     required TextEditingController controller,
     required String hint,
@@ -376,11 +483,15 @@ class _NoteRequestFormState extends ConsumerState<_NoteRequestForm> {
         hintStyle: const TextStyle(color: Colors.grey),
         filled: true,
         fillColor: const Color(0xFF2A2A2A),
-        counterText: '', // Hide default character counter to save space
+        counterText: '',
         contentPadding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 14.h),
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(8.r),
           borderSide: BorderSide.none,
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(8.r),
+          borderSide: const BorderSide(color: Colors.orangeAccent),
         ),
       ),
       onChanged: (_) => setState(() {}),
@@ -397,7 +508,6 @@ class _NoteRequestFormState extends ConsumerState<_NoteRequestForm> {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            // MODIFICATION: Replaced CupertinoIcons
             const Icon(Icons.schedule, color: Colors.orange, size: 48),
             SizedBox(height: 16.h),
             Text(
@@ -447,14 +557,14 @@ class _NoteRequestFormState extends ConsumerState<_NoteRequestForm> {
             height: 50.h,
             child: ElevatedButton(
               style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.blueAccent,
+                backgroundColor: Colors.orangeAccent,
                 disabledBackgroundColor: Colors.grey.shade800,
                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12.r)),
               ),
               onPressed: _isFormValid() && !_isSubmitting ? _submitRequest : null,
               child: _isSubmitting
                   ? SizedBox(height: 20.h, width: 20.h, child: const CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
-                  : const Text('Submit Request', style: TextStyle(color: Colors.white)),
+                  : const Text('Submit Request', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
             ),
           )
         ],

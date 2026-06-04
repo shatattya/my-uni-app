@@ -27,6 +27,8 @@ class _BooksCatalogScreenState extends ConsumerState<BooksCatalogScreen>
 
   final TextEditingController _searchController = TextEditingController();
 
+  final Set<String> _precachedUrls = {};
+
   @override
   void initState() {
     super.initState();
@@ -43,7 +45,6 @@ class _BooksCatalogScreenState extends ConsumerState<BooksCatalogScreen>
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
     if (state == AppLifecycleState.resumed) {
-      // Trigger a safe UI redraw if returning from Google Drive
       setState(() {});
     }
   }
@@ -51,7 +52,6 @@ class _BooksCatalogScreenState extends ConsumerState<BooksCatalogScreen>
   Future<void> _openDriveLink(String url) async {
     final uri = Uri.parse(url);
     try {
-      // MODIFICATION: Removed canLaunchUrl() check to bypass Android 11+ package visibility constraints
       await launchUrl(uri, mode: LaunchMode.externalApplication);
     } catch (e) {
       if (mounted) {
@@ -60,6 +60,63 @@ class _BooksCatalogScreenState extends ConsumerState<BooksCatalogScreen>
         );
       }
     }
+  }
+
+  void _showDownloadDialog(Book book) {
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: const Color(0xFF1E1E1E),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16.r)),
+        title: Row(
+          children: [
+            const Icon(Icons.cloud_download_outlined, color: Colors.blueAccent),
+            SizedBox(width: 10.w),
+            const Text('Download Book', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+          ],
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+                'Do you want to download "${book.title}"?',
+                style: const TextStyle(color: Colors.white70)
+            ),
+            SizedBox(height: 16.h),
+            Container(
+              padding: EdgeInsets.all(12.w),
+              decoration: BoxDecoration(
+                color: Colors.black26,
+                borderRadius: BorderRadius.circular(8.r),
+                border: Border.all(color: Colors.blueAccent.withOpacity(0.3)),
+              ),
+              child: const Text(
+                'Note: In future updates, supporting our app by viewing a short sponsor message may be required before downloading.',
+                style: TextStyle(color: Colors.blueAccent, fontSize: 12, fontStyle: FontStyle.italic),
+              ),
+            )
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: const Text('Cancel', style: TextStyle(color: Colors.grey)),
+          ),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.blueAccent,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8.r)),
+            ),
+            onPressed: () {
+              Navigator.pop(ctx);
+              _openDriveLink(book.downloadUrl);
+            },
+            child: const Text('Continue to Download', style: TextStyle(color: Colors.white)),
+          ),
+        ],
+      ),
+    );
   }
 
   void _showRequestBottomSheet() {
@@ -87,11 +144,10 @@ class _BooksCatalogScreenState extends ConsumerState<BooksCatalogScreen>
         slivers: [
           SliverAppBar(
             backgroundColor: Colors.black,
-            title: const Text('Books Library', style: TextStyle(color: Colors.white)),
+            title: const Text('Books Library', style: TextStyle(color: Colors.white, fontWeight: FontWeight.w800)),
             pinned: true,
             iconTheme: const IconThemeData(color: Colors.white),
             actions: [
-              // MODIFICATION: Replaced icon-only button with clear TextButton
               Padding(
                 padding: EdgeInsets.only(right: 8.w),
                 child: TextButton.icon(
@@ -108,7 +164,6 @@ class _BooksCatalogScreenState extends ConsumerState<BooksCatalogScreen>
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // MODIFICATION: Replaced CupertinoSearchTextField with sleek Material TextField
                   TextField(
                     controller: _searchController,
                     style: const TextStyle(color: Colors.white),
@@ -117,10 +172,10 @@ class _BooksCatalogScreenState extends ConsumerState<BooksCatalogScreen>
                       hintStyle: const TextStyle(color: Colors.grey),
                       prefixIcon: const Icon(Icons.search, color: Colors.grey),
                       filled: true,
-                      fillColor: const Color(0xFF1E1E1E),
+                      fillColor: const Color(0xFF1A1A1A),
                       contentPadding: EdgeInsets.symmetric(vertical: 0, horizontal: 16.w),
                       border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(10.r),
+                        borderRadius: BorderRadius.circular(12.r),
                         borderSide: BorderSide.none,
                       ),
                     ),
@@ -128,7 +183,7 @@ class _BooksCatalogScreenState extends ConsumerState<BooksCatalogScreen>
                   ),
                   SizedBox(height: 20.h),
                   SizedBox(
-                    height: 40.h,
+                    height: 42.h,
                     child: ListView.builder(
                       scrollDirection: Axis.horizontal,
                       physics: const BouncingScrollPhysics(),
@@ -138,12 +193,20 @@ class _BooksCatalogScreenState extends ConsumerState<BooksCatalogScreen>
                         final isSelected = currentSemester == semester;
                         return GestureDetector(
                           onTap: () => ref.read(bookSemesterProvider.notifier).state = semester,
-                          child: Container(
-                            margin: EdgeInsets.only(right: 10.w),
-                            padding: EdgeInsets.symmetric(horizontal: 20.w),
+                          child: AnimatedContainer(
+                            duration: const Duration(milliseconds: 250),
+                            margin: EdgeInsets.only(right: 12.w),
+                            padding: EdgeInsets.symmetric(horizontal: 24.w),
                             decoration: BoxDecoration(
-                              color: isSelected ? Colors.blueAccent : const Color(0xFF1E1E1E),
+                              gradient: isSelected
+                                  ? const LinearGradient(colors: [Color(0xFF4B7BFF), Color(0xFF00C9A7)])
+                                  : null,
+                              color: isSelected ? null : const Color(0xFF1A1A1A),
                               borderRadius: BorderRadius.circular(20.r),
+                              border: Border.all(
+                                color: isSelected ? Colors.transparent : Colors.grey.shade800,
+                                width: 1,
+                              ),
                             ),
                             alignment: Alignment.center,
                             child: Text(
@@ -168,8 +231,7 @@ class _BooksCatalogScreenState extends ConsumerState<BooksCatalogScreen>
             builder: (context, snapshot) {
               if (snapshot.connectionState == ConnectionState.waiting) {
                 return const SliverFillRemaining(
-                  // MODIFICATION: Replaced CupertinoActivityIndicator
-                  child: Center(child: CircularProgressIndicator(color: Colors.white)),
+                  child: Center(child: CircularProgressIndicator(color: Colors.blueAccent)),
                 );
               }
               if (snapshot.hasError) {
@@ -184,9 +246,38 @@ class _BooksCatalogScreenState extends ConsumerState<BooksCatalogScreen>
                     b.author.toLowerCase().contains(searchQuery);
               }).toList();
 
+              final unprecachedBooks = filteredBooks.where((b) => b.coverUrl.isNotEmpty && !_precachedUrls.contains(b.coverUrl)).toList();
+              if (unprecachedBooks.isNotEmpty) {
+                WidgetsBinding.instance.addPostFrameCallback((_) {
+                  if (!mounted) return;
+                  for (var book in unprecachedBooks) {
+                    _precachedUrls.add(book.coverUrl);
+                    // MODIFICATION: Handled the ImageResourceService socket exception natively
+                    // via the explicit onError callback parameter.
+                    precacheImage(
+                      NetworkImage(book.coverUrl),
+                      context,
+                      onError: (exception, stackTrace) {
+                        // Silently swallow SocketExceptions/timeouts to keep the console clean.
+                        // The UI will gracefully fallback to the colored background anyway.
+                      },
+                    );
+                  }
+                });
+              }
+
               if (filteredBooks.isEmpty) {
-                return const SliverFillRemaining(
-                  child: Center(child: Text('No books found.', style: TextStyle(color: Colors.grey))),
+                return SliverFillRemaining(
+                  child: Center(
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(Icons.menu_book, color: Colors.grey.shade800, size: 64.sp),
+                          SizedBox(height: 16.h),
+                          const Text('No books found.', style: TextStyle(color: Colors.grey)),
+                        ],
+                      )
+                  ),
                 );
               }
 
@@ -197,14 +288,14 @@ class _BooksCatalogScreenState extends ConsumerState<BooksCatalogScreen>
                     crossAxisCount: 2,
                     mainAxisSpacing: 16.h,
                     crossAxisSpacing: 16.w,
-                    childAspectRatio: 0.65,
+                    childAspectRatio: 0.6,
                   ),
                   delegate: SliverChildBuilderDelegate(
                         (context, index) {
                       final book = filteredBooks[index];
                       return _BookCard(
                         book: book,
-                        onTap: () => _openDriveLink(book.downloadUrl),
+                        onTap: () => _showDownloadDialog(book),
                       );
                     },
                     childCount: filteredBooks.length,
@@ -220,7 +311,7 @@ class _BooksCatalogScreenState extends ConsumerState<BooksCatalogScreen>
 }
 
 // -----------------------------------------------------------------
-// Book Card UI Component
+// Vibrant Book Card UI Component
 // -----------------------------------------------------------------
 class _BookCard extends StatelessWidget {
   final Book book;
@@ -228,49 +319,128 @@ class _BookCard extends StatelessWidget {
 
   const _BookCard({required this.book, required this.onTap});
 
+  Color _getVibrantColor(String title) {
+    final colors = [
+      const Color(0xFFFF4B4B), // Red
+      const Color(0xFF4B7BFF), // Blue
+      const Color(0xFF00C9A7), // Teal
+      const Color(0xFFFF8F00), // Orange
+      const Color(0xFFB54BFF), // Purple
+      const Color(0xFFFF4B91), // Pink
+    ];
+    return colors[title.hashCode.abs() % colors.length];
+  }
+
   @override
   Widget build(BuildContext context) {
+    final accentColor = _getVibrantColor(book.title);
+
     return GestureDetector(
       onTap: onTap,
       child: Container(
         decoration: BoxDecoration(
-          color: const Color(0xFF1E1E1E),
-          borderRadius: BorderRadius.circular(12.r),
+          color: const Color(0xFF161616),
+          borderRadius: BorderRadius.circular(16.r),
+          boxShadow: [
+            BoxShadow(
+              color: accentColor.withOpacity(0.1),
+              blurRadius: 10,
+              offset: const Offset(0, 4),
+            )
+          ],
         ),
         clipBehavior: Clip.antiAlias,
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Expanded(
-              child: book.coverUrl.isNotEmpty
-                  ? Image.network(
-                book.coverUrl,
-                fit: BoxFit.cover,
-                width: double.infinity,
-                // MODIFICATION: Replaced CupertinoIcons
-                errorBuilder: (_, __, ___) => const Center(child: Icon(Icons.book, color: Colors.grey, size: 40)),
-              )
-                  : const Center(child: Icon(Icons.book, color: Colors.grey, size: 40)),
-            ),
-            Padding(
-              padding: EdgeInsets.all(10.w),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
+              flex: 3,
+              child: Stack(
                 children: [
-                  Text(
-                      book.title,
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                      style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 14.sp)
+                  Container(
+                    width: double.infinity,
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                        colors: [
+                          accentColor.withOpacity(0.8),
+                          accentColor.withOpacity(0.3),
+                        ],
+                      ),
+                    ),
+                    child: Center(
+                      child: Icon(Icons.book, color: Colors.white.withOpacity(0.5), size: 48.sp),
+                    ),
                   ),
-                  SizedBox(height: 4.h),
-                  Text(
-                      book.author,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: TextStyle(color: Colors.grey, fontSize: 12.sp)
+                  if (book.coverUrl.isNotEmpty)
+                    Image.network(
+                      book.coverUrl,
+                      fit: BoxFit.cover,
+                      width: double.infinity,
+                      height: double.infinity,
+                      gaplessPlayback: true,
+                      loadingBuilder: (context, child, loadingProgress) {
+                        if (loadingProgress == null) return child;
+                        return Center(
+                            child: SizedBox(
+                              width: 24.w,
+                              height: 24.w,
+                              child: CircularProgressIndicator(
+                                color: accentColor,
+                                strokeWidth: 3,
+                                value: loadingProgress.expectedTotalBytes != null
+                                    ? loadingProgress.cumulativeBytesLoaded / loadingProgress.expectedTotalBytes!
+                                    : null,
+                              ),
+                            )
+                        );
+                      },
+                      errorBuilder: (_, __, ___) => const SizedBox(),
+                    ),
+                  Positioned(
+                    top: 8,
+                    right: 8,
+                    child: Container(
+                      padding: const EdgeInsets.all(6),
+                      decoration: BoxDecoration(
+                        color: Colors.black54,
+                        shape: BoxShape.circle,
+                        border: Border.all(color: Colors.white24),
+                      ),
+                      child: const Icon(Icons.download, color: Colors.white, size: 14),
+                    ),
                   ),
                 ],
+              ),
+            ),
+            Expanded(
+              flex: 2,
+              child: Container(
+                width: double.infinity,
+                padding: EdgeInsets.all(12.w),
+                decoration: BoxDecoration(
+                  border: Border(top: BorderSide(color: accentColor, width: 2)),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Text(
+                        book.title,
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                        style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 14.sp, height: 1.2)
+                    ),
+                    SizedBox(height: 6.h),
+                    Text(
+                        book.author,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: TextStyle(color: Colors.grey.shade400, fontSize: 12.sp)
+                    ),
+                  ],
+                ),
               ),
             )
           ],
@@ -279,7 +449,6 @@ class _BookCard extends StatelessWidget {
     );
   }
 }
-
 
 // -----------------------------------------------------------------
 // Internal Request Form Widget (Bottom Sheet)
@@ -361,20 +530,19 @@ class _BookRequestFormState extends ConsumerState<_BookRequestForm> {
       if (mounted) {
         Navigator.pop(context);
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Book request submitted successfully!')),
+          const SnackBar(content: Text('Book request submitted successfully!', style: TextStyle(color: Colors.white)), backgroundColor: Colors.green),
         );
       }
     } catch (e) {
       setState(() => _isSubmitting = false);
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Failed to submit request.')),
+          const SnackBar(content: Text('Failed to submit request.'), backgroundColor: Colors.red),
         );
       }
     }
   }
 
-  // MODIFICATION: Helper method to generate unified iOS-style Material TextFields
   Widget _buildFormTextField({
     required TextEditingController controller,
     required String hint,
@@ -391,11 +559,15 @@ class _BookRequestFormState extends ConsumerState<_BookRequestForm> {
         hintStyle: const TextStyle(color: Colors.grey),
         filled: true,
         fillColor: const Color(0xFF2A2A2A),
-        counterText: '', // Hide default character counter to save space
+        counterText: '',
         contentPadding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 14.h),
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(8.r),
           borderSide: BorderSide.none,
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(8.r),
+          borderSide: const BorderSide(color: Colors.blueAccent),
         ),
       ),
       onChanged: (_) => setState(() {}),
@@ -412,7 +584,6 @@ class _BookRequestFormState extends ConsumerState<_BookRequestForm> {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            // MODIFICATION: Replaced CupertinoIcons
             const Icon(Icons.schedule, color: Colors.orange, size: 48),
             SizedBox(height: 16.h),
             Text(
@@ -482,7 +653,7 @@ class _BookRequestFormState extends ConsumerState<_BookRequestForm> {
               onPressed: _isFormValid() && !_isSubmitting ? _submitRequest : null,
               child: _isSubmitting
                   ? SizedBox(height: 20.h, width: 20.h, child: const CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
-                  : const Text('Submit Request', style: TextStyle(color: Colors.white)),
+                  : const Text('Submit Request', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
             ),
           )
         ],
