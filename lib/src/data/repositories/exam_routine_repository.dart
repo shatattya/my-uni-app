@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:drift/drift.dart';
+import 'package:flutter/foundation.dart'; // ADDED: For debugPrint
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../local/app_database.dart';
@@ -68,9 +69,16 @@ class ExamRoutineRepository {
       final prefs = await SharedPreferences.getInstance();
       final allocationsStr = prefs.getString(_prefRoomAllocations) ?? '{}';
       Map<String, dynamic> allocations = {};
+
+      // BUG FIX: Safe JSON parsing to avoid TypeError if stored string is not a Map
       try {
-        allocations = json.decode(allocationsStr) as Map<String, dynamic>;
-      } catch (_) {}
+        final decoded = json.decode(allocationsStr);
+        if (decoded is Map) {
+          allocations = Map<String, dynamic>.from(decoded);
+        }
+      } catch (e) {
+        debugPrint("DEBUG: Failed to parse room allocations: $e");
+      }
 
       // Map over the database results to apply business logic
       return exams.map((e) {
@@ -137,7 +145,7 @@ class ExamRoutineRepository {
       final docSnapshot = await _firestore.collection("routines").doc("exam_routine").get();
 
       if (!docSnapshot.exists) {
-        print("DEBUG: Exam routine document not found in Firebase.");
+        debugPrint("DEBUG: Exam routine document not found in Firebase.");
         return;
       }
 
@@ -145,7 +153,20 @@ class ExamRoutineRepository {
       if (docData == null || !docData.containsKey("data")) return;
 
       final String rawJsonString = docData["data"];
-      final Map<String, dynamic> data = json.decode(rawJsonString);
+
+      // BUG FIX: Safe parsing for routine JSON data to prevent global sync failures
+      Map<String, dynamic> data = {};
+      try {
+        final decoded = json.decode(rawJsonString);
+        if (decoded is Map) {
+          data = Map<String, dynamic>.from(decoded);
+        } else {
+          return; // Abort sync if the structural wrapper isn't a Map
+        }
+      } catch (e) {
+        debugPrint("DEBUG: Malformed JSON string in exam routine: $e");
+        return;
+      }
 
       final prefs = await SharedPreferences.getInstance();
 
@@ -165,6 +186,7 @@ class ExamRoutineRepository {
       }
 
       if (!data.containsKey("data")) return;
+      if (data["data"] is! List) return; // BUG FIX: Ensure data is an array before processing
 
       final List<dynamic> daysData = data["data"];
       List<ExamRoutinesCompanion> companions = [];
@@ -172,13 +194,18 @@ class ExamRoutineRepository {
       final String masterExamId = newExamId ?? "default_exam";
 
       for (var dayEntry in daysData) {
-        final String dateStr = dayEntry["date"] ?? "";
+        if (dayEntry is! Map) continue; // BUG FIX: Skip malformed day objects
+
+        final String dateStr = dayEntry["date"]?.toString() ?? "";
         final DateTime? parsedDate = DateTime.tryParse(dateStr);
         if (parsedDate == null) continue;
 
-        final List<dynamic> exams = dayEntry["exams"] ?? [];
+        final dynamic rawExams = dayEntry["exams"];
+        final List<dynamic> exams = rawExams is List ? rawExams : [];
 
         for (var exam in exams) {
+          if (exam is! Map) continue; // BUG FIX: Skip malformed individual exams
+
           final int parsedSem = int.tryParse(exam["sem"]?.toString() ?? "1") ?? 1;
           final String parsedSec = (exam["sec"]?.toString() ?? "N/A").trim().toUpperCase();
           final String subject = (exam["sub"]?.toString() ?? "Unknown Subject").trim();
@@ -214,10 +241,10 @@ class ExamRoutineRepository {
         });
       });
 
-      print("DEBUG: Exam Routines synced. Total exams processed: ${companions.length}");
+      debugPrint("DEBUG: Exam Routines synced. Total exams processed: ${companions.length}");
 
     } catch (e) {
-      print("DEBUG: Exam Routine Sync Error: $e");
+      debugPrint("DEBUG: Exam Routine Sync Error: $e");
     } finally {
       _isSyncing = false;
     }

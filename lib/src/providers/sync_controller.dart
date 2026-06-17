@@ -1,5 +1,6 @@
 import 'dart:io';
 import 'dart:async'; // ADDED: Required for TimeoutException
+import 'package:flutter/foundation.dart'; // ADDED: For debugPrint
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:path_provider/path_provider.dart';
@@ -31,12 +32,19 @@ class SyncController extends AsyncNotifier<DateTime?> {
         return DateTime.tryParse(timestampString);
       }
     } catch (e) {
-      print("DEBUG: Failed to load persistent sync timestamp: $e");
+      debugPrint("DEBUG: Failed to load persistent sync timestamp: $e");
     }
     return null;
   }
 
   Future<void> syncAllData() async {
+    // BUG FIX: Prevent concurrent sync operations which would multiply Firebase reads
+    // and cause local SQLite transaction race conditions.
+    if (state.isLoading) {
+      debugPrint("DEBUG: Sync already in progress, aborting duplicate call.");
+      return;
+    }
+
     final uid = FirebaseAuth.instance.currentUser?.uid;
     if (uid == null) throw Exception("User not logged in.");
 
@@ -50,8 +58,8 @@ class SyncController extends AsyncNotifier<DateTime?> {
     final lastSync = state.value;
     if (!canBypassSyncLock && lastSync != null) {
       final difference = DateTime.now().difference(lastSync);
-      if (difference.inMinutes < 5) {
-        throw Exception("Sync is on cooldown to save data. Please try again in ${5 - difference.inMinutes} minutes.");
+      if (difference.inMinutes < 15) {
+        throw Exception("Sync is on cooldown to save data. Please try again in ${15 - difference.inMinutes} minutes.");
       }
     }
 
@@ -83,7 +91,7 @@ class SyncController extends AsyncNotifier<DateTime?> {
         final file = await _getSyncTimestampFile();
         await file.writeAsString(now.toIso8601String());
       } catch (e) {
-        print("DEBUG: Failed to save persistent sync timestamp: $e");
+        debugPrint("DEBUG: Failed to save persistent sync timestamp: $e");
       }
 
     } catch (e) {

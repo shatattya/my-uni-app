@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'package:flutter/foundation.dart'; // ADDED: For debugPrint
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart'; // ADDED: For Haptic Feedback
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -58,8 +59,16 @@ class _AttendanceMarkingScreenState extends ConsumerState<AttendanceMarkingScree
 
       // 3. If it exists, pre-load the present students into our Set so the teacher can edit them
       if (existingRecord != null && mounted) {
-        final presentIds = List<String>.from(jsonDecode(existingRecord.presentStudentIds));
-        _presentStudentIds.addAll(presentIds);
+        // BUG FIX: Safe JSON parsing to prevent FormatException from crashing screen initialization
+        try {
+          final decoded = jsonDecode(existingRecord.presentStudentIds);
+          if (decoded is List) {
+            final presentIds = List<String>.from(decoded);
+            _presentStudentIds.addAll(presentIds);
+          }
+        } catch (e) {
+          debugPrint("DEBUG: Malformed JSON in existing attendance record: $e");
+        }
       }
 
       if (mounted) {
@@ -69,7 +78,7 @@ class _AttendanceMarkingScreenState extends ConsumerState<AttendanceMarkingScree
         });
       }
     } catch (e) {
-      print("DEBUG: Failed to load students or existing record: $e");
+      debugPrint("DEBUG: Failed to load students or existing record: $e");
       if (mounted) {
         setState(() => _isLoading = false);
         ScaffoldMessenger.of(context).showSnackBar(
@@ -186,13 +195,16 @@ class _AttendanceMarkingScreenState extends ConsumerState<AttendanceMarkingScree
       );
 
       if (mounted) {
-        Navigator.pop(context); // Return to setup screen/home
+        // BUG FIX: Show SnackBar before popping to prevent "deactivated context" exceptions
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text("Attendance saved successfully!"), backgroundColor: Colors.green),
         );
+        if (Navigator.canPop(context)) {
+          Navigator.pop(context); // Return to setup screen/home
+        }
       }
     } catch (e) {
-      print("DEBUG: Error saving attendance: $e");
+      debugPrint("DEBUG: Error saving attendance: $e");
       if (mounted) {
         setState(() => _isLoading = false);
         ScaffoldMessenger.of(context).showSnackBar(

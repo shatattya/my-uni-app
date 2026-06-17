@@ -1,5 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:drift/drift.dart';
+import 'package:flutter/foundation.dart'; // ADDED: For debugPrint
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:firebase_messaging/firebase_messaging.dart'; // FIXED: Corrected import path
 import 'package:firebase_auth/firebase_auth.dart' as firebase_auth;
@@ -38,7 +39,7 @@ class UserRepository {
       String newTopic = "sem_${newSem}_sec_${newSec.toUpperCase()}";
       await _fcm.subscribeToTopic(newTopic);
     } catch (e) {
-      print("DEBUG: FCM Subscription Error: $e");
+      debugPrint("DEBUG: FCM Subscription Error: $e");
     }
   }
 
@@ -66,10 +67,15 @@ class UserRepository {
           }
         } else if (email.isNotEmpty) {
           final internalIdFromEmail = email.split("@")[0];
-          final doc = await _firestore.collection("students").doc(internalIdFromEmail).get();
-          if (doc.exists) {
-            data = doc.data();
-            resolvedInternalId = data?["internalId"] ?? internalIdFromEmail;
+
+          // BUG FIX: Ensure the derived document ID is not empty to prevent
+          // a fatal "Document path cannot be empty" crash.
+          if (internalIdFromEmail.isNotEmpty) {
+            final doc = await _firestore.collection("students").doc(internalIdFromEmail).get();
+            if (doc.exists) {
+              data = doc.data();
+              resolvedInternalId = data?["internalId"] ?? internalIdFromEmail;
+            }
           }
         }
 
@@ -88,7 +94,7 @@ class UserRepository {
           }
         }
       } catch (firestoreError) {
-        print("DEBUG: Firestore fetch failed: $firestoreError");
+        debugPrint("DEBUG: Firestore fetch failed: $firestoreError");
         fetchFailed = true; // Mark that the fetch threw an error (e.g., offline)
       }
 
@@ -129,16 +135,16 @@ class UserRepository {
         );
       } else if (fetchFailed) {
         // Prevent aggressive logout if the device is simply offline or Firestore failed
-        print("DEBUG: Sync failed due to network or Firestore error. Retaining session.");
+        debugPrint("DEBUG: Sync failed due to network or Firestore error. Retaining session.");
         throw Exception("Network error or offline. Could not sync profile.");
       } else {
         // Only log out if fetch succeeded but user genuinely doesn't exist in DB
-        print("DEBUG: Sync failed. User document does not exist.");
+        debugPrint("DEBUG: Sync failed. User document does not exist.");
         await firebase_auth.FirebaseAuth.instance.signOut();
         throw Exception("Profile data missing. You have been safely logged out.");
       }
     } catch (e) {
-      print("DEBUG: User Sync error: $e");
+      debugPrint("DEBUG: User Sync error: $e");
       // Removed the forced sign-out here to prevent offline logout traps
       rethrow;
     }
@@ -213,7 +219,7 @@ class UserRepository {
         );
       }
     } catch (e) {
-      print("DEBUG: Failed to update teacher profile: $e");
+      debugPrint("DEBUG: Failed to update teacher profile: $e");
       throw Exception("Failed to update profile.");
     }
   }

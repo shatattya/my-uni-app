@@ -20,6 +20,21 @@ class AuthWrapper extends StatelessWidget {
           );
         }
 
+        // BUG FIX: Handle potential stream errors gracefully to prevent
+        // silent UI crashes due to invalid auth state exceptions.
+        if (snapshot.hasError) {
+          return Scaffold(
+            backgroundColor: Colors.black,
+            body: Center(
+              child: Text(
+                'Authentication Error\nPlease restart the app.',
+                textAlign: TextAlign.center,
+                style: const TextStyle(color: Colors.redAccent, fontSize: 16),
+              ),
+            ),
+          );
+        }
+
         if (snapshot.hasData) {
           return const HomeScreen();
         } else {

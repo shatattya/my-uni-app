@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:drift/drift.dart';
+import 'package:flutter/foundation.dart'; // ADDED: For debugPrint
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import '../local/app_database.dart';
@@ -32,8 +33,17 @@ class BookRepository {
 
       final rawJson = data['data'] as String;
 
-      // MODIFICATION: Decode as a Map since the JSON structure is now grouped by semester keys
-      final Map<String, dynamic> decoded = jsonDecode(rawJson);
+      // BUG FIX: Safe JSON parsing to prevent FormatException from halting the global sync
+      Map<String, dynamic> decoded = {};
+      try {
+        final parsed = jsonDecode(rawJson);
+        if (parsed is Map) {
+          decoded = Map<String, dynamic>.from(parsed);
+        }
+      } catch (e) {
+        debugPrint("DEBUG: Malformed JSON in books catalog: $e");
+        return; // Gracefully abort book sync without crashing the app
+      }
 
       await _db.batch((batch) {
         decoded.forEach((semesterKey, bookList) {
@@ -42,24 +52,27 @@ class BookRepository {
 
           if (bookList is List) {
             for (var item in bookList) {
-              batch.insert(
-                _db.books,
-                BooksCompanion.insert(
-                  id: item['id'] as String,
-                  title: item['title'] as String,
-                  author: item['author'] as String,
-                  coverUrl: item['coverUrl'] as String,
-                  downloadUrl: item['downloadUrl'] as String,
-                  semester: semester, // Extracted dynamically from the parent JSON key
-                ),
-                mode: InsertMode.insertOrReplace,
-              );
+              if (item is Map) { // Added structural validation
+                batch.insert(
+                  _db.books,
+                  BooksCompanion.insert(
+                    // BUG FIX: Removed unsafe 'as String' casts to prevent TypeError crashes
+                    id: item['id']?.toString() ?? '',
+                    title: item['title']?.toString() ?? 'Unknown Title',
+                    author: item['author']?.toString() ?? 'Unknown Author',
+                    coverUrl: item['coverUrl']?.toString() ?? '',
+                    downloadUrl: item['downloadUrl']?.toString() ?? '',
+                    semester: semester, // Extracted dynamically from the parent JSON key
+                  ),
+                  mode: InsertMode.insertOrReplace,
+                );
+              }
             }
           }
         });
       });
     } catch (e) {
-      print("DEBUG: Error syncing books catalog: $e");
+      debugPrint("DEBUG: Error syncing books catalog: $e");
       rethrow;
     }
   }

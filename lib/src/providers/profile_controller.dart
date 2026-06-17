@@ -2,11 +2,13 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../data/repositories/user_repository.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
-final profileControllerProvider = AsyncNotifierProvider<ProfileController, void>(() {
+// BUG FIX: Added AutoDispose to prevent stale error/loading states from being
+// cached when the user navigates away from the profile screens.
+final profileControllerProvider = AutoDisposeAsyncNotifierProvider<ProfileController, void>(() {
   return ProfileController();
 });
 
-class ProfileController extends AsyncNotifier<void> {
+class ProfileController extends AutoDisposeAsyncNotifier<void> {
   @override
   Future<void> build() async {}
 
@@ -42,7 +44,6 @@ class ProfileController extends AsyncNotifier<void> {
         }
       }
 
-      // 2. Update Database
       await ref.read(userRepositoryProvider).updateProfile(
         uid: user.uid,
         name: name,

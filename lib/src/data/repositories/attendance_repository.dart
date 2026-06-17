@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'dart:io';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:drift/drift.dart';
+import 'package:flutter/foundation.dart'; // ADDED: For debugPrint
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:intl/intl.dart';
@@ -96,7 +97,7 @@ class AttendanceRepository {
         });
       }
     } catch (e) {
-      print("DEBUG: Failed to sync students from cloud: $e");
+      debugPrint("DEBUG: Failed to sync students from cloud: $e");
     }
   }
 
@@ -150,7 +151,7 @@ class AttendanceRepository {
           .write(const AttendanceRecordsCompanion(isSynced: Value(true)));
 
     } catch (e) {
-      print("DEBUG: Offline mode - Attendance saved locally, waiting for manual sync.");
+      debugPrint("DEBUG: Offline mode - Attendance saved locally, waiting for manual sync.");
     }
   }
 
@@ -183,7 +184,17 @@ class AttendanceRepository {
     }
 
     for (var record in records) {
-      final presentIds = List<String>.from(jsonDecode(record.presentStudentIds));
+      // BUG FIX: Safe JSON parsing to prevent FormatException from crashing CSV export
+      List<String> presentIds = [];
+      try {
+        final decoded = jsonDecode(record.presentStudentIds);
+        if (decoded is List) {
+          presentIds = List<String>.from(decoded);
+        }
+      } catch (e) {
+        debugPrint("DEBUG: Malformed JSON in presentStudentIds for ${record.attendanceId}");
+      }
+
       for (var sid in presentIds) {
         if (studentCount.containsKey(sid)) {
           studentCount[sid] = studentCount[sid]! + 1;
@@ -248,7 +259,17 @@ class AttendanceRepository {
 
         for (var record in pendingRecords) {
           final docRef = _firestore.collection("attendance_records").doc(record.attendanceId);
-          final presentIds = List<String>.from(jsonDecode(record.presentStudentIds));
+
+          // BUG FIX: Safe JSON parsing to prevent cloud sync from completely halting due to one bad record
+          List<String> presentIds = [];
+          try {
+            final decoded = jsonDecode(record.presentStudentIds);
+            if (decoded is List) {
+              presentIds = List<String>.from(decoded);
+            }
+          } catch (e) {
+            debugPrint("DEBUG: Malformed JSON during sync upload for ${record.attendanceId}");
+          }
 
           batch.set(docRef, {
             "attendanceId": record.attendanceId,
