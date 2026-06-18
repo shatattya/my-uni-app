@@ -10,6 +10,7 @@ import '../data/repositories/routine_repository.dart';
 import '../data/repositories/exam_routine_repository.dart';
 import '../data/repositories/book_repository.dart'; // ADDED: For Books sync
 import '../data/repositories/note_repository.dart'; // ADDED: For Notes sync
+import '../data/repositories/live_event_repository.dart'; // ADDED: For Live Events sync
 
 final syncControllerProvider = AsyncNotifierProvider<SyncController, DateTime?>(() {
   return SyncController();
@@ -58,8 +59,8 @@ class SyncController extends AsyncNotifier<DateTime?> {
     final lastSync = state.value;
     if (!canBypassSyncLock && lastSync != null) {
       final difference = DateTime.now().difference(lastSync);
-      if (difference.inMinutes < 15) {
-        throw Exception("Sync is on cooldown to save data. Please try again in ${15 - difference.inMinutes} minutes.");
+      if (difference.inMinutes < 5) {
+        throw Exception("Sync is on cooldown to save data. Please try again in ${5 - difference.inMinutes} minutes.");
       }
     }
 
@@ -81,6 +82,7 @@ class SyncController extends AsyncNotifier<DateTime?> {
         ref.read(examRoutineRepositoryProvider).syncExamRoutines(),
         ref.read(bookRepositoryProvider).syncBooks(), // MODIFICATION: Added Book Sync
         if (localUser != null) ref.read(noteRepositoryProvider).syncNotes(localUser.semester, localUser.section), // MODIFICATION: Added Note Sync with safe user properties
+        ref.read(liveEventRepositoryProvider).syncLiveEvents(), // MODIFICATION: Added Live Event Sync
       ]);
 
       // 4. Update the state and persist the timestamp to the file

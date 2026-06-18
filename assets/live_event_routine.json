@@ -1,0 +1,944 @@
+{
+  "eventId": "wc_2026",
+  "eventTitle": "FIFA World Cup 2026",
+  "eventType": "sports_versus",
+  "homeTabButtonLabel": "World Cup '26",
+  "schedule": [
+    {
+      "id": "wc26_m01",
+      "groupLabel": "Group Stage",
+      "heading": "Opening Match",
+      "titlePrimary": "Mexico",
+      "titleSecondary": "South Africa",
+      "subtitle": "Estadio Azteca; Mexico City, MEX",
+      "utcTime": "2026-06-11T19:00:00Z"
+    },
+    {
+      "id": "wc26_m02",
+      "groupLabel": "Group Stage",
+      "heading": "Group Stage",
+      "titlePrimary": "South Korea",
+      "titleSecondary": "Czechia",
+      "subtitle": "Estadio Akron; Guadalajara, MEX",
+      "utcTime": "2026-06-12T02:00:00Z"
+    },
+    {
+      "id": "wc26_m03",
+      "groupLabel": "Group Stage",
+      "heading": "Group Stage",
+      "titlePrimary": "Canada",
+      "titleSecondary": "Bosnia and Herzegovina",
+      "subtitle": "BMO Field; Toronto, CAN",
+      "utcTime": "2026-06-12T19:00:00Z"
+    },
+    {
+      "id": "wc26_m04",
+      "groupLabel": "Group Stage",
+      "heading": "Group Stage",
+      "titlePrimary": "United States",
+      "titleSecondary": "Paraguay",
+      "subtitle": "SoFi Stadium; Inglewood, CA",
+      "utcTime": "2026-06-13T01:00:00Z"
+    },
+    {
+      "id": "wc26_m05",
+      "groupLabel": "Group Stage",
+      "heading": "Group Stage",
+      "titlePrimary": "Qatar",
+      "titleSecondary": "Switzerland",
+      "subtitle": "Levi's Stadium; Santa Clara, CA",
+      "utcTime": "2026-06-13T19:00:00Z"
+    },
+    {
+      "id": "wc26_m06",
+      "groupLabel": "Group Stage",
+      "heading": "Group Stage",
+      "titlePrimary": "Brazil",
+      "titleSecondary": "Morocco",
+      "subtitle": "MetLife Stadium; East Rutherford, NJ",
+      "utcTime": "2026-06-13T22:00:00Z"
+    },
+    {
+      "id": "wc26_m07",
+      "groupLabel": "Group Stage",
+      "heading": "Group Stage",
+      "titlePrimary": "Haiti",
+      "titleSecondary": "Scotland",
+      "subtitle": "Gillette Stadium; Foxborough, MA",
+      "utcTime": "2026-06-14T01:00:00Z"
+    },
+    {
+      "id": "wc26_m08",
+      "groupLabel": "Group Stage",
+      "heading": "Group Stage",
+      "titlePrimary": "Australia",
+      "titleSecondary": "Türkiye",
+      "subtitle": "BC Place; Vancouver, CAN",
+      "utcTime": "2026-06-14T04:00:00Z"
+    },
+    {
+      "id": "wc26_m09",
+      "groupLabel": "Group Stage",
+      "heading": "Group Stage",
+      "titlePrimary": "Germany",
+      "titleSecondary": "Curacao",
+      "subtitle": "NRG Stadium; Houston, TX",
+      "utcTime": "2026-06-14T17:00:00Z"
+    },
+    {
+      "id": "wc26_m10",
+      "groupLabel": "Group Stage",
+      "heading": "Group Stage",
+      "titlePrimary": "Netherlands",
+      "titleSecondary": "Japan",
+      "subtitle": "AT&T Stadium; Arlington, TX",
+      "utcTime": "2026-06-14T20:00:00Z"
+    },
+    {
+      "id": "wc26_m11",
+      "groupLabel": "Group Stage",
+      "heading": "Group Stage",
+      "titlePrimary": "Ivory Coast",
+      "titleSecondary": "Ecuador",
+      "subtitle": "Lincoln Financial Field; Philadelphia, PA",
+      "utcTime": "2026-06-14T23:00:00Z"
+    },
+    {
+      "id": "wc26_m12",
+      "groupLabel": "Group Stage",
+      "heading": "Group Stage",
+      "titlePrimary": "Sweden",
+      "titleSecondary": "Tunisia",
+      "subtitle": "Estadio BBVA Bancomer; Monterrey, MEX",
+      "utcTime": "2026-06-15T02:00:00Z"
+    },
+    {
+      "id": "wc26_m13",
+      "groupLabel": "Group Stage",
+      "heading": "Group Stage",
+      "titlePrimary": "Spain",
+      "titleSecondary": "Cape Verde",
+      "subtitle": "Mercedes-Benz Stadium; Atlanta, GA",
+      "utcTime": "2026-06-15T16:00:00Z"
+    },
+    {
+      "id": "wc26_m14",
+      "groupLabel": "Group Stage",
+      "heading": "Group Stage",
+      "titlePrimary": "Belgium",
+      "titleSecondary": "Egypt",
+      "subtitle": "Lumen Field; Seattle, WA",
+      "utcTime": "2026-06-15T19:00:00Z"
+    },
+    {
+      "id": "wc26_m15",
+      "groupLabel": "Group Stage",
+      "heading": "Group Stage",
+      "titlePrimary": "Saudia Arabia",
+      "titleSecondary": "Uruguay",
+      "subtitle": "Hard Rock Stadium; Miami, FL",
+      "utcTime": "2026-06-15T22:00:00Z"
+    },
+    {
+      "id": "wc26_m16",
+      "groupLabel": "Group Stage",
+      "heading": "Group Stage",
+      "titlePrimary": "Iran",
+      "titleSecondary": "New Zealand",
+      "subtitle": "SoFi Stadium; Inglewood, CA",
+      "utcTime": "2026-06-16T01:00:00Z"
+    },
+    {
+      "id": "wc26_m17",
+      "groupLabel": "Group Stage",
+      "heading": "Group Stage",
+      "titlePrimary": "France",
+      "titleSecondary": "Senegal",
+      "subtitle": "MetLife Stadium; East Rutherford, NJ",
+      "utcTime": "2026-06-16T19:00:00Z"
+    },
+    {
+      "id": "wc26_m18",
+      "groupLabel": "Group Stage",
+      "heading": "Group Stage",
+      "titlePrimary": "Iraq",
+      "titleSecondary": "Norway",
+      "subtitle": "Gillette Stadium; Foxborough, MA",
+      "utcTime": "2026-06-16T22:00:00Z"
+    },
+    {
+      "id": "wc26_m19",
+      "groupLabel": "Group Stage",
+      "heading": "Group Stage",
+      "titlePrimary": "Argentina",
+      "titleSecondary": "Algeria",
+      "subtitle": "Arrowhead Stadium; Kansas City, MO",
+      "utcTime": "2026-06-17T01:00:00Z"
+    },
+    {
+      "id": "wc26_m20",
+      "groupLabel": "Group Stage",
+      "heading": "Group Stage",
+      "titlePrimary": "Austria",
+      "titleSecondary": "Jordan",
+      "subtitle": "Levi's Stadium; Santa Clara, CA",
+      "utcTime": "2026-06-17T04:00:00Z"
+    },
+    {
+      "id": "wc26_m21",
+      "groupLabel": "Group Stage",
+      "heading": "Group Stage",
+      "titlePrimary": "Portugal",
+      "titleSecondary": "Congo DR",
+      "subtitle": "NRG Stadium; Houston, TX",
+      "utcTime": "2026-06-17T17:00:00Z"
+    },
+    {
+      "id": "wc26_m22",
+      "groupLabel": "Group Stage",
+      "heading": "Group Stage",
+      "titlePrimary": "England",
+      "titleSecondary": "Croatia",
+      "subtitle": "AT&T Stadium; Arlington, TX",
+      "utcTime": "2026-06-17T20:00:00Z"
+    },
+    {
+      "id": "wc26_m23",
+      "groupLabel": "Group Stage",
+      "heading": "Group Stage",
+      "titlePrimary": "Ghana",
+      "titleSecondary": "Panama",
+      "subtitle": "BMO Field; Toronto, CAN",
+      "utcTime": "2026-06-17T23:00:00Z"
+    },
+    {
+      "id": "wc26_m24",
+      "groupLabel": "Group Stage",
+      "heading": "Group Stage",
+      "titlePrimary": "Uzbekistan",
+      "titleSecondary": "Colombia",
+      "subtitle": "Estadio Azteca; Mexico City, MEX",
+      "utcTime": "2026-06-18T02:00:00Z"
+    },
+    {
+      "id": "wc26_m25",
+      "groupLabel": "Group Stage",
+      "heading": "Group Stage",
+      "titlePrimary": "Czechia",
+      "titleSecondary": "South Africa",
+      "subtitle": "Mercedes-Benz Stadium; Atlanta, GA",
+      "utcTime": "2026-06-18T16:00:00Z"
+    },
+    {
+      "id": "wc26_m26",
+      "groupLabel": "Group Stage",
+      "heading": "Group Stage",
+      "titlePrimary": "Switzerland",
+      "titleSecondary": "Bosnia and Herzegovina",
+      "subtitle": "SoFi Stadium; Inglewood, CA",
+      "utcTime": "2026-06-18T19:00:00Z"
+    },
+    {
+      "id": "wc26_m27",
+      "groupLabel": "Group Stage",
+      "heading": "Group Stage",
+      "titlePrimary": "Canada",
+      "titleSecondary": "Qatar",
+      "subtitle": "BC Place; Vancouver, CAN",
+      "utcTime": "2026-06-18T22:00:00Z"
+    },
+    {
+      "id": "wc26_m28",
+      "groupLabel": "Group Stage",
+      "heading": "Group Stage",
+      "titlePrimary": "Mexico",
+      "titleSecondary": "South Korea",
+      "subtitle": "Estadio Akron; Guadalajara, MEX",
+      "utcTime": "2026-06-19T01:00:00Z"
+    },
+    {
+      "id": "wc26_m29",
+      "groupLabel": "Group Stage",
+      "heading": "Group Stage",
+      "titlePrimary": "United States",
+      "titleSecondary": "Australia",
+      "subtitle": "Lumen Field; Seattle, WA",
+      "utcTime": "2026-06-19T19:00:00Z"
+    },
+    {
+      "id": "wc26_m30",
+      "groupLabel": "Group Stage",
+      "heading": "Group Stage",
+      "titlePrimary": "Scotland",
+      "titleSecondary": "Morocco",
+      "subtitle": "Gillette Stadium; Foxborough, MA",
+      "utcTime": "2026-06-19T22:00:00Z"
+    },
+    {
+      "id": "wc26_m31",
+      "groupLabel": "Group Stage",
+      "heading": "Group Stage",
+      "titlePrimary": "Brazil",
+      "titleSecondary": "Haiti",
+      "subtitle": "Lincoln Financial Field; Philadelphia, PA",
+      "utcTime": "2026-06-20T00:30:00Z"
+    },
+    {
+      "id": "wc26_m32",
+      "groupLabel": "Group Stage",
+      "heading": "Group Stage",
+      "titlePrimary": "Türkiye",
+      "titleSecondary": "Paraguay",
+      "subtitle": "Levi's Stadium; Santa Clara, CA",
+      "utcTime": "2026-06-20T03:00:00Z"
+    },
+    {
+      "id": "wc26_m33",
+      "groupLabel": "Group Stage",
+      "heading": "Group Stage",
+      "titlePrimary": "Netherlands",
+      "titleSecondary": "Sweden",
+      "subtitle": "NRG Stadium; Houston, TX",
+      "utcTime": "2026-06-20T17:00:00Z"
+    },
+    {
+      "id": "wc26_m34",
+      "groupLabel": "Group Stage",
+      "heading": "Group Stage",
+      "titlePrimary": "Germany",
+      "titleSecondary": "Ivory Coast",
+      "subtitle": "BMO Field; Toronto, CAN",
+      "utcTime": "2026-06-20T20:00:00Z"
+    },
+    {
+      "id": "wc26_m35",
+      "groupLabel": "Group Stage",
+      "heading": "Group Stage",
+      "titlePrimary": "Ecuador",
+      "titleSecondary": "Curacao",
+      "subtitle": "Arrowhead Stadium; Kansas City, MO",
+      "utcTime": "2026-06-21T00:00:00Z"
+    },
+    {
+      "id": "wc26_m36",
+      "groupLabel": "Group Stage",
+      "heading": "Group Stage",
+      "titlePrimary": "Tunisia",
+      "titleSecondary": "Japan",
+      "subtitle": "Estadio BBVA Bancomer; Monterrey, MEX",
+      "utcTime": "2026-06-21T04:00:00Z"
+    },
+    {
+      "id": "wc26_m37",
+      "groupLabel": "Group Stage",
+      "heading": "Group Stage",
+      "titlePrimary": "Spain",
+      "titleSecondary": "Saudi Arabia",
+      "subtitle": "Mercedes-Benz Stadium; Atlanta, GA",
+      "utcTime": "2026-06-21T16:00:00Z"
+    },
+    {
+      "id": "wc26_m38",
+      "groupLabel": "Group Stage",
+      "heading": "Group Stage",
+      "titlePrimary": "Belgium",
+      "titleSecondary": "Iran",
+      "subtitle": "SoFi Stadium; Inglewood, CA",
+      "utcTime": "2026-06-21T19:00:00Z"
+    },
+    {
+      "id": "wc26_m39",
+      "groupLabel": "Group Stage",
+      "heading": "Group Stage",
+      "titlePrimary": "Uruguay",
+      "titleSecondary": "Cape Verde",
+      "subtitle": "Hard Rock Stadium; Miami, FL",
+      "utcTime": "2026-06-21T22:00:00Z"
+    },
+    {
+      "id": "wc26_m40",
+      "groupLabel": "Group Stage",
+      "heading": "Group Stage",
+      "titlePrimary": "New Zealand",
+      "titleSecondary": "Egypt",
+      "subtitle": "BC Place; Vancouver, CAN",
+      "utcTime": "2026-06-22T01:00:00Z"
+    },
+    {
+      "id": "wc26_m41",
+      "groupLabel": "Group Stage",
+      "heading": "Group Stage",
+      "titlePrimary": "Argentina",
+      "titleSecondary": "Austria",
+      "subtitle": "AT&T Stadium; Arlington, TX",
+      "utcTime": "2026-06-22T17:00:00Z"
+    },
+    {
+      "id": "wc26_m42",
+      "groupLabel": "Group Stage",
+      "heading": "Group Stage",
+      "titlePrimary": "France",
+      "titleSecondary": "Iraq",
+      "subtitle": "Lincoln Financial Field; Philadelphia, PA",
+      "utcTime": "2026-06-22T21:00:00Z"
+    },
+    {
+      "id": "wc26_m43",
+      "groupLabel": "Group Stage",
+      "heading": "Group Stage",
+      "titlePrimary": "Norway",
+      "titleSecondary": "Senegal",
+      "subtitle": "MetLife Stadium; East Rutherford, NJ",
+      "utcTime": "2026-06-23T00:00:00Z"
+    },
+    {
+      "id": "wc26_m44",
+      "groupLabel": "Group Stage",
+      "heading": "Group Stage",
+      "titlePrimary": "Jordan",
+      "titleSecondary": "Algeria",
+      "subtitle": "Levi's Stadium; Santa Clara, CA",
+      "utcTime": "2026-06-23T03:00:00Z"
+    },
+    {
+      "id": "wc26_m45",
+      "groupLabel": "Group Stage",
+      "heading": "Group Stage",
+      "titlePrimary": "Portugal",
+      "titleSecondary": "Uzbekistan",
+      "subtitle": "NRG Stadium; Houston, TX",
+      "utcTime": "2026-06-23T17:00:00Z"
+    },
+    {
+      "id": "wc26_m46",
+      "groupLabel": "Group Stage",
+      "heading": "Group Stage",
+      "titlePrimary": "England",
+      "titleSecondary": "Ghana",
+      "subtitle": "Gillette Stadium; Foxborough, MA",
+      "utcTime": "2026-06-23T20:00:00Z"
+    },
+    {
+      "id": "wc26_m47",
+      "groupLabel": "Group Stage",
+      "heading": "Group Stage",
+      "titlePrimary": "Panama",
+      "titleSecondary": "Croatia",
+      "subtitle": "BMO Field; Toronto, CAN",
+      "utcTime": "2026-06-23T23:00:00Z"
+    },
+    {
+      "id": "wc26_m48",
+      "groupLabel": "Group Stage",
+      "heading": "Group Stage",
+      "titlePrimary": "Colombia",
+      "titleSecondary": "Congo DR",
+      "subtitle": "Estadio Akron; Guadalajara, MEX",
+      "utcTime": "2026-06-24T02:00:00Z"
+    },
+    {
+      "id": "wc26_m49",
+      "groupLabel": "Group Stage",
+      "heading": "Group Stage",
+      "titlePrimary": "Switzerland",
+      "titleSecondary": "Canada",
+      "subtitle": "BC Place; Vancouver, CAN",
+      "utcTime": "2026-06-24T19:00:00Z"
+    },
+    {
+      "id": "wc26_m50",
+      "groupLabel": "Group Stage",
+      "heading": "Group Stage",
+      "titlePrimary": "Bosnia and Herzegovina",
+      "titleSecondary": "Qatar",
+      "subtitle": "Lumen Field; Seattle, WA",
+      "utcTime": "2026-06-24T19:00:00Z"
+    },
+    {
+      "id": "wc26_m51",
+      "groupLabel": "Group Stage",
+      "heading": "Group Stage",
+      "titlePrimary": "Scotland",
+      "titleSecondary": "Brazil",
+      "subtitle": "Hard Rock Stadium; Miami, FL",
+      "utcTime": "2026-06-24T22:00:00Z"
+    },
+    {
+      "id": "wc26_m52",
+      "groupLabel": "Group Stage",
+      "heading": "Group Stage",
+      "titlePrimary": "Morocco",
+      "titleSecondary": "Haiti",
+      "subtitle": "Mercedes-Benz Stadium; Atlanta, GA",
+      "utcTime": "2026-06-24T22:00:00Z"
+    },
+    {
+      "id": "wc26_m53",
+      "groupLabel": "Group Stage",
+      "heading": "Group Stage",
+      "titlePrimary": "Czechia",
+      "titleSecondary": "Mexico",
+      "subtitle": "Estadio Azteca; Mexico City, MEX",
+      "utcTime": "2026-06-25T01:00:00Z"
+    },
+    {
+      "id": "wc26_m54",
+      "groupLabel": "Group Stage",
+      "heading": "Group Stage",
+      "titlePrimary": "South Africa",
+      "titleSecondary": "South Korea",
+      "subtitle": "Estadio BBVA Bancomer; Monterrey, MEX",
+      "utcTime": "2026-06-25T01:00:00Z"
+    },
+    {
+      "id": "wc26_m55",
+      "groupLabel": "Group Stage",
+      "heading": "Group Stage",
+      "titlePrimary": "Ecuador",
+      "titleSecondary": "Germany",
+      "subtitle": "MetLife Stadium; East Rutherford, NJ",
+      "utcTime": "2026-06-25T20:00:00Z"
+    },
+    {
+      "id": "wc26_m56",
+      "groupLabel": "Group Stage",
+      "heading": "Group Stage",
+      "titlePrimary": "Curacao",
+      "titleSecondary": "Ivory Coast",
+      "subtitle": "Lincoln Financial Field; Philadelphia, PA",
+      "utcTime": "2026-06-25T20:00:00Z"
+    },
+    {
+      "id": "wc26_m57",
+      "groupLabel": "Group Stage",
+      "heading": "Group Stage",
+      "titlePrimary": "Tunisia",
+      "titleSecondary": "Netherlands",
+      "subtitle": "Arrowhead Stadium; Kansas City, MO",
+      "utcTime": "2026-06-25T23:00:00Z"
+    },
+    {
+      "id": "wc26_m58",
+      "groupLabel": "Group Stage",
+      "heading": "Group Stage",
+      "titlePrimary": "Japan",
+      "titleSecondary": "Sweden",
+      "subtitle": "AT&T Stadium; Arlington, TX",
+      "utcTime": "2026-06-25T23:00:00Z"
+    },
+    {
+      "id": "wc26_m59",
+      "groupLabel": "Group Stage",
+      "heading": "Group Stage",
+      "titlePrimary": "Türkiye",
+      "titleSecondary": "United States",
+      "subtitle": "SoFi Stadium; Inglewood, CA",
+      "utcTime": "2026-06-26T02:00:00Z"
+    },
+    {
+      "id": "wc26_m60",
+      "groupLabel": "Group Stage",
+      "heading": "Group Stage",
+      "titlePrimary": "Paraguay",
+      "titleSecondary": "Australia",
+      "subtitle": "Levi's Stadium; Santa Clara, CA",
+      "utcTime": "2026-06-26T02:00:00Z"
+    },
+    {
+      "id": "wc26_m61",
+      "groupLabel": "Group Stage",
+      "heading": "Group Stage",
+      "titlePrimary": "Norway",
+      "titleSecondary": "France",
+      "subtitle": "Gillette Stadium; Foxborough, MA",
+      "utcTime": "2026-06-26T19:00:00Z"
+    },
+    {
+      "id": "wc26_m62",
+      "groupLabel": "Group Stage",
+      "heading": "Group Stage",
+      "titlePrimary": "Senegal",
+      "titleSecondary": "Iraq",
+      "subtitle": "BMO Field; Toronto, CAN",
+      "utcTime": "2026-06-26T19:00:00Z"
+    },
+    {
+      "id": "wc26_m63",
+      "groupLabel": "Group Stage",
+      "heading": "Group Stage",
+      "titlePrimary": "Uruguay",
+      "titleSecondary": "Spain",
+      "subtitle": "Estadio Akron; Guadalajara, MEX",
+      "utcTime": "2026-06-27T00:00:00Z"
+    },
+    {
+      "id": "wc26_m64",
+      "groupLabel": "Group Stage",
+      "heading": "Group Stage",
+      "titlePrimary": "Cape Verde",
+      "titleSecondary": "Saudi Arabia",
+      "subtitle": "NRG Stadium; Houston, TX",
+      "utcTime": "2026-06-27T00:00:00Z"
+    },
+    {
+      "id": "wc26_m65",
+      "groupLabel": "Group Stage",
+      "heading": "Group Stage",
+      "titlePrimary": "New Zealand",
+      "titleSecondary": "Belgium",
+      "subtitle": "BC Place; Vancouver, CAN",
+      "utcTime": "2026-06-27T03:00:00Z"
+    },
+    {
+      "id": "wc26_m66",
+      "groupLabel": "Group Stage",
+      "heading": "Group Stage",
+      "titlePrimary": "Egypt",
+      "titleSecondary": "Iran",
+      "subtitle": "Lumen Field; Seattle, WA",
+      "utcTime": "2026-06-27T03:00:00Z"
+    },
+    {
+      "id": "wc26_m67",
+      "groupLabel": "Group Stage",
+      "heading": "Group Stage",
+      "titlePrimary": "Panama",
+      "titleSecondary": "England",
+      "subtitle": "MetLife Stadium; East Rutherford, NJ",
+      "utcTime": "2026-06-27T21:00:00Z"
+    },
+    {
+      "id": "wc26_m68",
+      "groupLabel": "Group Stage",
+      "heading": "Group Stage",
+      "titlePrimary": "Croatia",
+      "titleSecondary": "Ghana",
+      "subtitle": "Lincoln Financial Field; Philadelphia, PA",
+      "utcTime": "2026-06-27T21:00:00Z"
+    },
+    {
+      "id": "wc26_m69",
+      "groupLabel": "Group Stage",
+      "heading": "Group Stage",
+      "titlePrimary": "Colombia",
+      "titleSecondary": "Portugal",
+      "subtitle": "Hard Rock Stadium; Miami, FL",
+      "utcTime": "2026-06-27T23:30:00Z"
+    },
+    {
+      "id": "wc26_m70",
+      "groupLabel": "Group Stage",
+      "heading": "Group Stage",
+      "titlePrimary": "Congo DR",
+      "titleSecondary": "Uzbekistan",
+      "subtitle": "Mercedes-Benz Stadium; Atlanta, GA",
+      "utcTime": "2026-06-27T23:30:00Z"
+    },
+    {
+      "id": "wc26_m71",
+      "groupLabel": "Group Stage",
+      "heading": "Group Stage",
+      "titlePrimary": "Jordan",
+      "titleSecondary": "Argentina",
+      "subtitle": "AT&T Stadium; Arlington, TX",
+      "utcTime": "2026-06-28T03:00:00Z"
+    },
+    {
+      "id": "wc26_m72",
+      "groupLabel": "Group Stage",
+      "heading": "Group Stage",
+      "titlePrimary": "Algeria",
+      "titleSecondary": "Austria",
+      "subtitle": "Arrowhead Stadium; Kansas City, MO",
+      "utcTime": "2026-06-28T03:00:00Z"
+    },
+    {
+      "id": "wc26_m73",
+      "groupLabel": "Round Of 32",
+      "heading": "Round Of 32",
+      "titlePrimary": "2A",
+      "titleSecondary": "2B",
+      "subtitle": "SoFi Stadium; Inglewood, CA",
+      "utcTime": "2026-06-28T19:00:00Z"
+    },
+    {
+      "id": "wc26_m74",
+      "groupLabel": "Round Of 32",
+      "heading": "Round Of 32",
+      "titlePrimary": "1C",
+      "titleSecondary": "2F",
+      "subtitle": "NRG Stadium; Houston, TX",
+      "utcTime": "2026-06-29T17:00:00Z"
+    },
+    {
+      "id": "wc26_m75",
+      "groupLabel": "Round Of 32",
+      "heading": "Round Of 32",
+      "titlePrimary": "1E",
+      "titleSecondary": "3ABCDF",
+      "subtitle": "Gillette Stadium; Foxborough, MA",
+      "utcTime": "2026-06-29T20:30:00Z"
+    },
+    {
+      "id": "wc26_m76",
+      "groupLabel": "Round Of 32",
+      "heading": "Round Of 32",
+      "titlePrimary": "1F",
+      "titleSecondary": "2C",
+      "subtitle": "Estadio BBVA Bancomer; Monterrey, MEX",
+      "utcTime": "2026-06-30T01:00:00Z"
+    },
+    {
+      "id": "wc26_m77",
+      "groupLabel": "Round Of 32",
+      "heading": "Round Of 32",
+      "titlePrimary": "2E",
+      "titleSecondary": "2I",
+      "subtitle": "AT&T Stadium; Arlington, TX",
+      "utcTime": "2026-06-30T17:00:00Z"
+    },
+    {
+      "id": "wc26_m78",
+      "groupLabel": "Round Of 32",
+      "heading": "Round Of 32",
+      "titlePrimary": "1I",
+      "titleSecondary": "3CDFGH",
+      "subtitle": "MetLife Stadium; East Rutherford, NJ",
+      "utcTime": "2026-06-30T21:00:00Z"
+    },
+    {
+      "id": "wc26_m79",
+      "groupLabel": "Round Of 32",
+      "heading": "Round Of 32",
+      "titlePrimary": "1A",
+      "titleSecondary": "3CEFHI",
+      "subtitle": "Estadio Azteca; Mexico City, MEX",
+      "utcTime": "2026-07-01T01:00:00Z"
+    },
+    {
+      "id": "wc26_m80",
+      "groupLabel": "Round Of 32",
+      "heading": "Round Of 32",
+      "titlePrimary": "1L",
+      "titleSecondary": "3EHIJK",
+      "subtitle": "Mercedes-Benz Stadium; Atlanta, GA",
+      "utcTime": "2026-07-01T16:00:00Z"
+    },
+    {
+      "id": "wc26_m81",
+      "groupLabel": "Round Of 32",
+      "heading": "Round Of 32",
+      "titlePrimary": "1G",
+      "titleSecondary": "3AEHIJ",
+      "subtitle": "Lumen Field; Seattle, WA",
+      "utcTime": "2026-07-01T20:00:00Z"
+    },
+    {
+      "id": "wc26_m82",
+      "groupLabel": "Round Of 32",
+      "heading": "Round Of 32",
+      "titlePrimary": "1D",
+      "titleSecondary": "3BEFIJ",
+      "subtitle": "Levi's Stadium; Santa Clara, CA",
+      "utcTime": "2026-07-02T00:00:00Z"
+    },
+    {
+      "id": "wc26_m83",
+      "groupLabel": "Round Of 32",
+      "heading": "Round Of 32",
+      "titlePrimary": "1H",
+      "titleSecondary": "2J",
+      "subtitle": "SoFi Stadium; Inglewood, CA",
+      "utcTime": "2026-07-02T19:00:00Z"
+    },
+    {
+      "id": "wc26_m84",
+      "groupLabel": "Round Of 32",
+      "heading": "Round Of 32",
+      "titlePrimary": "2K",
+      "titleSecondary": "2L",
+      "subtitle": "BMO Field; Toronto, CAN",
+      "utcTime": "2026-07-02T23:00:00Z"
+    },
+    {
+      "id": "wc26_m85",
+      "groupLabel": "Round Of 32",
+      "heading": "Round Of 32",
+      "titlePrimary": "1B",
+      "titleSecondary": "3EFGIJ",
+      "subtitle": "BC Place; Vancouver, CAN",
+      "utcTime": "2026-07-03T03:00:00Z"
+    },
+    {
+      "id": "wc26_m86",
+      "groupLabel": "Round Of 32",
+      "heading": "Round Of 32",
+      "titlePrimary": "2D",
+      "titleSecondary": "2G",
+      "subtitle": "AT&T Stadium; Arlington, TX",
+      "utcTime": "2026-07-03T18:00:00Z"
+    },
+    {
+      "id": "wc26_m87",
+      "groupLabel": "Round Of 32",
+      "heading": "Round Of 32",
+      "titlePrimary": "1J",
+      "titleSecondary": "2H",
+      "subtitle": "Hard Rock Stadium; Miami, FL",
+      "utcTime": "2026-07-03T22:00:00Z"
+    },
+    {
+      "id": "wc26_m88",
+      "groupLabel": "Round Of 32",
+      "heading": "Round Of 32",
+      "titlePrimary": "1K",
+      "titleSecondary": "3DEIJL",
+      "subtitle": "Arrowhead Stadium; Kansas City, MO",
+      "utcTime": "2026-07-04T01:30:00Z"
+    },
+    {
+      "id": "wc26_m89",
+      "groupLabel": "Round Of 16",
+      "heading": "Round Of 16",
+      "titlePrimary": "TBD",
+      "titleSecondary": "TBD",
+      "subtitle": "NRG Stadium; Houston, TX",
+      "utcTime": "2026-07-04T17:00:00Z"
+    },
+    {
+      "id": "wc26_m90",
+      "groupLabel": "Round Of 16",
+      "heading": "Round Of 16",
+      "titlePrimary": "TBD",
+      "titleSecondary": "TBD",
+      "subtitle": "Lincoln Financial Field; Philadelphia, PA",
+      "utcTime": "2026-07-04T21:00:00Z"
+    },
+    {
+      "id": "wc26_m91",
+      "groupLabel": "Round Of 16",
+      "heading": "Round Of 16",
+      "titlePrimary": "TBD",
+      "titleSecondary": "TBD",
+      "subtitle": "MetLife Stadium; East Rutherford, NJ",
+      "utcTime": "2026-07-05T20:00:00Z"
+    },
+    {
+      "id": "wc26_m92",
+      "groupLabel": "Round Of 16",
+      "heading": "Round Of 16",
+      "titlePrimary": "TBD",
+      "titleSecondary": "TBD",
+      "subtitle": "Estadio Azteca; Mexico City, MEX",
+      "utcTime": "2026-07-06T00:00:00Z"
+    },
+    {
+      "id": "wc26_m93",
+      "groupLabel": "Round Of 16",
+      "heading": "Round Of 16",
+      "titlePrimary": "TBD",
+      "titleSecondary": "TBD",
+      "subtitle": "AT&T Stadium; Arlington, TX",
+      "utcTime": "2026-07-06T19:00:00Z"
+    },
+    {
+      "id": "wc26_m94",
+      "groupLabel": "Round Of 16",
+      "heading": "Round Of 16",
+      "titlePrimary": "TBD",
+      "titleSecondary": "TBD",
+      "subtitle": "Lumen Field; Seattle, WA",
+      "utcTime": "2026-07-07T00:00:00Z"
+    },
+    {
+      "id": "wc26_m95",
+      "groupLabel": "Round Of 16",
+      "heading": "Round Of 16",
+      "titlePrimary": "TBD",
+      "titleSecondary": "TBD",
+      "subtitle": "Mercedes-Benz Stadium; Atlanta, GA",
+      "utcTime": "2026-07-07T16:00:00Z"
+    },
+    {
+      "id": "wc26_m96",
+      "groupLabel": "Round Of 16",
+      "heading": "Round Of 16",
+      "titlePrimary": "TBD",
+      "titleSecondary": "TBD",
+      "subtitle": "BC Place; Vancouver, CAN",
+      "utcTime": "2026-07-07T20:00:00Z"
+    },
+    {
+      "id": "wc26_m97",
+      "groupLabel": "Quarterfinals",
+      "heading": "Quarterfinals",
+      "titlePrimary": "TBD",
+      "titleSecondary": "TBD",
+      "subtitle": "Gillette Stadium; Foxborough, MA",
+      "utcTime": "2026-07-09T20:00:00Z"
+    },
+    {
+      "id": "wc26_m98",
+      "groupLabel": "Quarterfinals",
+      "heading": "Quarterfinals",
+      "titlePrimary": "TBD",
+      "titleSecondary": "TBD",
+      "subtitle": "SoFi Stadium; Inglewood, CA",
+      "utcTime": "2026-07-10T19:00:00Z"
+    },
+    {
+      "id": "wc26_m99",
+      "groupLabel": "Quarterfinals",
+      "heading": "Quarterfinals",
+      "titlePrimary": "TBD",
+      "titleSecondary": "TBD",
+      "subtitle": "Hard Rock Stadium; Miami, FL",
+      "utcTime": "2026-07-11T21:00:00Z"
+    },
+    {
+      "id": "wc26_m100",
+      "groupLabel": "Quarterfinals",
+      "heading": "Quarterfinals",
+      "titlePrimary": "TBD",
+      "titleSecondary": "TBD",
+      "subtitle": "Arrowhead Stadium; Kansas City, MO",
+      "utcTime": "2026-07-12T01:00:00Z"
+    },
+    {
+      "id": "wc26_m101",
+      "groupLabel": "Semifinals",
+      "heading": "Semifinals",
+      "titlePrimary": "TBD",
+      "titleSecondary": "TBD",
+      "subtitle": "AT&T Stadium; Arlington, TX",
+      "utcTime": "2026-07-14T19:00:00Z"
+    },
+    {
+      "id": "wc26_m102",
+      "groupLabel": "Semifinals",
+      "heading": "Semifinals",
+      "titlePrimary": "TBD",
+      "titleSecondary": "TBD",
+      "subtitle": "Mercedes-Benz Stadium; Atlanta, GA",
+      "utcTime": "2026-07-15T19:00:00Z"
+    },
+    {
+      "id": "wc26_m103",
+      "groupLabel": "Third Place Match",
+      "heading": "Third Place Match",
+      "titlePrimary": "TBD",
+      "titleSecondary": "TBD",
+      "subtitle": "Hard Rock Stadium; Miami, FL",
+      "utcTime": "2026-07-18T21:00:00Z"
+    },
+    {
+      "id": "wc26_m104",
+      "groupLabel": "Final Match",
+      "heading": "Final Match",
+      "titlePrimary": "TBD",
+      "titleSecondary": "TBD",
+      "subtitle": "MetLife Stadium; East Rutherford, NJ",
+      "utcTime": "2026-07-19T19:00:00Z"
+    }
+  ]
+}

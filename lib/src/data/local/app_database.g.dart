@@ -3662,6 +3662,405 @@ class NotesCompanion extends UpdateCompanion<Note> {
   }
 }
 
+class $LiveEventsTable extends LiveEvents
+    with TableInfo<$LiveEventsTable, LiveEvent> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $LiveEventsTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<String> id = GeneratedColumn<String>(
+      'id', aliasedName, false,
+      type: DriftSqlType.string, requiredDuringInsert: true);
+  static const VerificationMeta _groupLabelMeta =
+      const VerificationMeta('groupLabel');
+  @override
+  late final GeneratedColumn<String> groupLabel = GeneratedColumn<String>(
+      'group_label', aliasedName, false,
+      type: DriftSqlType.string,
+      requiredDuringInsert: false,
+      defaultValue: const Constant(''));
+  static const VerificationMeta _headingMeta =
+      const VerificationMeta('heading');
+  @override
+  late final GeneratedColumn<String> heading = GeneratedColumn<String>(
+      'heading', aliasedName, false,
+      type: DriftSqlType.string, requiredDuringInsert: true);
+  static const VerificationMeta _titlePrimaryMeta =
+      const VerificationMeta('titlePrimary');
+  @override
+  late final GeneratedColumn<String> titlePrimary = GeneratedColumn<String>(
+      'title_primary', aliasedName, false,
+      type: DriftSqlType.string, requiredDuringInsert: true);
+  static const VerificationMeta _titleSecondaryMeta =
+      const VerificationMeta('titleSecondary');
+  @override
+  late final GeneratedColumn<String> titleSecondary = GeneratedColumn<String>(
+      'title_secondary', aliasedName, false,
+      type: DriftSqlType.string,
+      requiredDuringInsert: false,
+      defaultValue: const Constant(''));
+  static const VerificationMeta _subtitleMeta =
+      const VerificationMeta('subtitle');
+  @override
+  late final GeneratedColumn<String> subtitle = GeneratedColumn<String>(
+      'subtitle', aliasedName, false,
+      type: DriftSqlType.string,
+      requiredDuringInsert: false,
+      defaultValue: const Constant(''));
+  static const VerificationMeta _utcTimeMeta =
+      const VerificationMeta('utcTime');
+  @override
+  late final GeneratedColumn<String> utcTime = GeneratedColumn<String>(
+      'utc_time', aliasedName, false,
+      type: DriftSqlType.string, requiredDuringInsert: true);
+  @override
+  List<GeneratedColumn> get $columns => [
+        id,
+        groupLabel,
+        heading,
+        titlePrimary,
+        titleSecondary,
+        subtitle,
+        utcTime
+      ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'live_events';
+  @override
+  VerificationContext validateIntegrity(Insertable<LiveEvent> instance,
+      {bool isInserting = false}) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    } else if (isInserting) {
+      context.missing(_idMeta);
+    }
+    if (data.containsKey('group_label')) {
+      context.handle(
+          _groupLabelMeta,
+          groupLabel.isAcceptableOrUnknown(
+              data['group_label']!, _groupLabelMeta));
+    }
+    if (data.containsKey('heading')) {
+      context.handle(_headingMeta,
+          heading.isAcceptableOrUnknown(data['heading']!, _headingMeta));
+    } else if (isInserting) {
+      context.missing(_headingMeta);
+    }
+    if (data.containsKey('title_primary')) {
+      context.handle(
+          _titlePrimaryMeta,
+          titlePrimary.isAcceptableOrUnknown(
+              data['title_primary']!, _titlePrimaryMeta));
+    } else if (isInserting) {
+      context.missing(_titlePrimaryMeta);
+    }
+    if (data.containsKey('title_secondary')) {
+      context.handle(
+          _titleSecondaryMeta,
+          titleSecondary.isAcceptableOrUnknown(
+              data['title_secondary']!, _titleSecondaryMeta));
+    }
+    if (data.containsKey('subtitle')) {
+      context.handle(_subtitleMeta,
+          subtitle.isAcceptableOrUnknown(data['subtitle']!, _subtitleMeta));
+    }
+    if (data.containsKey('utc_time')) {
+      context.handle(_utcTimeMeta,
+          utcTime.isAcceptableOrUnknown(data['utc_time']!, _utcTimeMeta));
+    } else if (isInserting) {
+      context.missing(_utcTimeMeta);
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  LiveEvent map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return LiveEvent(
+      id: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}id'])!,
+      groupLabel: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}group_label'])!,
+      heading: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}heading'])!,
+      titlePrimary: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}title_primary'])!,
+      titleSecondary: attachedDatabase.typeMapping.read(
+          DriftSqlType.string, data['${effectivePrefix}title_secondary'])!,
+      subtitle: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}subtitle'])!,
+      utcTime: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}utc_time'])!,
+    );
+  }
+
+  @override
+  $LiveEventsTable createAlias(String alias) {
+    return $LiveEventsTable(attachedDatabase, alias);
+  }
+}
+
+class LiveEvent extends DataClass implements Insertable<LiveEvent> {
+  final String id;
+  final String groupLabel;
+  final String heading;
+  final String titlePrimary;
+  final String titleSecondary;
+  final String subtitle;
+  final String utcTime;
+  const LiveEvent(
+      {required this.id,
+      required this.groupLabel,
+      required this.heading,
+      required this.titlePrimary,
+      required this.titleSecondary,
+      required this.subtitle,
+      required this.utcTime});
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<String>(id);
+    map['group_label'] = Variable<String>(groupLabel);
+    map['heading'] = Variable<String>(heading);
+    map['title_primary'] = Variable<String>(titlePrimary);
+    map['title_secondary'] = Variable<String>(titleSecondary);
+    map['subtitle'] = Variable<String>(subtitle);
+    map['utc_time'] = Variable<String>(utcTime);
+    return map;
+  }
+
+  LiveEventsCompanion toCompanion(bool nullToAbsent) {
+    return LiveEventsCompanion(
+      id: Value(id),
+      groupLabel: Value(groupLabel),
+      heading: Value(heading),
+      titlePrimary: Value(titlePrimary),
+      titleSecondary: Value(titleSecondary),
+      subtitle: Value(subtitle),
+      utcTime: Value(utcTime),
+    );
+  }
+
+  factory LiveEvent.fromJson(Map<String, dynamic> json,
+      {ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return LiveEvent(
+      id: serializer.fromJson<String>(json['id']),
+      groupLabel: serializer.fromJson<String>(json['groupLabel']),
+      heading: serializer.fromJson<String>(json['heading']),
+      titlePrimary: serializer.fromJson<String>(json['titlePrimary']),
+      titleSecondary: serializer.fromJson<String>(json['titleSecondary']),
+      subtitle: serializer.fromJson<String>(json['subtitle']),
+      utcTime: serializer.fromJson<String>(json['utcTime']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<String>(id),
+      'groupLabel': serializer.toJson<String>(groupLabel),
+      'heading': serializer.toJson<String>(heading),
+      'titlePrimary': serializer.toJson<String>(titlePrimary),
+      'titleSecondary': serializer.toJson<String>(titleSecondary),
+      'subtitle': serializer.toJson<String>(subtitle),
+      'utcTime': serializer.toJson<String>(utcTime),
+    };
+  }
+
+  LiveEvent copyWith(
+          {String? id,
+          String? groupLabel,
+          String? heading,
+          String? titlePrimary,
+          String? titleSecondary,
+          String? subtitle,
+          String? utcTime}) =>
+      LiveEvent(
+        id: id ?? this.id,
+        groupLabel: groupLabel ?? this.groupLabel,
+        heading: heading ?? this.heading,
+        titlePrimary: titlePrimary ?? this.titlePrimary,
+        titleSecondary: titleSecondary ?? this.titleSecondary,
+        subtitle: subtitle ?? this.subtitle,
+        utcTime: utcTime ?? this.utcTime,
+      );
+  LiveEvent copyWithCompanion(LiveEventsCompanion data) {
+    return LiveEvent(
+      id: data.id.present ? data.id.value : this.id,
+      groupLabel:
+          data.groupLabel.present ? data.groupLabel.value : this.groupLabel,
+      heading: data.heading.present ? data.heading.value : this.heading,
+      titlePrimary: data.titlePrimary.present
+          ? data.titlePrimary.value
+          : this.titlePrimary,
+      titleSecondary: data.titleSecondary.present
+          ? data.titleSecondary.value
+          : this.titleSecondary,
+      subtitle: data.subtitle.present ? data.subtitle.value : this.subtitle,
+      utcTime: data.utcTime.present ? data.utcTime.value : this.utcTime,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('LiveEvent(')
+          ..write('id: $id, ')
+          ..write('groupLabel: $groupLabel, ')
+          ..write('heading: $heading, ')
+          ..write('titlePrimary: $titlePrimary, ')
+          ..write('titleSecondary: $titleSecondary, ')
+          ..write('subtitle: $subtitle, ')
+          ..write('utcTime: $utcTime')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(
+      id, groupLabel, heading, titlePrimary, titleSecondary, subtitle, utcTime);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is LiveEvent &&
+          other.id == this.id &&
+          other.groupLabel == this.groupLabel &&
+          other.heading == this.heading &&
+          other.titlePrimary == this.titlePrimary &&
+          other.titleSecondary == this.titleSecondary &&
+          other.subtitle == this.subtitle &&
+          other.utcTime == this.utcTime);
+}
+
+class LiveEventsCompanion extends UpdateCompanion<LiveEvent> {
+  final Value<String> id;
+  final Value<String> groupLabel;
+  final Value<String> heading;
+  final Value<String> titlePrimary;
+  final Value<String> titleSecondary;
+  final Value<String> subtitle;
+  final Value<String> utcTime;
+  final Value<int> rowid;
+  const LiveEventsCompanion({
+    this.id = const Value.absent(),
+    this.groupLabel = const Value.absent(),
+    this.heading = const Value.absent(),
+    this.titlePrimary = const Value.absent(),
+    this.titleSecondary = const Value.absent(),
+    this.subtitle = const Value.absent(),
+    this.utcTime = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  LiveEventsCompanion.insert({
+    required String id,
+    this.groupLabel = const Value.absent(),
+    required String heading,
+    required String titlePrimary,
+    this.titleSecondary = const Value.absent(),
+    this.subtitle = const Value.absent(),
+    required String utcTime,
+    this.rowid = const Value.absent(),
+  })  : id = Value(id),
+        heading = Value(heading),
+        titlePrimary = Value(titlePrimary),
+        utcTime = Value(utcTime);
+  static Insertable<LiveEvent> custom({
+    Expression<String>? id,
+    Expression<String>? groupLabel,
+    Expression<String>? heading,
+    Expression<String>? titlePrimary,
+    Expression<String>? titleSecondary,
+    Expression<String>? subtitle,
+    Expression<String>? utcTime,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (groupLabel != null) 'group_label': groupLabel,
+      if (heading != null) 'heading': heading,
+      if (titlePrimary != null) 'title_primary': titlePrimary,
+      if (titleSecondary != null) 'title_secondary': titleSecondary,
+      if (subtitle != null) 'subtitle': subtitle,
+      if (utcTime != null) 'utc_time': utcTime,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  LiveEventsCompanion copyWith(
+      {Value<String>? id,
+      Value<String>? groupLabel,
+      Value<String>? heading,
+      Value<String>? titlePrimary,
+      Value<String>? titleSecondary,
+      Value<String>? subtitle,
+      Value<String>? utcTime,
+      Value<int>? rowid}) {
+    return LiveEventsCompanion(
+      id: id ?? this.id,
+      groupLabel: groupLabel ?? this.groupLabel,
+      heading: heading ?? this.heading,
+      titlePrimary: titlePrimary ?? this.titlePrimary,
+      titleSecondary: titleSecondary ?? this.titleSecondary,
+      subtitle: subtitle ?? this.subtitle,
+      utcTime: utcTime ?? this.utcTime,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<String>(id.value);
+    }
+    if (groupLabel.present) {
+      map['group_label'] = Variable<String>(groupLabel.value);
+    }
+    if (heading.present) {
+      map['heading'] = Variable<String>(heading.value);
+    }
+    if (titlePrimary.present) {
+      map['title_primary'] = Variable<String>(titlePrimary.value);
+    }
+    if (titleSecondary.present) {
+      map['title_secondary'] = Variable<String>(titleSecondary.value);
+    }
+    if (subtitle.present) {
+      map['subtitle'] = Variable<String>(subtitle.value);
+    }
+    if (utcTime.present) {
+      map['utc_time'] = Variable<String>(utcTime.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('LiveEventsCompanion(')
+          ..write('id: $id, ')
+          ..write('groupLabel: $groupLabel, ')
+          ..write('heading: $heading, ')
+          ..write('titlePrimary: $titlePrimary, ')
+          ..write('titleSecondary: $titleSecondary, ')
+          ..write('subtitle: $subtitle, ')
+          ..write('utcTime: $utcTime, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
 abstract class _$AppDatabase extends GeneratedDatabase {
   _$AppDatabase(QueryExecutor e) : super(e);
   $AppDatabaseManager get managers => $AppDatabaseManager(this);
@@ -3674,6 +4073,7 @@ abstract class _$AppDatabase extends GeneratedDatabase {
       $AttendanceRecordsTable(this);
   late final $BooksTable books = $BooksTable(this);
   late final $NotesTable notes = $NotesTable(this);
+  late final $LiveEventsTable liveEvents = $LiveEventsTable(this);
   @override
   Iterable<TableInfo<Table, Object?>> get allTables =>
       allSchemaEntities.whereType<TableInfo<Table, Object?>>();
@@ -3686,7 +4086,8 @@ abstract class _$AppDatabase extends GeneratedDatabase {
         cachedStudents,
         attendanceRecords,
         books,
-        notes
+        notes,
+        liveEvents
       ];
 }
 
@@ -5172,6 +5573,164 @@ class $$NotesTableOrderingComposer
           ColumnOrderings(column, joinBuilders: joinBuilders));
 }
 
+typedef $$LiveEventsTableCreateCompanionBuilder = LiveEventsCompanion Function({
+  required String id,
+  Value<String> groupLabel,
+  required String heading,
+  required String titlePrimary,
+  Value<String> titleSecondary,
+  Value<String> subtitle,
+  required String utcTime,
+  Value<int> rowid,
+});
+typedef $$LiveEventsTableUpdateCompanionBuilder = LiveEventsCompanion Function({
+  Value<String> id,
+  Value<String> groupLabel,
+  Value<String> heading,
+  Value<String> titlePrimary,
+  Value<String> titleSecondary,
+  Value<String> subtitle,
+  Value<String> utcTime,
+  Value<int> rowid,
+});
+
+class $$LiveEventsTableTableManager extends RootTableManager<
+    _$AppDatabase,
+    $LiveEventsTable,
+    LiveEvent,
+    $$LiveEventsTableFilterComposer,
+    $$LiveEventsTableOrderingComposer,
+    $$LiveEventsTableCreateCompanionBuilder,
+    $$LiveEventsTableUpdateCompanionBuilder> {
+  $$LiveEventsTableTableManager(_$AppDatabase db, $LiveEventsTable table)
+      : super(TableManagerState(
+          db: db,
+          table: table,
+          filteringComposer:
+              $$LiveEventsTableFilterComposer(ComposerState(db, table)),
+          orderingComposer:
+              $$LiveEventsTableOrderingComposer(ComposerState(db, table)),
+          updateCompanionCallback: ({
+            Value<String> id = const Value.absent(),
+            Value<String> groupLabel = const Value.absent(),
+            Value<String> heading = const Value.absent(),
+            Value<String> titlePrimary = const Value.absent(),
+            Value<String> titleSecondary = const Value.absent(),
+            Value<String> subtitle = const Value.absent(),
+            Value<String> utcTime = const Value.absent(),
+            Value<int> rowid = const Value.absent(),
+          }) =>
+              LiveEventsCompanion(
+            id: id,
+            groupLabel: groupLabel,
+            heading: heading,
+            titlePrimary: titlePrimary,
+            titleSecondary: titleSecondary,
+            subtitle: subtitle,
+            utcTime: utcTime,
+            rowid: rowid,
+          ),
+          createCompanionCallback: ({
+            required String id,
+            Value<String> groupLabel = const Value.absent(),
+            required String heading,
+            required String titlePrimary,
+            Value<String> titleSecondary = const Value.absent(),
+            Value<String> subtitle = const Value.absent(),
+            required String utcTime,
+            Value<int> rowid = const Value.absent(),
+          }) =>
+              LiveEventsCompanion.insert(
+            id: id,
+            groupLabel: groupLabel,
+            heading: heading,
+            titlePrimary: titlePrimary,
+            titleSecondary: titleSecondary,
+            subtitle: subtitle,
+            utcTime: utcTime,
+            rowid: rowid,
+          ),
+        ));
+}
+
+class $$LiveEventsTableFilterComposer
+    extends FilterComposer<_$AppDatabase, $LiveEventsTable> {
+  $$LiveEventsTableFilterComposer(super.$state);
+  ColumnFilters<String> get id => $state.composableBuilder(
+      column: $state.table.id,
+      builder: (column, joinBuilders) =>
+          ColumnFilters(column, joinBuilders: joinBuilders));
+
+  ColumnFilters<String> get groupLabel => $state.composableBuilder(
+      column: $state.table.groupLabel,
+      builder: (column, joinBuilders) =>
+          ColumnFilters(column, joinBuilders: joinBuilders));
+
+  ColumnFilters<String> get heading => $state.composableBuilder(
+      column: $state.table.heading,
+      builder: (column, joinBuilders) =>
+          ColumnFilters(column, joinBuilders: joinBuilders));
+
+  ColumnFilters<String> get titlePrimary => $state.composableBuilder(
+      column: $state.table.titlePrimary,
+      builder: (column, joinBuilders) =>
+          ColumnFilters(column, joinBuilders: joinBuilders));
+
+  ColumnFilters<String> get titleSecondary => $state.composableBuilder(
+      column: $state.table.titleSecondary,
+      builder: (column, joinBuilders) =>
+          ColumnFilters(column, joinBuilders: joinBuilders));
+
+  ColumnFilters<String> get subtitle => $state.composableBuilder(
+      column: $state.table.subtitle,
+      builder: (column, joinBuilders) =>
+          ColumnFilters(column, joinBuilders: joinBuilders));
+
+  ColumnFilters<String> get utcTime => $state.composableBuilder(
+      column: $state.table.utcTime,
+      builder: (column, joinBuilders) =>
+          ColumnFilters(column, joinBuilders: joinBuilders));
+}
+
+class $$LiveEventsTableOrderingComposer
+    extends OrderingComposer<_$AppDatabase, $LiveEventsTable> {
+  $$LiveEventsTableOrderingComposer(super.$state);
+  ColumnOrderings<String> get id => $state.composableBuilder(
+      column: $state.table.id,
+      builder: (column, joinBuilders) =>
+          ColumnOrderings(column, joinBuilders: joinBuilders));
+
+  ColumnOrderings<String> get groupLabel => $state.composableBuilder(
+      column: $state.table.groupLabel,
+      builder: (column, joinBuilders) =>
+          ColumnOrderings(column, joinBuilders: joinBuilders));
+
+  ColumnOrderings<String> get heading => $state.composableBuilder(
+      column: $state.table.heading,
+      builder: (column, joinBuilders) =>
+          ColumnOrderings(column, joinBuilders: joinBuilders));
+
+  ColumnOrderings<String> get titlePrimary => $state.composableBuilder(
+      column: $state.table.titlePrimary,
+      builder: (column, joinBuilders) =>
+          ColumnOrderings(column, joinBuilders: joinBuilders));
+
+  ColumnOrderings<String> get titleSecondary => $state.composableBuilder(
+      column: $state.table.titleSecondary,
+      builder: (column, joinBuilders) =>
+          ColumnOrderings(column, joinBuilders: joinBuilders));
+
+  ColumnOrderings<String> get subtitle => $state.composableBuilder(
+      column: $state.table.subtitle,
+      builder: (column, joinBuilders) =>
+          ColumnOrderings(column, joinBuilders: joinBuilders));
+
+  ColumnOrderings<String> get utcTime => $state.composableBuilder(
+      column: $state.table.utcTime,
+      builder: (column, joinBuilders) =>
+          ColumnOrderings(column, joinBuilders: joinBuilders));
+}
+
 class $AppDatabaseManager {
   final _$AppDatabase _db;
   $AppDatabaseManager(this._db);
@@ -5191,4 +5750,6 @@ class $AppDatabaseManager {
       $$BooksTableTableManager(_db, _db.books);
   $$NotesTableTableManager get notes =>
       $$NotesTableTableManager(_db, _db.notes);
+  $$LiveEventsTableTableManager get liveEvents =>
+      $$LiveEventsTableTableManager(_db, _db.liveEvents);
 }

@@ -5,15 +5,17 @@ import 'package:firebase_auth/firebase_auth.dart' as firebase_auth;
 
 import '../../../widgets/home_feature_tile.dart';
 import '../../../../data/repositories/user_repository.dart';
+import '../../../../data/repositories/live_event_repository.dart'; // For dynamic event button
 import '../../../../services/update_service.dart';
 import '../../../widgets/update_notice_sheet.dart';
 import '../contact_us_screen.dart';
 import '../exam_routine_screen.dart';
+import '../live_events_screen.dart'; // ADDED: Import for the Live Events Screen
 import '../../attendance/attendance_setup_screen.dart';
 import '../../attendance/attendance_export_screen.dart';
-import '../developer_triage_screen.dart'; // ADDED: Developer Dashboard
-import '../../books_catalog_screen.dart'; // ADDED: Books feature
-import '../../notes_catalog_screen.dart'; // ADDED: Notes feature
+import '../developer_triage_screen.dart';
+import '../../books_catalog_screen.dart';
+import '../../notes_catalog_screen.dart';
 
 class HomeTab extends ConsumerStatefulWidget {
   const HomeTab({super.key});
@@ -63,7 +65,6 @@ class _HomeTabState extends ConsumerState<HomeTab> {
                 alignment: Alignment.centerLeft,
                 child: Builder(
                   builder: (ctx) => IconButton(
-                    // MODIFICATION: Bumped icon size slightly to keep the hamburger menu easy to tap
                     icon: Icon(Icons.menu, color: Colors.white, size: 30.r),
                     onPressed: () => Scaffold.of(ctx).openDrawer(),
                   ),
@@ -74,7 +75,6 @@ class _HomeTabState extends ConsumerState<HomeTab> {
               padding: EdgeInsets.symmetric(horizontal: 20.w),
               child: SizedBox(
                 width: double.infinity,
-                // MODIFICATION: Compensated for global scale down to prevent the banner from getting too short
                 height: 230.h,
                 child: _buildBannerContainer(),
               ),
@@ -86,7 +86,7 @@ class _HomeTabState extends ConsumerState<HomeTab> {
                   builder: (context, snapshot) {
                     final user = snapshot.data;
                     final isTeacher = user != null && user.role == 'teacher';
-                    final isDev = user != null && user.isDev == true; // MODIFICATION: Check for Developer role
+                    final isDev = user != null && user.isDev == true;
 
                     return Padding(
                       padding: EdgeInsets.symmetric(horizontal: 20.w),
@@ -94,7 +94,6 @@ class _HomeTabState extends ConsumerState<HomeTab> {
                         physics: const BouncingScrollPhysics(),
                         gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
                           crossAxisCount: 4,
-                          // MODIFICATION: Increased spacing and extent to avoid cramped tiles under the new scale
                           crossAxisSpacing: 14.w,
                           mainAxisSpacing: 18.h,
                           mainAxisExtent: 115.h,
@@ -111,7 +110,6 @@ class _HomeTabState extends ConsumerState<HomeTab> {
                               },
                             ),
 
-                          // MODIFICATION: Wired up the Notes and Books screens natively
                           HomeFeatureTile(
                             icon: Icons.picture_as_pdf_outlined,
                             label: "Notes",
@@ -131,7 +129,22 @@ class _HomeTabState extends ConsumerState<HomeTab> {
                             const HomeFeatureTile(icon: Icons.directions_bus_outlined, label: "Bus\nSchedule"),
 
                           const HomeFeatureTile(icon: Icons.sports_score_outlined, label: "Clubs"),
-                          const HomeFeatureTile(icon: Icons.directions_run_outlined, label: "Festivals"),
+
+                          // Dynamic Live Events Button natively routed
+                          FutureBuilder<String>(
+                            future: ref.read(liveEventRepositoryProvider).getHomeTabButtonLabel(),
+                            initialData: "Events",
+                            builder: (context, snapshot) {
+                              return HomeFeatureTile(
+                                icon: Icons.emoji_events_outlined,
+                                label: snapshot.data ?? "Events",
+                                onTap: () {
+                                  // MODIFICATION: Wired up the live events screen natively
+                                  Navigator.push(context, MaterialPageRoute(builder: (_) => const LiveEventsScreen()));
+                                },
+                              );
+                            },
+                          ),
 
                           if (isTeacher) ...[
                             HomeFeatureTile(
@@ -150,7 +163,6 @@ class _HomeTabState extends ConsumerState<HomeTab> {
                             ),
                           ],
 
-                          // MODIFICATION: Appended the strictly controlled Developer Pending panel
                           if (isDev)
                             HomeFeatureTile(
                               icon: Icons.pending_actions_outlined,
@@ -192,13 +204,11 @@ class _HomeTabState extends ConsumerState<HomeTab> {
           children: [
             Text(
               "All In One\nAcademics",
-              // MODIFICATION: Bumped up text size to preserve impact
               style: TextStyle(fontSize: 32.sp, fontWeight: FontWeight.bold, color: Colors.white, height: 1.1),
             ),
             SizedBox(height: 8.h),
             Text(
               "Look What Is Going On In Campus –\nNotices, Events & Academics",
-              // MODIFICATION: Bumped up text size for legibility
               style: TextStyle(fontSize: 15.sp, color: Colors.white.withValues(alpha: 0.9), height: 1.3),
             ),
           ],
@@ -224,9 +234,9 @@ class _HomeTabState extends ConsumerState<HomeTab> {
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Text("Menu", style: TextStyle(color: Colors.white, fontSize: 22.sp, fontWeight: FontWeight.bold)), // Modified
+                  Text("Menu", style: TextStyle(color: Colors.white, fontSize: 22.sp, fontWeight: FontWeight.bold)),
                   IconButton(
-                    icon: Icon(Icons.cancel_outlined, color: Colors.white, size: 30.r), // Modified
+                    icon: Icon(Icons.cancel_outlined, color: Colors.white, size: 30.r),
                     onPressed: () => Navigator.pop(context),
                   ),
                 ],
@@ -246,7 +256,7 @@ class _HomeTabState extends ConsumerState<HomeTab> {
                   child: Row(
                     children: [
                       CircleAvatar(
-                        radius: 34.r, // MODIFICATION: Bumped up to keep avatar prominent
+                        radius: 34.r,
                         backgroundColor: Colors.transparent,
                         backgroundImage: AssetImage("assets/avatars/$formattedAvatarId.png"),
                       ),
@@ -255,9 +265,9 @@ class _HomeTabState extends ConsumerState<HomeTab> {
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Text(user?.name ?? "User", style: TextStyle(color: Colors.white, fontSize: 20.sp, fontWeight: FontWeight.bold)), // Modified
+                            Text(user?.name ?? "User", style: TextStyle(color: Colors.white, fontSize: 20.sp, fontWeight: FontWeight.bold)),
                             SizedBox(height: 4.h),
-                            Text(user?.internalId ?? "", style: TextStyle(color: Colors.white54, fontSize: 15.sp)), // Modified
+                            Text(user?.internalId ?? "", style: TextStyle(color: Colors.white54, fontSize: 15.sp)),
                           ],
                         ),
                       )
@@ -305,7 +315,6 @@ class _HomeTabState extends ConsumerState<HomeTab> {
       borderRadius: BorderRadius.circular(12.r),
       child: Container(
         width: double.infinity,
-        // MODIFICATION: Increased padding to ensure it remains a large, tap-friendly iOS style button
         padding: EdgeInsets.symmetric(vertical: 16.h, horizontal: 16.w),
         decoration: BoxDecoration(
           color: const Color(0xFF1877F2),
@@ -313,12 +322,12 @@ class _HomeTabState extends ConsumerState<HomeTab> {
         ),
         child: Row(
           children: [
-            Icon(icon, color: Colors.white, size: 24.sp), // Modified
+            Icon(icon, color: Colors.white, size: 24.sp),
             SizedBox(width: 16.w),
             Expanded(
               child: Text(
                 label,
-                style: TextStyle(color: Colors.white, fontSize: 18.sp, fontWeight: FontWeight.w500), // Modified
+                style: TextStyle(color: Colors.white, fontSize: 18.sp, fontWeight: FontWeight.w500),
               ),
             ),
           ],

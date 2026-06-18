@@ -54,7 +54,6 @@ class Routines extends Table {
   Set<Column> get primaryKey => {id};
 }
 
-// ADDED: New table for Exam Routines
 class ExamRoutines extends Table {
   TextColumn get id => text()();
   DateTimeColumn get date => dateTime()();
@@ -124,14 +123,28 @@ class Notes extends Table {
   Set<Column> get primaryKey => {id};
 }
 
-// MODIFICATION: Added Books and Notes to the tables list
-@DriftDatabase(tables: [Users, Announcements, Routines, ExamRoutines, CachedStudents, AttendanceRecords, Books, Notes])
+// ADDED: Generic polymorphic table for live event schedules (World Cup, Cricket, Festivals)
+class LiveEvents extends Table {
+  TextColumn get id => text()();
+  TextColumn get groupLabel => text().withDefault(const Constant(''))(); // e.g., "Group A"
+  TextColumn get heading => text()(); // e.g., "Group Stage" or "Day 1"
+  TextColumn get titlePrimary => text()(); // e.g., "Mexico" or "Opening Ceremony"
+  TextColumn get titleSecondary => text().withDefault(const Constant(''))(); // e.g., "USA"
+  TextColumn get subtitle => text().withDefault(const Constant(''))(); // e.g., "Estadio Azteca" or "Main Hall"
+  TextColumn get utcTime => text()(); // Stored in UTC to parse locally to user's timezone
+
+  @override
+  Set<Column> get primaryKey => {id};
+}
+
+// MODIFICATION: Added LiveEvents to the tables list
+@DriftDatabase(tables: [Users, Announcements, Routines, ExamRoutines, CachedStudents, AttendanceRecords, Books, Notes, LiveEvents])
 class AppDatabase extends _$AppDatabase {
   AppDatabase() : super(_openConnection());
 
-  // MODIFICATION: Bumped schema version to 8
+  // MODIFICATION: Bumped schema version to 9
   @override
-  int get schemaVersion => 8;
+  int get schemaVersion => 9;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -160,14 +173,16 @@ class AppDatabase extends _$AppDatabase {
       if (from < 6) {
         try { await m.addColumn(attendanceRecords, attendanceRecords.isSynced); } catch (_) {}
       }
-      // MODIFICATION: Migration for schema 7 to create the new ExamRoutines table
       if (from < 7) {
         try { await m.createTable(examRoutines); } catch (_) {}
       }
-      // MODIFICATION: Migration for schema 8 to create Books and Notes tables
       if (from < 8) {
         try { await m.createTable(books); } catch (_) {}
         try { await m.createTable(notes); } catch (_) {}
+      }
+      // MODIFICATION: Migration for schema 9 to create LiveEvents table
+      if (from < 9) {
+        try { await m.createTable(liveEvents); } catch (_) {}
       }
     },
   );
@@ -177,11 +192,12 @@ class AppDatabase extends _$AppDatabase {
       await delete(users).go();
       await delete(announcements).go();
       await delete(routines).go();
-      await delete(examRoutines).go(); // MODIFICATION: Clear exam routines on logout
+      await delete(examRoutines).go();
       await delete(cachedStudents).go();
       await delete(attendanceRecords).go();
-      await delete(books).go(); // MODIFICATION: Clear books on logout
-      await delete(notes).go(); // MODIFICATION: Clear notes on logout
+      await delete(books).go();
+      await delete(notes).go();
+      await delete(liveEvents).go(); // MODIFICATION: Clear live events on logout
     });
   }
 }
