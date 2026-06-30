@@ -70,9 +70,21 @@ flutter:
 
 flutter_launcher_icons:
   android: true
-  image_path: "assets/images/appicon.png"
+  ios: true
+  # Older Androids (Android 7 and below)
+  image_path: "assets/images/logo_padded.png"
+  # Modern Androids (Android 8+)
+  adaptive_icon_background: "#000000"
+  adaptive_icon_foreground: "assets/images/logo_padded.png"
 
 flutter_native_splash:
+  # Older Androids & iOS
   color: "#000000"
-  image: assets/images/appicon.png
+  image: "assets/images/logo_padded.png"
   android: true
+  ios: true
+
+  # Modern Androids (Android 12+) - Strict Circular Cropping
+  android_12:
+    image: "assets/images/logo_padded.png"
+    icon_background_color: "#000000"
