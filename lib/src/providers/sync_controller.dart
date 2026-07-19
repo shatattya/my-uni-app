@@ -17,7 +17,6 @@ final syncControllerProvider = AsyncNotifierProvider<SyncController, DateTime?>(
 });
 
 class SyncController extends AsyncNotifier<DateTime?> {
-
   // Helper to get the persistent file path
   Future<File> _getSyncTimestampFile() async {
     final directory = await getApplicationDocumentsDirectory();
@@ -59,8 +58,9 @@ class SyncController extends AsyncNotifier<DateTime?> {
     final lastSync = state.value;
     if (!canBypassSyncLock && lastSync != null) {
       final difference = DateTime.now().difference(lastSync);
-      if (difference.inMinutes < 5) {
-        throw Exception("Sync is on cooldown to save data. Please try again in ${5 - difference.inMinutes} minutes.");
+      // MODIFICATION: Enforce 15-minute global cooldown instead of 5 minutes
+      if (difference.inMinutes < 15) {
+        throw Exception("Sync is on cooldown to save data. Please try again in ${15 - difference.inMinutes} minutes.");
       }
     }
 
@@ -88,14 +88,12 @@ class SyncController extends AsyncNotifier<DateTime?> {
       // 4. Update the state and persist the timestamp to the file
       final now = DateTime.now();
       state = AsyncData(now);
-
       try {
         final file = await _getSyncTimestampFile();
         await file.writeAsString(now.toIso8601String());
       } catch (e) {
         debugPrint("DEBUG: Failed to save persistent sync timestamp: $e");
       }
-
     } catch (e) {
       // Revert state back to the previous timestamp so they aren't locked out due to a failure
       state = AsyncData(lastSync);

@@ -5,9 +5,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:intl/intl.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart'; // Added ScreenUtil
-
 import '../../../../data/repositories/announcement_repository.dart';
 import '../../../../data/repositories/user_repository.dart';
+import '../../../../providers/sync_controller.dart'; // ADDED: For sync controller
 import '../create_announcement_screen.dart';
 import '../announcement_detail_screen.dart';
 import '../edit_announcement_screen.dart';
@@ -31,7 +31,6 @@ class _NoticeTabState extends ConsumerState<NoticeTab> {
   @override
   Widget build(BuildContext context) {
     final uid = FirebaseAuth.instance.currentUser?.uid;
-
     if (uid == null) {
       return Scaffold(
         backgroundColor: Colors.black,
@@ -52,9 +51,7 @@ class _NoticeTabState extends ConsumerState<NoticeTab> {
             ),
           );
         }
-
         final user = userSnapshot.data;
-
         if (user == null) {
           return Scaffold(
             backgroundColor: Colors.black,
@@ -68,6 +65,9 @@ class _NoticeTabState extends ConsumerState<NoticeTab> {
           );
         }
 
+        // MODIFICATION: Watch the sync controller to handle loading states and enforce cooldowns
+        final syncState = ref.watch(syncControllerProvider);
+
         return Scaffold(
           backgroundColor: Colors.black,
           appBar: AppBar(
@@ -77,6 +77,41 @@ class _NoticeTabState extends ConsumerState<NoticeTab> {
               "Announcements",
               style: TextStyle(color: Colors.white, fontSize: 22.sp, fontWeight: FontWeight.w600), // Scaled
             ),
+            // MODIFICATION: Added sync action button connected to the 15-minute global cooldown
+            actions: [
+              Padding(
+                padding: EdgeInsets.only(right: 16.w),
+                child: syncState.isLoading
+                    ? Center(
+                  child: SizedBox(
+                    width: 20.w,
+                    height: 20.w,
+                    child: const CircularProgressIndicator(color: Color(0xFF1877F2), strokeWidth: 2),
+                  ),
+                )
+                    : IconButton(
+                  icon: Icon(Icons.sync, color: const Color(0xFF1877F2), size: 24.sp),
+                  tooltip: "Sync Announcements",
+                  onPressed: () async {
+                    HapticFeedback.lightImpact(); // iOS UX
+                    try {
+                      await ref.read(syncControllerProvider.notifier).syncAllData();
+                      if (context.mounted) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(content: Text("Announcements synced successfully!"), backgroundColor: Colors.green),
+                        );
+                      }
+                    } catch (e) {
+                      if (context.mounted) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(content: Text(e.toString().replaceAll("Exception: ", "")), backgroundColor: Colors.redAccent),
+                        );
+                      }
+                    }
+                  },
+                ),
+              ),
+            ],
           ),
           floatingActionButton:
           (user.role == "teacher" || user.isDev || user.isCR)
@@ -106,9 +141,7 @@ class _NoticeTabState extends ConsumerState<NoticeTab> {
                   child: CircularProgressIndicator(color: Color(0xFF1877F2)),
                 );
               }
-
               final notices = announcementSnapshot.data ?? [];
-
               if (notices.isEmpty) {
                 return Center(
                   child: Text(
@@ -117,12 +150,20 @@ class _NoticeTabState extends ConsumerState<NoticeTab> {
                   ),
                 );
               }
-
               return RefreshIndicator(
                 color: const Color(0xFF1877F2),
+                // MODIFICATION: Wired pull-to-refresh to syncAllData to prevent cooldown bypass
                 onRefresh: () async {
                   HapticFeedback.lightImpact(); // iOS UX
-                  await ref.read(announcementRepositoryProvider).syncAnnouncements();
+                  try {
+                    await ref.read(syncControllerProvider.notifier).syncAllData();
+                  } catch (e) {
+                    if (context.mounted) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(content: Text(e.toString().replaceAll("Exception: ", "")), backgroundColor: Colors.redAccent),
+                      );
+                    }
+                  }
                 },
                 child: ListView.builder(
                   padding: EdgeInsets.all(16.w), // Scaled padding
@@ -140,7 +181,6 @@ class _NoticeTabState extends ConsumerState<NoticeTab> {
 
   Widget _buildNoticeCard(BuildContext context, dynamic notice, String currentUserId) {
     bool isAuthor = notice.authorUid == currentUserId;
-
     return Padding(
       padding: EdgeInsets.only(bottom: 16.h), // Scaled
       child: Material(
@@ -197,9 +237,7 @@ class _NoticeTabState extends ConsumerState<NoticeTab> {
                       ),
                   ],
                 ),
-
                 SizedBox(height: 16.h), // Scaled
-
                 Text(
                   notice.title,
                   maxLines: 1,
@@ -221,9 +259,7 @@ class _NoticeTabState extends ConsumerState<NoticeTab> {
                     height: 1.4,
                   ),
                 ),
-
                 SizedBox(height: 16.h), // Scaled
-
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   crossAxisAlignment: CrossAxisAlignment.end,
@@ -235,7 +271,6 @@ class _NoticeTabState extends ConsumerState<NoticeTab> {
                         fontSize: 12.sp, // Scaled
                       ),
                     ),
-
                     if (isAuthor)
                       Row(
                         mainAxisSize: MainAxisSize.min,
@@ -267,9 +302,7 @@ class _NoticeTabState extends ConsumerState<NoticeTab> {
                               ),
                             ),
                           ),
-
                           SizedBox(width: 12.w), // Scaled
-
                           Material(
                             color: Colors.transparent,
                             child: InkWell(
@@ -323,7 +356,6 @@ class _NoticeTabState extends ConsumerState<NoticeTab> {
             onPressed: () async {
               HapticFeedback.heavyImpact(); // iOS UX - Confirm Destructive Action
               Navigator.pop(context); // Close sheet first
-
               try {
                 await ref.read(announcementRepositoryProvider).softDeleteAnnouncement(noticeId);
                 if (context.mounted) {

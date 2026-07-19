@@ -98,46 +98,117 @@ class RoutineRepository {
       if (data == null || !data.containsKey("data")) return;
 
       final String jsonString = data["data"];
-      final List<dynamic> teachersData = jsonDecode(jsonString);
+      final dynamic decodedData = jsonDecode(jsonString);
 
       List<RoutinesCompanion> companions = [];
 
-      for (var teacher in teachersData) {
-        final String teacherName = (teacher["teacherName"]?.toString() ?? "TBA").trim();
-        final String teacherId = (teacher["teacherId"]?.toString() ?? "").trim().toLowerCase();
-        final Map<String, dynamic> days = teacher["days"] ?? {};
+      // MODIFICATION: Handle the new top-level slots mapping & Semester -> Section -> Weekday JSON structure
+      if (decodedData is Map<String, dynamic>) {
+        // Extract dynamic time slots from the root "slots" object
+        Map<String, Map<String, String>> dynamicSlots = {};
+        if (decodedData["slots"] is Map<String, dynamic>) {
+          (decodedData["slots"] as Map<String, dynamic>).forEach((slotKey, timeData) {
+            if (timeData is Map<String, dynamic>) {
+              dynamicSlots[slotKey] = {
+                "start": timeData["startTime"]?.toString() ?? "00:00",
+                "end": timeData["endTime"]?.toString() ?? "00:00",
+              };
+            }
+          });
+        }
 
-        for (var dayEntry in days.entries) {
-          final int dayOfWeek = _dayMap[dayEntry.key] ?? 1;
-          final Map<String, dynamic> classes = dayEntry.value;
+        final Map<String, dynamic> semesters = decodedData["semesters"] is Map<String, dynamic>
+            ? decodedData["semesters"]
+            : {};
 
-          for (var classEntry in classes.entries) {
-            final String slotKey = classEntry.key;
-            final Map<String, dynamic> details = classEntry.value;
+        semesters.forEach((semKey, sectionsMap) {
+          final int parsedSem = int.tryParse(semKey) ?? 1;
 
-            final startTime = _timeSlots[slotKey]?["start"] ?? "00:00";
-            final endTime = _timeSlots[slotKey]?["end"] ?? "00:00";
+          if (sectionsMap is Map<String, dynamic>) {
+            sectionsMap.forEach((secKey, daysMap) {
+              final String parsedSec = secKey.trim().toUpperCase();
 
-            final int parsedSem = int.tryParse(details["sem"]?.toString() ?? "1") ?? 1;
-            final String parsedSec = (details["sec"]?.toString() ?? "A").trim().toUpperCase();
-            final String roomNum = (details["room"]?.toString() ?? "TBA").trim();
+              if (daysMap is Map<String, dynamic>) {
+                daysMap.forEach((dayName, classesList) {
+                  final int dayOfWeek = _dayMap[dayName] ?? 1;
 
-            final uniqueId = "${teacherName}_${dayOfWeek}_${slotKey}_${parsedSem}_${parsedSec}_$roomNum";
+                  if (classesList is List) {
+                    for (var classBlock in classesList) {
+                      if (classBlock is Map<String, dynamic>) {
+                        final String slotKey = classBlock["slot"]?.toString() ?? "class1";
 
-            companions.add(
-                RoutinesCompanion(
-                  id: Value(uniqueId),
-                  subjectName: Value(details["sub"] ?? "Unknown Subject"),
-                  teacherName: Value(teacherName),
-                  teacherId: Value(teacherId),
-                  roomNumber: Value(roomNum),
-                  dayOfWeek: Value(dayOfWeek),
-                  startTime: Value(startTime),
-                  endTime: Value(endTime),
-                  semester: Value(parsedSem),
-                  section: Value(parsedSec),
-                )
-            );
+                        // Look up time in dynamic slots first, fallback to static _timeSlots
+                        final startTime = dynamicSlots[slotKey]?["start"] ?? _timeSlots[slotKey]?["start"] ?? "00:00";
+                        final endTime = dynamicSlots[slotKey]?["end"] ?? _timeSlots[slotKey]?["end"] ?? "00:00";
+
+                        final String subjectName = classBlock["subjectName"]?.toString() ?? "Unknown Subject";
+                        final String roomNum = classBlock["roomNumber"]?.toString() ?? "TBA";
+                        final String teacherId = (classBlock["teacherId"]?.toString() ?? "").trim().toLowerCase();
+                        final String teacherName = (classBlock["teacherName"]?.toString() ?? "TBA").trim();
+
+                        final uniqueId = "${parsedSem}_${parsedSec}_${dayOfWeek}_${slotKey}_${startTime.replaceAll(':', '')}_${teacherId.isNotEmpty ? teacherId : teacherName}_$roomNum";
+
+                        companions.add(
+                            RoutinesCompanion(
+                              id: Value(uniqueId),
+                              subjectName: Value(subjectName),
+                              teacherName: Value(teacherName),
+                              teacherId: Value(teacherId),
+                              roomNumber: Value(roomNum),
+                              dayOfWeek: Value(dayOfWeek),
+                              startTime: Value(startTime),
+                              endTime: Value(endTime),
+                              semester: Value(parsedSem),
+                              section: Value(parsedSec),
+                            )
+                        );
+                      }
+                    }
+                  }
+                });
+              }
+            });
+          }
+        });
+      } else if (decodedData is List) {
+        // Legacy fallback for old teacher-wise JSON structure
+        for (var teacher in decodedData) {
+          final String teacherName = (teacher["teacherName"]?.toString() ?? "TBA").trim();
+          final String teacherId = (teacher["teacherId"]?.toString() ?? "").trim().toLowerCase();
+          final Map<String, dynamic> days = teacher["days"] ?? {};
+
+          for (var dayEntry in days.entries) {
+            final int dayOfWeek = _dayMap[dayEntry.key] ?? 1;
+            final Map<String, dynamic> classes = dayEntry.value;
+
+            for (var classEntry in classes.entries) {
+              final String slotKey = classEntry.key;
+              final Map<String, dynamic> details = classEntry.value;
+
+              final startTime = _timeSlots[slotKey]?["start"] ?? "00:00";
+              final endTime = _timeSlots[slotKey]?["end"] ?? "00:00";
+
+              final int parsedSem = int.tryParse(details["sem"]?.toString() ?? "1") ?? 1;
+              final String parsedSec = (details["sec"]?.toString() ?? "A").trim().toUpperCase();
+              final String roomNum = (details["room"]?.toString() ?? "TBA").trim();
+
+              final uniqueId = "${teacherName}_${dayOfWeek}_${slotKey}_${parsedSem}_${parsedSec}_$roomNum";
+
+              companions.add(
+                  RoutinesCompanion(
+                    id: Value(uniqueId),
+                    subjectName: Value(details["sub"] ?? "Unknown Subject"),
+                    teacherName: Value(teacherName),
+                    teacherId: Value(teacherId),
+                    roomNumber: Value(roomNum),
+                    dayOfWeek: Value(dayOfWeek),
+                    startTime: Value(startTime),
+                    endTime: Value(endTime),
+                    semester: Value(parsedSem),
+                    section: Value(parsedSec),
+                  )
+              );
+            }
           }
         }
       }

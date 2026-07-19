@@ -1,15 +1,15 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart'; // ADDED: For HapticFeedback
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:firebase_auth/firebase_auth.dart' as firebase_auth;
 import 'package:intl/intl.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-
 import '../../../../data/repositories/user_repository.dart';
 import '../../../../data/repositories/routine_repository.dart';
+import '../../../../providers/sync_controller.dart'; // ADDED: For sync button
 
 class RoutineTab extends ConsumerStatefulWidget {
   const RoutineTab({super.key});
-
   @override
   ConsumerState<RoutineTab> createState() => _RoutineTabState();
 }
@@ -26,6 +26,7 @@ class _RoutineTabState extends ConsumerState<RoutineTab> {
     const Color(0xFFE91E63),
   ];
 
+  // FIX: Updated the reference slots to exactly match the database's new JSON start/end times
   static const List<Map<String, String>> _fixedSlots = [
     {"start": "09:30", "end": "10:20"},
     {"start": "10:25", "end": "11:15"},
@@ -61,21 +62,17 @@ class _RoutineTabState extends ConsumerState<RoutineTab> {
 
   bool _isClassOngoing(String startTime, String endTime, DateTime classDate) {
     if (classDate.day != DateTime.now().day || classDate.month != DateTime.now().month) return false;
-
     final now = TimeOfDay.now();
     final nowMin = now.hour * 60 + now.minute;
-
     int startMin = _timeToMinutes(startTime);
     int endMin = _timeToMinutes(endTime);
-
     if (endMin < startMin) return false;
-
     return nowMin >= startMin && nowMin <= endMin;
   }
 
-  List<dynamic> _generateFixedTimeline(List<dynamic> routines) {
+  // Cross-references the database classes against the 6 fixed slots to find missing breaks
+  List<dynamic> _generateTimeline(List<dynamic> routines) {
     if (routines.isEmpty) return [];
-
     List<dynamic> timeline = [];
     int colorIndex = 0;
 
@@ -96,7 +93,7 @@ class _RoutineTabState extends ConsumerState<RoutineTab> {
           "type": "break",
           "startTime": slot["start"]!,
           "endTime": slot["end"]!,
-          "durationText": "50m",
+          "durationText": "50m", // FIX: Updated duration back to 50m to match the actual JSON slot length
         });
       }
     }
@@ -106,11 +103,9 @@ class _RoutineTabState extends ConsumerState<RoutineTab> {
   @override
   Widget build(BuildContext context) {
     final uid = firebase_auth.FirebaseAuth.instance.currentUser?.uid;
-
     if (uid == null) {
       return Center(child: Text("Please login", style: TextStyle(color: Colors.white, fontSize: 16.sp)));
     }
-
     return SafeArea(
       child: StreamBuilder(
         stream: ref.watch(userRepositoryProvider).watchUser(uid),
@@ -118,10 +113,8 @@ class _RoutineTabState extends ConsumerState<RoutineTab> {
           if (userSnapshot.connectionState == ConnectionState.waiting) {
             return const Center(child: CircularProgressIndicator(color: Color(0xFF1877F2)));
           }
-
           final user = userSnapshot.data;
           if (user == null) return const SizedBox();
-
           return Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -134,10 +127,8 @@ class _RoutineTabState extends ConsumerState<RoutineTab> {
               ),
               _buildTimelineHeader(),
               SizedBox(height: 10.h),
-
               Expanded(
                 child: StreamBuilder(
-                  // MODIFICATION: Passing both user.internalId and user.name for the hybrid query
                   stream: user.role == 'teacher'
                       ? ref.watch(routineRepositoryProvider).watchTeacherDailyRoutines(user.internalId, user.name, selectedDate.weekday)
                       : ref.watch(routineRepositoryProvider).watchDailyRoutines(user.semester, user.section, selectedDate.weekday),
@@ -145,21 +136,18 @@ class _RoutineTabState extends ConsumerState<RoutineTab> {
                     if (routineSnapshot.connectionState == ConnectionState.waiting) {
                       return const Center(child: CircularProgressIndicator(color: Color(0xFF1877F2)));
                     }
-
                     final routines = routineSnapshot.data ?? [];
-
                     if (routines.isEmpty) {
                       return _buildFreedomBanner();
                     }
 
-                    final timeline = _generateFixedTimeline(routines);
+                    final timeline = _generateTimeline(routines);
 
                     return ListView.builder(
                       padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 10.h),
                       itemCount: timeline.length,
                       itemBuilder: (context, index) {
                         final item = timeline[index];
-
                         if (item["type"] == "class") {
                           return _buildRoutineSlot(item["data"], item["color"], user.role);
                         } else {
@@ -178,6 +166,7 @@ class _RoutineTabState extends ConsumerState<RoutineTab> {
   }
 
   Widget _buildHeader(String role, int semester) {
+    final syncState = ref.watch(syncControllerProvider);
     return Padding(
       padding: EdgeInsets.symmetric(horizontal: 24.w, vertical: 16.h),
       child: Row(
@@ -206,6 +195,36 @@ class _RoutineTabState extends ConsumerState<RoutineTab> {
             role == 'teacher' ? "Teacher Schedule" : "${semester}th Semester",
             style: TextStyle(color: Colors.white70, fontSize: 16.sp, fontWeight: FontWeight.w500),
           ),
+          SizedBox(width: 12.w),
+          syncState.isLoading
+              ? SizedBox(
+            width: 20.w,
+            height: 20.w,
+            child: const CircularProgressIndicator(color: Color(0xFF1877F2), strokeWidth: 2),
+          )
+              : IconButton(
+            icon: Icon(Icons.sync, color: const Color(0xFF1877F2), size: 24.sp),
+            padding: EdgeInsets.zero,
+            constraints: const BoxConstraints(),
+            tooltip: "Sync Routine",
+            onPressed: () async {
+              HapticFeedback.lightImpact();
+              try {
+                await ref.read(syncControllerProvider.notifier).syncAllData();
+                if (context.mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text("Routine synced successfully!"), backgroundColor: Colors.green),
+                  );
+                }
+              } catch (e) {
+                if (context.mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(content: Text(e.toString().replaceAll("Exception: ", "")), backgroundColor: Colors.redAccent),
+                  );
+                }
+              }
+            },
+          ),
         ],
       ),
     );
@@ -218,7 +237,6 @@ class _RoutineTabState extends ConsumerState<RoutineTab> {
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: currentWeek.map((date) {
           bool isSelected = date.day == selectedDate.day && date.month == selectedDate.month;
-
           return GestureDetector(
             onTap: () => setState(() => selectedDate = date),
             child: AnimatedContainer(
@@ -267,7 +285,6 @@ class _RoutineTabState extends ConsumerState<RoutineTab> {
 
   Widget _buildRoutineSlot(dynamic routine, Color cardColor, String userRole) {
     bool ongoing = _isClassOngoing(routine.startTime, routine.endTime, selectedDate);
-
     return IntrinsicHeight(
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -284,13 +301,11 @@ class _RoutineTabState extends ConsumerState<RoutineTab> {
               ],
             ),
           ),
-
           Container(
             width: 1.5.w,
             color: Colors.white24,
             margin: EdgeInsets.symmetric(horizontal: 16.w),
           ),
-
           Expanded(
             child: Padding(
               padding: EdgeInsets.only(bottom: 20.h),
@@ -349,6 +364,19 @@ class _RoutineTabState extends ConsumerState<RoutineTab> {
   }
 
   Widget _buildBreakSlot(String startTime, String endTime, String durationText) {
+    // A playful array of messages to give life to empty slots
+    List<String> goofyMessages = [
+      "Time to chill 🎮",
+      "Grab a snack 🍕",
+      "Power nap time 😴",
+      "Coffee break ☕",
+      "Touch some grass 🌱",
+      "Brain cooling down 🥶",
+      "Scroll some memes 📱"
+    ];
+    // Pick a deterministic random message based on the time so it stays consistent per slot
+    String randomMsg = goofyMessages[(startTime.hashCode + endTime.hashCode).abs() % goofyMessages.length];
+
     return IntrinsicHeight(
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -365,31 +393,39 @@ class _RoutineTabState extends ConsumerState<RoutineTab> {
               ],
             ),
           ),
-
           Container(
             width: 1.5.w,
             color: Colors.white24,
             margin: EdgeInsets.symmetric(horizontal: 16.w),
           ),
-
           Expanded(
             child: Padding(
               padding: EdgeInsets.only(bottom: 20.h),
               child: Container(
                 padding: EdgeInsets.symmetric(vertical: 20.h, horizontal: 16.w),
                 decoration: BoxDecoration(
-                  color: Colors.transparent,
+                  color: const Color(0xFF1877F2).withOpacity(0.1), // Subtle matching blue tint
                   borderRadius: BorderRadius.circular(16.r),
-                  border: Border.all(color: Colors.white12, width: 1.5.w),
+                  border: Border.all(color: const Color(0xFF1877F2).withOpacity(0.3), width: 1.5.w),
                 ),
-                child: Row(
+                child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    Icon(Icons.coffee_outlined, color: Colors.white54, size: 22.sp),
-                    SizedBox(width: 12.w),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(Icons.coffee_outlined, color: Colors.amber, size: 22.sp),
+                        SizedBox(width: 8.w),
+                        Text(
+                          "Break ($durationText)",
+                          style: TextStyle(color: Colors.amber, fontSize: 18.sp, fontWeight: FontWeight.bold),
+                        ),
+                      ],
+                    ),
+                    SizedBox(height: 6.h),
                     Text(
-                      "Break Time ($durationText)",
-                      style: TextStyle(color: Colors.white54, fontSize: 18.sp, fontWeight: FontWeight.bold),
+                      randomMsg,
+                      style: TextStyle(color: Colors.white70, fontSize: 14.sp, fontStyle: FontStyle.italic),
                     ),
                   ],
                 ),
