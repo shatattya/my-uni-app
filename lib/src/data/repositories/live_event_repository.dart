@@ -24,10 +24,23 @@ class LiveEventRepository {
 
   LiveEventRepository(this._db, this._firestore);
 
-  /// Get the dynamic button label for the Home Tab
+  /// Clears cached event metadata on logout or manual reset
+  Future<void> resetEventMetadata() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.remove(_prefEventId);
+      await prefs.remove(_prefEventTitle);
+      await prefs.remove(_prefEventType);
+      await prefs.remove(_prefHomeTabButtonLabel);
+    } catch (e) {
+      debugPrint("DEBUG: Failed to reset live event metadata: $e");
+    }
+  }
+
+  /// Get the dynamic button label for the Home Tab (Defaults to "Events")
   Future<String> getHomeTabButtonLabel() async {
     final prefs = await SharedPreferences.getInstance();
-    return prefs.getString(_prefHomeTabButtonLabel) ?? "Live Events";
+    return prefs.getString(_prefHomeTabButtonLabel) ?? "Events";
   }
 
   /// Get the current master Event Type (e.g., 'sports_versus' or 'event_session')
@@ -36,10 +49,10 @@ class LiveEventRepository {
     return prefs.getString(_prefEventType) ?? "event_session";
   }
 
-  /// Get the event title for the header
+  /// Get the event title for the header (Defaults to "Campus Events")
   Future<String> getEventTitle() async {
     final prefs = await SharedPreferences.getInstance();
-    return prefs.getString(_prefEventTitle) ?? "Event Schedule";
+    return prefs.getString(_prefEventTitle) ?? "Campus Events";
   }
 
   /// OFFLINE FIRST: Watch all events, optionally filtering by a search query
@@ -78,14 +91,23 @@ class LiveEventRepository {
 
       final String rawJsonString = docData["data"];
 
-      // Safe parsing for the master JSON structure
+      // Safe parsing that supports BOTH root JSON Objects {} and root JSON Arrays []
       Map<String, dynamic> data = {};
+      List<dynamic> scheduleData = [];
+
       try {
         final decoded = json.decode(rawJsonString);
         if (decoded is Map) {
           data = Map<String, dynamic>.from(decoded);
+          if (data.containsKey("schedule") && data["schedule"] is List) {
+            scheduleData = data["schedule"];
+          }
+        } else if (decoded is List) {
+          // If the user uploaded a raw array like [] or a direct list of events
+          scheduleData = decoded;
         } else {
-          return; // Abort sync if the structural wrapper isn't a Map
+          debugPrint("DEBUG: Unsupported JSON root structure for live events.");
+          return;
         }
       } catch (e) {
         debugPrint("DEBUG: Malformed JSON string in live event routine: $e");
@@ -94,23 +116,24 @@ class LiveEventRepository {
 
       final prefs = await SharedPreferences.getInstance();
 
-      // 1. Update Dynamic Metadata
-      final String? eventId = data['eventId'];
-      if (eventId != null) await prefs.setString(_prefEventId, eventId);
+      // 1. Update Dynamic SharedPreferences Metadata (with clean defaults)
+      final String? eventId = data['eventId']?.toString();
+      if (eventId != null && eventId.isNotEmpty) {
+        await prefs.setString(_prefEventId, eventId);
+      } else if (scheduleData.isEmpty) {
+        await prefs.remove(_prefEventId);
+      }
 
-      final String eventTitle = (data["eventTitle"]?.toString() ?? "Event Schedule").trim();
-      await prefs.setString(_prefEventTitle, eventTitle);
+      final String eventTitle = (data["eventTitle"]?.toString() ?? "Campus Events").trim();
+      await prefs.setString(_prefEventTitle, eventTitle.isNotEmpty ? eventTitle : "Campus Events");
 
       final String eventType = (data["eventType"]?.toString() ?? "event_session").trim();
-      await prefs.setString(_prefEventType, eventType);
+      await prefs.setString(_prefEventType, eventType.isNotEmpty ? eventType : "event_session");
 
-      final String buttonLabel = (data["homeTabButtonLabel"]?.toString() ?? "Live Events").trim();
-      await prefs.setString(_prefHomeTabButtonLabel, buttonLabel);
+      final String buttonLabel = (data["homeTabButtonLabel"]?.toString() ?? "Events").trim();
+      await prefs.setString(_prefHomeTabButtonLabel, buttonLabel.isNotEmpty ? buttonLabel : "Events");
 
-      if (!data.containsKey("schedule")) return;
-      if (data["schedule"] is! List) return;
-
-      final List<dynamic> scheduleData = data["schedule"];
+      // 2. Build database rows from the extracted schedule
       List<LiveEventsCompanion> companions = [];
 
       for (var item in scheduleData) {
@@ -131,11 +154,14 @@ class LiveEventRepository {
         );
       }
 
+      // 3. Guaranteed Database Cleanup: Always clear old records during sync
       await _db.transaction(() async {
         await _db.delete(_db.liveEvents).go();
-        await _db.batch((batch) {
-          batch.insertAll(_db.liveEvents, companions, mode: InsertMode.insertOrReplace);
-        });
+        if (companions.isNotEmpty) {
+          await _db.batch((batch) {
+            batch.insertAll(_db.liveEvents, companions, mode: InsertMode.insertOrReplace);
+          });
+        }
       });
 
       debugPrint("DEBUG: Live Events synced. Total processed: ${companions.length}");
