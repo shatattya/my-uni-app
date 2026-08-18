@@ -1,16 +1,15 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart'; // ADDED: For iOS Haptic Feedback
+import 'package:flutter/services.dart';
 import 'package:firebase_auth/firebase_auth.dart' as firebase_auth;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:flutter_screenutil/flutter_screenutil.dart'; // Added ScreenUtil
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 
 import '../../../data/repositories/user_repository.dart';
-import '../../../data/local/app_database.dart'; // ADDED: To resolve Drift User type
-import 'edit_student_profile_screen.dart';
-import '../auth/auth_wrapper.dart';
+import '../../../data/local/app_database.dart';
 import '../../../providers/sync_controller.dart';
-import '../../widgets/developer_panel_sheet.dart'; // MODIFICATION: Import the new Dev Menu
-import '../../../services/auth_service.dart'; // Added: Import AuthService for secure logout
+import '../../widgets/developer_panel_sheet.dart';
+import '../../../services/auth_service.dart';
+import '../../routes/app_router.dart';
 
 class StudentProfileScreen extends ConsumerStatefulWidget {
   const StudentProfileScreen({super.key});
@@ -26,13 +25,111 @@ class _StudentProfileScreenState extends ConsumerState<StudentProfileScreen> {
   void initState() {
     super.initState();
     final firebaseUser = firebase_auth.FirebaseAuth.instance.currentUser;
-
-    // MEMORY FIX: Initialize stream exactly once
     if (firebaseUser != null) {
       _userStream = ref.read(userRepositoryProvider).watchUser(firebaseUser.uid);
     } else {
       _userStream = const Stream.empty();
     }
+  }
+
+  void _showDeleteAccountDialog(BuildContext context, User user) {
+    final passwordController = TextEditingController();
+    bool isDeleting = false;
+    bool obscureText = true;
+
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (ctx) => StatefulBuilder(
+          builder: (context, setState) {
+            return AlertDialog(
+              backgroundColor: const Color(0xFF1E1E1E),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16.r)),
+              title: Row(
+                children: [
+                  Icon(Icons.warning_amber_rounded, color: Colors.redAccent, size: 28.sp),
+                  SizedBox(width: 10.w),
+                  Text("Delete Account", style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 18.sp)),
+                ],
+              ),
+              content: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                      "This action is permanent and cannot be undone. All your offline and cloud data will be erased.\n\nPlease enter your password to confirm.",
+                      style: TextStyle(color: Colors.white70, fontSize: 14.sp, height: 1.4)
+                  ),
+                  SizedBox(height: 16.h),
+                  TextField(
+                    controller: passwordController,
+                    obscureText: obscureText,
+                    style: TextStyle(color: Colors.white, fontSize: 16.sp),
+                    decoration: InputDecoration(
+                        hintText: "Password",
+                        hintStyle: const TextStyle(color: Colors.white54),
+                        filled: true,
+                        fillColor: Colors.black26,
+                        border: OutlineInputBorder(borderRadius: BorderRadius.circular(12.r), borderSide: BorderSide.none),
+                        suffixIcon: IconButton(
+                          icon: Icon(obscureText ? Icons.visibility_off_outlined : Icons.visibility_outlined, color: Colors.white54, size: 20.sp),
+                          onPressed: () => setState(() => obscureText = !obscureText),
+                        )
+                    ),
+                  ),
+                ],
+              ),
+              actions: [
+                TextButton(
+                  onPressed: isDeleting ? null : () => Navigator.pop(ctx),
+                  child: const Text("Cancel", style: TextStyle(color: Colors.white54)),
+                ),
+                ElevatedButton(
+                  onPressed: isDeleting ? null : () async {
+                    if (passwordController.text.isEmpty) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(content: Text("Password is required"), backgroundColor: Colors.redAccent)
+                      );
+                      return;
+                    }
+
+                    setState(() => isDeleting = true);
+
+                    try {
+                      await ref.read(authServiceProvider).deleteAccount(
+                        password: passwordController.text,
+                        role: 'student',
+                        docId: user.internalId,
+                      );
+
+                      if (!ctx.mounted) return;
+                      Navigator.of(ctx, rootNavigator: true).pushNamedAndRemoveUntil(
+                        AppRoutes.auth,
+                            (route) => false,
+                      );
+                    } catch (e) {
+                      setState(() => isDeleting = false);
+                      if (ctx.mounted) {
+                        HapticFeedback.heavyImpact();
+                        ScaffoldMessenger.of(ctx).showSnackBar(
+                          SnackBar(content: Text(e.toString().replaceAll("Exception: ", "")), backgroundColor: Colors.redAccent),
+                        );
+                      }
+                    }
+                  },
+                  style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.redAccent,
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8.r))
+                  ),
+                  child: isDeleting
+                      ? SizedBox(width: 16.w, height: 16.w, child: const CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
+                      : const Text("Delete", style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+                ),
+              ],
+            );
+          }
+      ),
+    );
   }
 
   @override
@@ -44,12 +141,11 @@ class _StudentProfileScreenState extends ConsumerState<StudentProfileScreen> {
       backgroundColor: Colors.black,
       body: SafeArea(
         child: StreamBuilder<User?>(
-          stream: _userStream, // Using the cached stream
+          stream: _userStream,
           builder: (context, snapshot) {
             if (snapshot.connectionState == ConnectionState.waiting) {
               return const Center(child: CircularProgressIndicator(color: Color(0xFF1877F2)));
             }
-
             if (!snapshot.hasData || snapshot.data == null) return const SizedBox();
 
             final user = snapshot.data!;
@@ -70,7 +166,6 @@ class _StudentProfileScreenState extends ConsumerState<StudentProfileScreen> {
                     style: TextStyle(fontSize: 24.sp, color: Colors.white, fontWeight: FontWeight.bold),
                   ),
                   SizedBox(height: 16.h),
-
                   Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
@@ -85,8 +180,6 @@ class _StudentProfileScreenState extends ConsumerState<StudentProfileScreen> {
                       ],
                     ],
                   ),
-
-                  // MODIFICATION: The updated Developer Menu Button
                   if (user.isDev) ...[
                     SizedBox(height: 20.h),
                     ElevatedButton.icon(
@@ -100,30 +193,25 @@ class _StudentProfileScreenState extends ConsumerState<StudentProfileScreen> {
                       icon: Icon(Icons.developer_mode, color: Colors.amber, size: 22.sp),
                       label: Text("Developer Panel", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14.sp)),
                       onPressed: () {
-                        HapticFeedback.mediumImpact(); // iOS UX
+                        HapticFeedback.mediumImpact();
                         DeveloperPanelSheet.show(context);
                       },
                     ),
                   ],
-
                   SizedBox(height: 24.h),
-
                   GestureDetector(
                     onTap: () async {
-                      HapticFeedback.mediumImpact(); // iOS UX
-                      // MODIFICATION: Use the centralized secure sign-out to wipe DB and clear FCM token
+                      HapticFeedback.mediumImpact();
                       await ref.read(authServiceProvider).signOut();
                       if (!context.mounted) return;
-                      Navigator.of(context).pushAndRemoveUntil(
-                        MaterialPageRoute(builder: (_) => const AuthWrapper()),
+                      Navigator.of(context).pushNamedAndRemoveUntil(
+                        AppRoutes.auth,
                             (route) => false,
                       );
                     },
                     child: Text("Log out", style: TextStyle(color: Colors.redAccent, fontSize: 16.sp, fontWeight: FontWeight.w500)),
                   ),
-
                   SizedBox(height: 40.h),
-
                   Padding(
                     padding: EdgeInsets.symmetric(horizontal: 30.w),
                     child: Column(
@@ -136,9 +224,7 @@ class _StudentProfileScreenState extends ConsumerState<StudentProfileScreen> {
                       ],
                     ),
                   ),
-
                   SizedBox(height: 40.h),
-
                   Padding(
                     padding: EdgeInsets.symmetric(horizontal: 30.w),
                     child: Column(
@@ -146,14 +232,13 @@ class _StudentProfileScreenState extends ConsumerState<StudentProfileScreen> {
                         Consumer(
                             builder: (context, ref, child) {
                               final syncState = ref.watch(syncControllerProvider);
-
                               return _actionRow(
                                 icon: Icons.sync_outlined,
                                 title: "Sync Data",
                                 action: syncState.isLoading ? "Syncing..." : "Sync",
                                 color: syncState.isLoading ? Colors.white54 : const Color(0xFF1877F2),
                                 onTap: syncState.isLoading ? () {} : () async {
-                                  HapticFeedback.lightImpact(); // iOS UX
+                                  HapticFeedback.lightImpact();
                                   try {
                                     await ref.read(syncControllerProvider.notifier).syncAllData();
                                     if (context.mounted) {
@@ -179,8 +264,8 @@ class _StudentProfileScreenState extends ConsumerState<StudentProfileScreen> {
                           action: "Edit",
                           color: const Color(0xFF1877F2),
                           onTap: () {
-                            HapticFeedback.lightImpact(); // iOS UX
-                            Navigator.push(context, MaterialPageRoute(builder: (_) => const EditStudentProfileScreen()));
+                            HapticFeedback.lightImpact();
+                            Navigator.pushNamed(context, AppRoutes.editStudentProfile);
                           },
                         ),
                         SizedBox(height: 25.h),
@@ -190,8 +275,8 @@ class _StudentProfileScreenState extends ConsumerState<StudentProfileScreen> {
                           action: "Delete",
                           color: Colors.redAccent,
                           onTap: () {
-                            HapticFeedback.heavyImpact(); // iOS UX
-                            // Delete account logic placeholder
+                            HapticFeedback.heavyImpact();
+                            _showDeleteAccountDialog(context, user);
                           },
                         ),
                       ],

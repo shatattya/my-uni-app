@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart'; // Added ScreenUtil
-import '../login/login_sceen.dart';
-import '../signup/signup_screen.dart';
-import '../signup/teacher_signup_screen.dart';
+
+// MODIFICATION: Imported centralized routing constants and removed direct screen imports
+import '../../routes/app_router.dart';
 
 class WelcomeScreen extends StatelessWidget {
   const WelcomeScreen({super.key});
@@ -18,18 +18,15 @@ class WelcomeScreen extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
               SizedBox(height: 60.h), // Scaled
-
               /// Illustration
               Image.asset(
                 "assets/images/welcome_image.png",
                 height: 260.h, // Scaled
               ),
-
               SizedBox(height: 40.h), // Scaled
-
               /// App Title
               Text(
-                "My Uni App",
+                "BGCTUB Companion",
                 style: TextStyle(
                   fontSize: 32.sp, // Scaled
                   fontWeight: FontWeight.bold,
@@ -37,9 +34,7 @@ class WelcomeScreen extends StatelessWidget {
                   letterSpacing: 1.2,
                 ),
               ),
-
               SizedBox(height: 12.h), // Scaled
-
               /// Subtitle
               Text(
                 "Your all-in-one campus companion.\nStay updated with routines, notices, and events.",
@@ -50,19 +45,15 @@ class WelcomeScreen extends StatelessWidget {
                   height: 1.4,
                 ),
               ),
-
               SizedBox(height: 50.h), // Scaled
-
               /// Login Button
               SizedBox(
                 width: double.infinity,
                 height: 56.h, // Scaled
                 child: ElevatedButton(
                   onPressed: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(builder: (_) => const LoginScreen()),
-                    );
+                    // MODIFICATION: Used named route
+                    Navigator.pushNamed(context, AppRoutes.login);
                   },
                   style: ElevatedButton.styleFrom(
                     backgroundColor: const Color(0xFF1877F2), // Premium Blue
@@ -80,20 +71,15 @@ class WelcomeScreen extends StatelessWidget {
                   ),
                 ),
               ),
-
               SizedBox(height: 16.h), // Scaled
-
               /// Sign Up Button (Student)
               SizedBox(
                 width: double.infinity,
                 height: 56.h, // Scaled
                 child: OutlinedButton(
-                  // MODIFICATION: Await the result and show a SnackBar if successful
                   onPressed: () async {
-                    final result = await Navigator.push(
-                      context,
-                      MaterialPageRoute(builder: (_) => const SignupScreen()),
-                    );
+                    // MODIFICATION: Used named route and awaited the result
+                    final result = await Navigator.pushNamed(context, AppRoutes.studentSignup);
 
                     if (result != null && result is String && context.mounted) {
                       ScaffoldMessenger.of(context).showSnackBar(
@@ -121,20 +107,15 @@ class WelcomeScreen extends StatelessWidget {
                   ),
                 ),
               ),
-
               SizedBox(height: 16.h), // Scaled
-
               /// Sign Up Button (Teacher)
               SizedBox(
                 width: double.infinity,
                 height: 56.h, // Scaled
                 child: OutlinedButton(
-                  // MODIFICATION: Await the result and show a SnackBar if successful
                   onPressed: () async {
-                    final result = await Navigator.push(
-                      context,
-                      MaterialPageRoute(builder: (_) => const TeacherSignupScreen()),
-                    );
+                    // MODIFICATION: Used named route and awaited the result
+                    final result = await Navigator.pushNamed(context, AppRoutes.teacherSignup);
 
                     if (result != null && result is String && context.mounted) {
                       ScaffoldMessenger.of(context).showSnackBar(
@@ -162,7 +143,6 @@ class WelcomeScreen extends StatelessWidget {
                   ),
                 ),
               ),
-
               SizedBox(height: 40.h), // Scaled
             ],
           ),

@@ -1,15 +1,14 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart'; // ADDED: For iOS Haptic Feedback
+import 'package:flutter/services.dart';
 import 'package:firebase_auth/firebase_auth.dart' as firebase_auth;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:flutter_screenutil/flutter_screenutil.dart'; // Added ScreenUtil
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 
 import '../../../data/repositories/user_repository.dart';
-import '../../../data/local/app_database.dart'; // ADDED: To resolve Drift User type
-import 'edit_teacher_profile_screen.dart';
-import '../auth/auth_wrapper.dart';
+import '../../../data/local/app_database.dart';
 import '../../../providers/sync_controller.dart';
-import '../../../services/auth_service.dart'; // Added: Import AuthService for secure logout
+import '../../../services/auth_service.dart';
+import '../../routes/app_router.dart';
 
 class TeacherProfileScreen extends ConsumerStatefulWidget {
   const TeacherProfileScreen({super.key});
@@ -25,13 +24,111 @@ class _TeacherProfileScreenState extends ConsumerState<TeacherProfileScreen> {
   void initState() {
     super.initState();
     final firebaseUser = firebase_auth.FirebaseAuth.instance.currentUser;
-
-    // MEMORY FIX: Initialize stream exactly once
     if (firebaseUser != null) {
       _userStream = ref.read(userRepositoryProvider).watchUser(firebaseUser.uid);
     } else {
       _userStream = const Stream.empty();
     }
+  }
+
+  void _showDeleteAccountDialog(BuildContext context, User user) {
+    final passwordController = TextEditingController();
+    bool isDeleting = false;
+    bool obscureText = true;
+
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (ctx) => StatefulBuilder(
+          builder: (context, setState) {
+            return AlertDialog(
+              backgroundColor: const Color(0xFF1E1E1E),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16.r)),
+              title: Row(
+                children: [
+                  Icon(Icons.warning_amber_rounded, color: Colors.redAccent, size: 28.sp),
+                  SizedBox(width: 10.w),
+                  Text("Delete Account", style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 18.sp)),
+                ],
+              ),
+              content: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                      "This action is permanent and cannot be undone. All your offline and cloud data will be erased.\n\nPlease enter your password to confirm.",
+                      style: TextStyle(color: Colors.white70, fontSize: 14.sp, height: 1.4)
+                  ),
+                  SizedBox(height: 16.h),
+                  TextField(
+                    controller: passwordController,
+                    obscureText: obscureText,
+                    style: TextStyle(color: Colors.white, fontSize: 16.sp),
+                    decoration: InputDecoration(
+                        hintText: "Password",
+                        hintStyle: const TextStyle(color: Colors.white54),
+                        filled: true,
+                        fillColor: Colors.black26,
+                        border: OutlineInputBorder(borderRadius: BorderRadius.circular(12.r), borderSide: BorderSide.none),
+                        suffixIcon: IconButton(
+                          icon: Icon(obscureText ? Icons.visibility_off_outlined : Icons.visibility_outlined, color: Colors.white54, size: 20.sp),
+                          onPressed: () => setState(() => obscureText = !obscureText),
+                        )
+                    ),
+                  ),
+                ],
+              ),
+              actions: [
+                TextButton(
+                  onPressed: isDeleting ? null : () => Navigator.pop(ctx),
+                  child: const Text("Cancel", style: TextStyle(color: Colors.white54)),
+                ),
+                ElevatedButton(
+                  onPressed: isDeleting ? null : () async {
+                    if (passwordController.text.isEmpty) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(content: Text("Password is required"), backgroundColor: Colors.redAccent)
+                      );
+                      return;
+                    }
+
+                    setState(() => isDeleting = true);
+
+                    try {
+                      await ref.read(authServiceProvider).deleteAccount(
+                        password: passwordController.text,
+                        role: 'teacher',
+                        docId: user.internalId,
+                      );
+
+                      if (!ctx.mounted) return;
+                      Navigator.of(ctx, rootNavigator: true).pushNamedAndRemoveUntil(
+                        AppRoutes.auth,
+                            (route) => false,
+                      );
+                    } catch (e) {
+                      setState(() => isDeleting = false);
+                      if (ctx.mounted) {
+                        HapticFeedback.heavyImpact();
+                        ScaffoldMessenger.of(ctx).showSnackBar(
+                          SnackBar(content: Text(e.toString().replaceAll("Exception: ", "")), backgroundColor: Colors.redAccent),
+                        );
+                      }
+                    }
+                  },
+                  style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.redAccent,
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8.r))
+                  ),
+                  child: isDeleting
+                      ? SizedBox(width: 16.w, height: 16.w, child: const CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
+                      : const Text("Delete", style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+                ),
+              ],
+            );
+          }
+      ),
+    );
   }
 
   @override
@@ -43,12 +140,11 @@ class _TeacherProfileScreenState extends ConsumerState<TeacherProfileScreen> {
       backgroundColor: Colors.black,
       body: SafeArea(
         child: StreamBuilder<User?>(
-          stream: _userStream, // Using cached stream
+          stream: _userStream,
           builder: (context, snapshot) {
             if (snapshot.connectionState == ConnectionState.waiting) {
-              return const Center(child: CircularProgressIndicator(color: Color(0xFF1877F2))); // Premium Blue
+              return const Center(child: CircularProgressIndicator(color: Color(0xFF1877F2)));
             }
-
             if (!snapshot.hasData || snapshot.data == null) return const SizedBox();
 
             final user = snapshot.data!;
@@ -58,71 +154,62 @@ class _TeacherProfileScreenState extends ConsumerState<TeacherProfileScreen> {
             return SingleChildScrollView(
               child: Column(
                 children: [
-                  SizedBox(height: 40.h), // Scaled
+                  SizedBox(height: 40.h),
                   CircleAvatar(
-                    radius: 60.r, // Scaled
+                    radius: 60.r,
                     backgroundColor: Colors.transparent,
                     backgroundImage: AssetImage("assets/avatars/$formattedAvatarId.png"),
                   ),
-                  SizedBox(height: 20.h), // Scaled
+                  SizedBox(height: 20.h),
                   Text(
                     user.name,
-                    style: TextStyle(fontSize: 24.sp, color: Colors.white, fontWeight: FontWeight.bold), // Scaled
+                    style: TextStyle(fontSize: 24.sp, color: Colors.white, fontWeight: FontWeight.bold),
                   ),
-                  SizedBox(height: 16.h), // Scaled
-
+                  SizedBox(height: 16.h),
                   Container(
-                    padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 6.h), // Scaled
-                    decoration: BoxDecoration(color: const Color(0xFF1877F2), borderRadius: BorderRadius.circular(20.r)), // Premium Blue & Scaled
-                    child: Text("Teacher", style: TextStyle(color: Colors.white, fontSize: 12.sp)), // Scaled
+                    padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 6.h),
+                    decoration: BoxDecoration(color: const Color(0xFF1877F2), borderRadius: BorderRadius.circular(20.r)),
+                    child: Text("Teacher", style: TextStyle(color: Colors.white, fontSize: 12.sp)),
                   ),
-
-                  SizedBox(height: 24.h), // Scaled
-
+                  SizedBox(height: 24.h),
                   GestureDetector(
                     onTap: () async {
-                      HapticFeedback.mediumImpact(); // iOS UX
-                      // MODIFICATION: Use the centralized secure sign-out to wipe DB and clear FCM token
+                      HapticFeedback.mediumImpact();
                       await ref.read(authServiceProvider).signOut();
                       if (!context.mounted) return;
-                      Navigator.of(context).pushAndRemoveUntil(
-                        MaterialPageRoute(builder: (_) => const AuthWrapper()),
+                      Navigator.of(context).pushNamedAndRemoveUntil(
+                        AppRoutes.auth,
                             (route) => false,
                       );
                     },
-                    child: Text("Log out", style: TextStyle(color: Colors.redAccent, fontSize: 16.sp, fontWeight: FontWeight.w500)), // Scaled
+                    child: Text("Log out", style: TextStyle(color: Colors.redAccent, fontSize: 16.sp, fontWeight: FontWeight.w500)),
                   ),
-
-                  SizedBox(height: 60.h), // Scaled
-
+                  SizedBox(height: 60.h),
                   Padding(
-                    padding: EdgeInsets.symmetric(horizontal: 30.w), // Scaled
+                    padding: EdgeInsets.symmetric(horizontal: 30.w),
                     child: Row(
                       children: [
-                        Icon(Icons.badge_outlined, color: Colors.white, size: 22.sp), // Scaled
-                        SizedBox(width: 15.w), // Scaled
-                        Text("E-mail : $email", style: TextStyle(color: Colors.white, fontSize: 16.sp)), // Scaled
+                        Icon(Icons.badge_outlined, color: Colors.white, size: 22.sp),
+                        SizedBox(width: 15.w),
+                        Text("E-mail : $email", style: TextStyle(color: Colors.white, fontSize: 16.sp)),
                       ],
                     ),
                   ),
-
-                  SizedBox(height: 40.h), // Scaled
-
+                  SizedBox(height: 40.h),
                   Padding(
-                    padding: EdgeInsets.symmetric(horizontal: 30.w), // Scaled
+                    padding: EdgeInsets.symmetric(horizontal: 30.w),
                     child: Column(
                       children: [
                         Consumer(
                             builder: (context, ref, child) {
                               final syncState = ref.watch(syncControllerProvider);
-
                               return _actionRow(
                                 icon: Icons.sync_outlined,
                                 title: "Sync Data",
                                 action: syncState.isLoading ? "Syncing..." : "Sync",
-                                color: syncState.isLoading ? Colors.white54 : const Color(0xFF1877F2), // Premium Blue
+                                color: syncState.isLoading ? Colors.white54 : const Color(0xFF1877F2),
                                 onTap: syncState.isLoading ? () {} : () async {
-                                  HapticFeedback.lightImpact(); // iOS UX
+                                  HapticFeedback.lightImpact();
                                   try {
                                     await ref.read(syncControllerProvider.notifier).syncAllData();
                                     if (context.mounted) {
@@ -141,31 +228,32 @@ class _TeacherProfileScreenState extends ConsumerState<TeacherProfileScreen> {
                               );
                             }
                         ),
-                        SizedBox(height: 25.h), // Scaled
+                        SizedBox(height: 25.h),
                         _actionRow(
                           icon: Icons.edit_outlined,
                           title: "Edit Profile",
                           action: "Edit",
-                          color: const Color(0xFF1877F2), // Premium Blue
+                          color: const Color(0xFF1877F2),
                           onTap: () {
-                            HapticFeedback.lightImpact(); // iOS UX
-                            Navigator.push(context, MaterialPageRoute(builder: (_) => const EditTeacherProfileScreen()));
+                            HapticFeedback.lightImpact();
+                            Navigator.pushNamed(context, AppRoutes.editTeacherProfile);
                           },
                         ),
-                        SizedBox(height: 25.h), // Scaled
+                        SizedBox(height: 25.h),
                         _actionRow(
                           icon: Icons.delete_outline,
                           title: "Delete Account",
                           action: "Delete",
                           color: Colors.redAccent,
                           onTap: () {
-                            HapticFeedback.heavyImpact(); // iOS UX
+                            HapticFeedback.heavyImpact();
+                            _showDeleteAccountDialog(context, user);
                           },
                         ),
                       ],
                     ),
                   ),
-                  SizedBox(height: 40.h), // Scaled
+                  SizedBox(height: 40.h),
                 ],
               ),
             );
@@ -186,18 +274,18 @@ class _TeacherProfileScreenState extends ConsumerState<TeacherProfileScreen> {
       color: Colors.transparent,
       child: InkWell(
         onTap: onTap,
-        borderRadius: BorderRadius.circular(8.r), // Scaled
+        borderRadius: BorderRadius.circular(8.r),
         splashColor: color.withValues(alpha: 0.15),
         highlightColor: Colors.transparent,
         child: Padding(
-          padding: EdgeInsets.symmetric(vertical: 10.h, horizontal: 8.w), // Scaled
+          padding: EdgeInsets.symmetric(vertical: 10.h, horizontal: 8.w),
           child: Row(
             children: [
-              Icon(icon, color: Colors.white, size: 22.sp), // Scaled
-              SizedBox(width: 15.w), // Scaled
-              Text(title, style: TextStyle(color: Colors.white, fontSize: 16.sp)), // Scaled
+              Icon(icon, color: Colors.white, size: 22.sp),
+              SizedBox(width: 15.w),
+              Text(title, style: TextStyle(color: Colors.white, fontSize: 16.sp)),
               const Spacer(),
-              Text(action, style: TextStyle(color: color, fontSize: 16.sp)), // Scaled
+              Text(action, style: TextStyle(color: color, fontSize: 16.sp)),
             ],
           ),
         ),

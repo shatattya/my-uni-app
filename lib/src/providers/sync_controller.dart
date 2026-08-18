@@ -1,16 +1,21 @@
 import 'dart:io';
-import 'dart:async'; // ADDED: Required for TimeoutException
-import 'package:flutter/foundation.dart'; // ADDED: For debugPrint
+import 'dart:async';
+import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:path_provider/path_provider.dart';
+
 import '../data/repositories/user_repository.dart';
 import '../data/repositories/announcement_repository.dart';
 import '../data/repositories/routine_repository.dart';
 import '../data/repositories/exam_routine_repository.dart';
-import '../data/repositories/book_repository.dart'; // ADDED: For Books sync
-import '../data/repositories/note_repository.dart'; // ADDED: For Notes sync
-import '../data/repositories/live_event_repository.dart'; // ADDED: For Live Events sync
+import '../data/repositories/book_repository.dart';
+import '../data/repositories/note_repository.dart';
+import '../data/repositories/live_event_repository.dart';
+
+// ADDED: For notification auto-scheduling after sync
+import 'notification_settings_provider.dart';
+import '../services/local_notification_service.dart';
 
 final syncControllerProvider = AsyncNotifierProvider<SyncController, DateTime?>(() {
   return SyncController();
@@ -80,20 +85,39 @@ class SyncController extends AsyncNotifier<DateTime?> {
         ref.read(announcementRepositoryProvider).syncAnnouncements(),
         ref.read(routineRepositoryProvider).syncRoutines(),
         ref.read(examRoutineRepositoryProvider).syncExamRoutines(),
-        ref.read(bookRepositoryProvider).syncBooks(), // MODIFICATION: Added Book Sync
-        if (localUser != null) ref.read(noteRepositoryProvider).syncNotes(localUser.semester, localUser.section), // MODIFICATION: Added Note Sync with safe user properties
-        ref.read(liveEventRepositoryProvider).syncLiveEvents(), // MODIFICATION: Added Live Event Sync
+        ref.read(bookRepositoryProvider).syncBooks(),
+        if (localUser != null) ref.read(noteRepositoryProvider).syncNotes(localUser.semester, localUser.section),
+        ref.read(liveEventRepositoryProvider).syncLiveEvents(),
       ]);
 
       // 4. Update the state and persist the timestamp to the file
       final now = DateTime.now();
       state = AsyncData(now);
+
+      // NEW: Auto-refresh alarms if enabled
+      try {
+        final settings = ref.read(notificationSettingsProvider).value;
+        if (settings != null && settings.isRoutineAlarmEnabled && localUser != null) {
+          List<dynamic> allRoutines = [];
+          for (int i = 1; i <= 7; i++) {
+            final daily = localUser.role == 'teacher'
+                ? await ref.read(routineRepositoryProvider).watchTeacherDailyRoutines(localUser.internalId, localUser.name, i).first
+                : await ref.read(routineRepositoryProvider).watchDailyRoutines(localUser.semester, localUser.section, i).first;
+            allRoutines.addAll(daily);
+          }
+          await ref.read(localNotificationServiceProvider).scheduleClassRoutines(allRoutines, settings.alarmLeadTimeMinutes);
+        }
+      } catch (e) {
+        debugPrint("DEBUG: Failed to reschedule alarms after sync: $e");
+      }
+
       try {
         final file = await _getSyncTimestampFile();
         await file.writeAsString(now.toIso8601String());
       } catch (e) {
         debugPrint("DEBUG: Failed to save persistent sync timestamp: $e");
       }
+
     } catch (e) {
       // Revert state back to the previous timestamp so they aren't locked out due to a failure
       state = AsyncData(lastSync);

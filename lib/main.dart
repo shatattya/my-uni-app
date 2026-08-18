@@ -4,8 +4,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 
-import 'src/presentation/screens/home/home_screen.dart';
-import 'src/presentation/screens/auth/auth_wrapper.dart';
+// MODIFICATION: Import the new centralized AppRouter
+import 'src/presentation/routes/app_router.dart';
 
 @pragma('vm:entry-point')
 Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
@@ -16,15 +16,12 @@ Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp();
-
   await FirebaseMessaging.instance.setForegroundNotificationPresentationOptions(
     alert: true,
     badge: true,
     sound: true,
   );
-
   FirebaseMessaging.onBackgroundMessage(_firebaseMessagingBackgroundHandler);
-
   await _requestNotificationPermissions();
 
   runApp(
@@ -42,7 +39,6 @@ void main() async {
 
 Future<void> _requestNotificationPermissions() async {
   final messaging = FirebaseMessaging.instance;
-
   NotificationSettings settings = await messaging.requestPermission(
     alert: true,
     badge: true,
@@ -75,10 +71,9 @@ class MyApp extends StatelessWidget {
         brightness: Brightness.dark,
         useMaterial3: true,
       ),
-      routes: {
-        "/home": (context) => const HomeScreen(),
-      },
-      home: const AuthWrapper(),
+      // MODIFICATION: Delegated all routing logic to the AppRouter
+      initialRoute: AppRoutes.auth,
+      onGenerateRoute: AppRouter.generateRoute,
     );
   }
 }

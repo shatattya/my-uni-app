@@ -1,16 +1,15 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/cupertino.dart'; // ADDED: For iOS Date Picker
-import 'package:flutter/services.dart'; // ADDED: For Haptic Feedback
+import 'package:flutter/cupertino.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:intl/intl.dart';
 import 'package:firebase_auth/firebase_auth.dart' as firebase_auth;
 import 'package:share_plus/share_plus.dart';
-
 import '../../../data/repositories/attendance_repository.dart';
 import '../../../data/repositories/user_repository.dart';
 import '../../../data/local/app_database.dart';
-import 'attendance_marking_screen.dart';
+import '../../routes/app_router.dart';
 
 class AttendanceExportScreen extends ConsumerStatefulWidget {
   const AttendanceExportScreen({super.key});
@@ -20,15 +19,13 @@ class AttendanceExportScreen extends ConsumerStatefulWidget {
 }
 
 class _AttendanceExportScreenState extends ConsumerState<AttendanceExportScreen> {
-  // Dashboard State
   bool isLoading = true;
   bool isSyncing = false;
   int _pendingSyncs = 0;
   List<AttendanceRecord> _history = [];
   int _historyLimit = 25;
-  String? _teacherId; // Required for two-way sync
+  String? _teacherId;
 
-  // Export Form State
   bool isExporting = false;
   List<Map<String, dynamic>> availableClasses = [];
   String? selectedCourse;
@@ -57,7 +54,7 @@ class _AttendanceExportScreenState extends ConsumerState<AttendanceExportScreen>
       if (firebaseUser != null) {
         final user = await ref.read(userRepositoryProvider).getUserLocally(firebaseUser.uid);
         if (user != null) {
-          _teacherId = user.internalId; // Store for sync logic
+          _teacherId = user.internalId;
           final classes = await ref.read(attendanceRepositoryProvider).getTeacherClasses(user.internalId);
           if (mounted) {
             setState(() => availableClasses = classes);
@@ -76,7 +73,6 @@ class _AttendanceExportScreenState extends ConsumerState<AttendanceExportScreen>
       final repo = ref.read(attendanceRepositoryProvider);
       final pending = await repo.getPendingSyncCount();
       final history = await repo.getRecentAttendance(limit: _historyLimit);
-
       if (mounted) {
         setState(() {
           _pendingSyncs = pending;
@@ -90,8 +86,6 @@ class _AttendanceExportScreenState extends ConsumerState<AttendanceExportScreen>
     }
   }
 
-  // --- Dashboard Actions ---
-
   Future<void> _handleSync() async {
     if (_teacherId == null) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -99,15 +93,11 @@ class _AttendanceExportScreenState extends ConsumerState<AttendanceExportScreen>
       );
       return;
     }
-
-    HapticFeedback.mediumImpact(); // iOS UX action confirm
+    HapticFeedback.mediumImpact();
     setState(() => isSyncing = true);
     try {
-      // Execute the two-way sync and capture if updates occurred
       final bool hasUpdates = await ref.read(attendanceRepositoryProvider).syncPendingRecords(_teacherId!);
-
-      await _loadDashboardData(); // Refresh counts and history
-
+      await _loadDashboardData();
       if (mounted) {
         if (hasUpdates) {
           _showSyncDialog(
@@ -125,7 +115,7 @@ class _AttendanceExportScreenState extends ConsumerState<AttendanceExportScreen>
       }
     } catch (e) {
       if (mounted) {
-        HapticFeedback.heavyImpact(); // iOS UX error warning
+        HapticFeedback.heavyImpact();
         _showSyncDialog(
           title: "Sync Failed",
           message: "Some error occured, not stored.\n\nError Code: ${e.toString()}",
@@ -140,7 +130,7 @@ class _AttendanceExportScreenState extends ConsumerState<AttendanceExportScreen>
   void _showSyncDialog({required String title, required String message, required bool isError}) {
     showDialog(
       context: context,
-      barrierDismissible: false, // Force user to tap "Okay"
+      barrierDismissible: false,
       builder: (context) {
         return AlertDialog(
           backgroundColor: const Color(0xFF2C2C2E),
@@ -188,13 +178,13 @@ class _AttendanceExportScreenState extends ConsumerState<AttendanceExportScreen>
     _loadDashboardData();
   }
 
-  // --- Export Actions ---
-
   List<String> get _uniqueCourses => availableClasses.map((c) => c["subjectName"] as String).toSet().toList();
+
   List<int> get _availableSemesters {
     if (selectedCourse == null) return [];
     return availableClasses.where((c) => c["subjectName"] == selectedCourse).map((c) => c["semester"] as int).toSet().toList();
   }
+
   List<String> get _availableSections {
     if (selectedCourse == null || selectedSemester == null) return [];
     return availableClasses
@@ -204,23 +194,21 @@ class _AttendanceExportScreenState extends ConsumerState<AttendanceExportScreen>
 
   Future<void> _handleExport() async {
     if (selectedCourse == null || selectedSemester == null || selectedSection == null) {
-      HapticFeedback.heavyImpact(); // iOS UX error warning
+      HapticFeedback.heavyImpact();
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text("Please select Course, Semester, and Section"), backgroundColor: Colors.redAccent),
       );
       return;
     }
-
     final double? maxMarks = double.tryParse(maxMarksController.text.trim());
     if (maxMarks == null || maxMarks <= 0) {
-      HapticFeedback.heavyImpact(); // iOS UX error warning
+      HapticFeedback.heavyImpact();
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text("Please enter a valid number for Max Marks"), backgroundColor: Colors.redAccent),
       );
       return;
     }
-
-    HapticFeedback.mediumImpact(); // iOS UX action confirm
+    HapticFeedback.mediumImpact();
     setState(() => isExporting = true);
     try {
       final path = await ref.read(attendanceRepositoryProvider).generateCsvReport(
@@ -232,7 +220,6 @@ class _AttendanceExportScreenState extends ConsumerState<AttendanceExportScreen>
         maxMarks: maxMarks,
         mode: selectedMode,
       );
-
       if (mounted) {
         setState(() => isExporting = false);
         await Share.shareXFiles([XFile(path)], text: "Attendance Report - ${selectedCourse!}");
@@ -246,11 +233,8 @@ class _AttendanceExportScreenState extends ConsumerState<AttendanceExportScreen>
     }
   }
 
-  // --- UI Builders ---
-
   @override
   Widget build(BuildContext context) {
-    // MODIFICATION: Wrap in GestureDetector to seamlessly drop keyboard
     return GestureDetector(
       onTap: () => FocusScope.of(context).unfocus(),
       child: Scaffold(
@@ -444,7 +428,6 @@ class _AttendanceExportScreenState extends ConsumerState<AttendanceExportScreen>
         ),
       );
     }
-
     return Column(
       children: [
         ListView.separated(
@@ -456,21 +439,19 @@ class _AttendanceExportScreenState extends ConsumerState<AttendanceExportScreen>
             final record = _history[index];
             final dateObj = DateTime.tryParse(record.date);
             final displayDate = dateObj != null ? DateFormat('dd MMM, yyyy').format(dateObj) : record.date;
-
             return InkWell(
               borderRadius: BorderRadius.circular(12.r),
               onTap: () {
-                HapticFeedback.lightImpact(); // iOS UX micro-interaction
-                Navigator.push(
+                HapticFeedback.lightImpact();
+                Navigator.pushNamed(
                   context,
-                  MaterialPageRoute(
-                    builder: (_) => AttendanceMarkingScreen(
-                      subjectName: record.subjectId,
-                      semester: record.semester,
-                      section: record.section,
-                      date: record.date,
-                    ),
-                  ),
+                  AppRoutes.attendanceMarking,
+                  arguments: {
+                    'subjectName': record.subjectId,
+                    'semester': record.semester,
+                    'section': record.section,
+                    'date': record.date,
+                  },
                 ).then((_) => _loadDashboardData());
               },
               child: Container(
@@ -490,7 +471,7 @@ class _AttendanceExportScreenState extends ConsumerState<AttendanceExportScreen>
                         children: [
                           Text(record.subjectId, style: TextStyle(color: Colors.white, fontSize: 16.sp, fontWeight: FontWeight.bold), maxLines: 1, overflow: TextOverflow.ellipsis),
                           SizedBox(height: 4.h),
-                          Text("Sem ${record.semester} • Sec ${record.section} • $displayDate", style: TextStyle(color: Colors.white70, fontSize: 13.sp)),
+                          Text("Sem ${record.semester}   Sec ${record.section}   $displayDate", style: TextStyle(color: Colors.white70, fontSize: 13.sp)),
                         ],
                       ),
                     ),
@@ -511,8 +492,6 @@ class _AttendanceExportScreenState extends ConsumerState<AttendanceExportScreen>
       ],
     );
   }
-
-  // --- Helper Widgets for Export Form ---
 
   Widget _buildDropdownField<T>({required String label, required T? value, required List<DropdownMenuItem<T>> items, required void Function(T?) onChanged}) {
     return Column(
@@ -545,7 +524,6 @@ class _AttendanceExportScreenState extends ConsumerState<AttendanceExportScreen>
     );
   }
 
-  // MODIFICATION: Replaced Android Date Picker implementation with Cupertino
   Widget _buildDateField({required String label, required DateTime selectedDate, required Function(DateTime) onDateChanged}) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,

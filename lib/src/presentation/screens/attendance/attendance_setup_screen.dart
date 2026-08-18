@@ -1,14 +1,13 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/cupertino.dart'; // ADDED: For iOS Date Picker
-import 'package:flutter/services.dart'; // ADDED: For Haptic Feedback
+import 'package:flutter/cupertino.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:intl/intl.dart';
 import 'package:firebase_auth/firebase_auth.dart' as firebase_auth;
-
 import '../../../data/repositories/attendance_repository.dart';
 import '../../../data/repositories/user_repository.dart';
-import 'attendance_marking_screen.dart';
+import '../../routes/app_router.dart';
 
 class AttendanceSetupScreen extends ConsumerStatefulWidget {
   const AttendanceSetupScreen({super.key});
@@ -20,7 +19,6 @@ class AttendanceSetupScreen extends ConsumerStatefulWidget {
 class _AttendanceSetupScreenState extends ConsumerState<AttendanceSetupScreen> {
   bool isLoading = true;
   List<Map<String, dynamic>> availableClasses = [];
-
   String? selectedCourse;
   int? selectedSemester;
   String? selectedSection;
@@ -55,7 +53,6 @@ class _AttendanceSetupScreenState extends ConsumerState<AttendanceSetupScreen> {
     }
   }
 
-  // Dynamic filtering based on selections
   List<String> get _uniqueCourses {
     return availableClasses.map((c) => c["subjectName"] as String).toSet().toList();
   }
@@ -80,24 +77,22 @@ class _AttendanceSetupScreenState extends ConsumerState<AttendanceSetupScreen> {
 
   void _onTakeAttendance() {
     if (selectedCourse == null || selectedSemester == null || selectedSection == null) {
-      HapticFeedback.heavyImpact(); // iOS UX warning
+      HapticFeedback.heavyImpact();
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text("Please select Course, Semester, and Section"), backgroundColor: Colors.redAccent),
       );
       return;
     }
-
-    HapticFeedback.mediumImpact(); // iOS UX action confirm
-    Navigator.push(
+    HapticFeedback.mediumImpact();
+    Navigator.pushNamed(
       context,
-      MaterialPageRoute(
-        builder: (_) => AttendanceMarkingScreen(
-          subjectName: selectedCourse!,
-          semester: selectedSemester!,
-          section: selectedSection!,
-          date: DateFormat('yyyy-MM-dd').format(selectedDate),
-        ),
-      ),
+      AppRoutes.attendanceMarking,
+      arguments: {
+        'subjectName': selectedCourse!,
+        'semester': selectedSemester!,
+        'section': selectedSection!,
+        'date': DateFormat('yyyy-MM-dd').format(selectedDate),
+      },
     );
   }
 
@@ -119,8 +114,6 @@ class _AttendanceSetupScreenState extends ConsumerState<AttendanceSetupScreen> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               SizedBox(height: 20.h),
-
-              // 1. Course Selection
               _buildDropdownField<String>(
                 label: "Course",
                 value: selectedCourse,
@@ -134,15 +127,12 @@ class _AttendanceSetupScreenState extends ConsumerState<AttendanceSetupScreen> {
                   HapticFeedback.selectionClick();
                   setState(() {
                     selectedCourse = val;
-                    selectedSemester = null; // Reset dependents
+                    selectedSemester = null;
                     selectedSection = null;
                   });
                 },
               ),
-
               SizedBox(height: 40.h),
-
-              // 2. Semester Selection
               _buildDropdownField<int>(
                 label: "Semester",
                 value: selectedSemester,
@@ -156,14 +146,11 @@ class _AttendanceSetupScreenState extends ConsumerState<AttendanceSetupScreen> {
                   HapticFeedback.selectionClick();
                   setState(() {
                     selectedSemester = val;
-                    selectedSection = null; // Reset dependent
+                    selectedSection = null;
                   });
                 },
               ),
-
               SizedBox(height: 40.h),
-
-              // 3. Section Selection
               _buildDropdownField<String>(
                 label: "Section",
                 value: selectedSection,
@@ -180,10 +167,7 @@ class _AttendanceSetupScreenState extends ConsumerState<AttendanceSetupScreen> {
                   });
                 },
               ),
-
               SizedBox(height: 40.h),
-
-              // 4. Date Selection (MODIFIED: iOS Cupertino Picker)
               Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -194,7 +178,7 @@ class _AttendanceSetupScreenState extends ConsumerState<AttendanceSetupScreen> {
                         context: context,
                         builder: (BuildContext context) => Container(
                           height: 250.h,
-                          color: const Color(0xFF1E1E1E), // Match app dark theme
+                          color: const Color(0xFF1E1E1E),
                           child: SafeArea(
                             top: false,
                             child: CupertinoDatePicker(
@@ -204,7 +188,7 @@ class _AttendanceSetupScreenState extends ConsumerState<AttendanceSetupScreen> {
                               maximumDate: DateTime.now().add(const Duration(days: 30)),
                               mode: CupertinoDatePickerMode.date,
                               onDateTimeChanged: (DateTime newDate) {
-                                HapticFeedback.selectionClick(); // Tactile scrolling
+                                HapticFeedback.selectionClick();
                                 setState(() => selectedDate = newDate);
                               },
                             ),
@@ -240,10 +224,7 @@ class _AttendanceSetupScreenState extends ConsumerState<AttendanceSetupScreen> {
                   Container(height: 1.h, color: Colors.white),
                 ],
               ),
-
               const Spacer(),
-
-              // Take Attendance Button matching the specific purple/blue from mockup
               SizedBox(
                 width: double.infinity,
                 height: 56.h,
@@ -260,7 +241,7 @@ class _AttendanceSetupScreenState extends ConsumerState<AttendanceSetupScreen> {
                     style: TextStyle(
                       fontSize: 18.sp,
                       fontWeight: FontWeight.w600,
-                      color: Colors.black, // Matching mockup text color logic if standard, but usually it's black/dark on this button
+                      color: Colors.black,
                     ),
                   ),
                 ),
@@ -273,7 +254,6 @@ class _AttendanceSetupScreenState extends ConsumerState<AttendanceSetupScreen> {
     );
   }
 
-  // Helper widget to build the exact underlined UI from the mockup
   Widget _buildDropdownField<T>({
     required String label,
     required T? value,
@@ -297,7 +277,7 @@ class _AttendanceSetupScreenState extends ConsumerState<AttendanceSetupScreen> {
             isExpanded: true,
             icon: Icon(Icons.arrow_drop_down, color: Colors.white, size: 28.sp),
             dropdownColor: const Color(0xFF1E1E1E),
-            items: items.isEmpty ? null : items, // Disable if empty
+            items: items.isEmpty ? null : items,
             onChanged: onChanged,
             selectedItemBuilder: (BuildContext context) {
               return items.map<Widget>((DropdownMenuItem<T> item) {

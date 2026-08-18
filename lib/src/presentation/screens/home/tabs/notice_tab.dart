@@ -1,16 +1,14 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/cupertino.dart'; // ADDED: For iOS Action Sheet
-import 'package:flutter/services.dart'; // ADDED: For Haptic Feedback
+import 'package:flutter/cupertino.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:intl/intl.dart';
-import 'package:flutter_screenutil/flutter_screenutil.dart'; // Added ScreenUtil
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../../../../data/repositories/announcement_repository.dart';
 import '../../../../data/repositories/user_repository.dart';
-import '../../../../providers/sync_controller.dart'; // ADDED: For sync controller
-import '../create_announcement_screen.dart';
-import '../announcement_detail_screen.dart';
-import '../edit_announcement_screen.dart';
+import '../../../../providers/sync_controller.dart';
+import '../../../routes/app_router.dart';
 
 class NoticeTab extends ConsumerStatefulWidget {
   const NoticeTab({super.key});
@@ -39,7 +37,6 @@ class _NoticeTabState extends ConsumerState<NoticeTab> {
         ),
       );
     }
-
     return StreamBuilder(
       stream: ref.watch(userRepositoryProvider).watchUser(uid),
       builder: (context, userSnapshot) {
@@ -47,7 +44,7 @@ class _NoticeTabState extends ConsumerState<NoticeTab> {
           return const Scaffold(
             backgroundColor: Colors.black,
             body: Center(
-              child: CircularProgressIndicator(color: Color(0xFF1877F2)), // Premium Blue
+              child: CircularProgressIndicator(color: Color(0xFF1877F2)),
             ),
           );
         }
@@ -64,10 +61,7 @@ class _NoticeTabState extends ConsumerState<NoticeTab> {
             ),
           );
         }
-
-        // MODIFICATION: Watch the sync controller to handle loading states and enforce cooldowns
         final syncState = ref.watch(syncControllerProvider);
-
         return Scaffold(
           backgroundColor: Colors.black,
           appBar: AppBar(
@@ -75,9 +69,8 @@ class _NoticeTabState extends ConsumerState<NoticeTab> {
             centerTitle: true,
             title: Text(
               "Announcements",
-              style: TextStyle(color: Colors.white, fontSize: 22.sp, fontWeight: FontWeight.w600), // Scaled
+              style: TextStyle(color: Colors.white, fontSize: 22.sp, fontWeight: FontWeight.w600),
             ),
-            // MODIFICATION: Added sync action button connected to the 15-minute global cooldown
             actions: [
               Padding(
                 padding: EdgeInsets.only(right: 16.w),
@@ -93,7 +86,7 @@ class _NoticeTabState extends ConsumerState<NoticeTab> {
                   icon: Icon(Icons.sync, color: const Color(0xFF1877F2), size: 24.sp),
                   tooltip: "Sync Announcements",
                   onPressed: () async {
-                    HapticFeedback.lightImpact(); // iOS UX
+                    HapticFeedback.lightImpact();
                     try {
                       await ref.read(syncControllerProvider.notifier).syncAllData();
                       if (context.mounted) {
@@ -116,18 +109,13 @@ class _NoticeTabState extends ConsumerState<NoticeTab> {
           floatingActionButton:
           (user.role == "teacher" || user.isDev || user.isCR)
               ? FloatingActionButton(
-            backgroundColor: const Color(0xFF1877F2), // Premium Blue
+            backgroundColor: const Color(0xFF1877F2),
             tooltip: "Create Announcement",
             elevation: 4,
             child: Icon(Icons.add, color: Colors.white, size: 28.sp),
             onPressed: () {
-              HapticFeedback.lightImpact(); // iOS UX
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (_) => const CreateAnnouncementScreen(),
-                ),
-              );
+              HapticFeedback.lightImpact();
+              Navigator.pushNamed(context, AppRoutes.createAnnouncement);
             },
           )
               : null,
@@ -152,9 +140,8 @@ class _NoticeTabState extends ConsumerState<NoticeTab> {
               }
               return RefreshIndicator(
                 color: const Color(0xFF1877F2),
-                // MODIFICATION: Wired pull-to-refresh to syncAllData to prevent cooldown bypass
                 onRefresh: () async {
-                  HapticFeedback.lightImpact(); // iOS UX
+                  HapticFeedback.lightImpact();
                   try {
                     await ref.read(syncControllerProvider.notifier).syncAllData();
                   } catch (e) {
@@ -166,7 +153,7 @@ class _NoticeTabState extends ConsumerState<NoticeTab> {
                   }
                 },
                 child: ListView.builder(
-                  padding: EdgeInsets.all(16.w), // Scaled padding
+                  padding: EdgeInsets.all(16.w),
                   itemCount: notices.length,
                   itemBuilder: (context, index) =>
                       _buildNoticeCard(context, notices[index], user.id),
@@ -182,22 +169,17 @@ class _NoticeTabState extends ConsumerState<NoticeTab> {
   Widget _buildNoticeCard(BuildContext context, dynamic notice, String currentUserId) {
     bool isAuthor = notice.authorUid == currentUserId;
     return Padding(
-      padding: EdgeInsets.only(bottom: 16.h), // Scaled
+      padding: EdgeInsets.only(bottom: 16.h),
       child: Material(
         color: const Color(0xFF1E1E1E),
-        borderRadius: BorderRadius.circular(16.r), // Scaled radius
+        borderRadius: BorderRadius.circular(16.r),
         child: InkWell(
           borderRadius: BorderRadius.circular(16.r),
           onTap: () {
-            Navigator.push(
-              context,
-              MaterialPageRoute(
-                builder: (_) => AnnouncementDetailScreen(notice: notice),
-              ),
-            );
+            Navigator.pushNamed(context, AppRoutes.detailAnnouncement, arguments: notice);
           },
           child: Padding(
-            padding: EdgeInsets.all(16.w), // Scaled
+            padding: EdgeInsets.all(16.w),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -207,21 +189,21 @@ class _NoticeTabState extends ConsumerState<NoticeTab> {
                     Row(
                       children: [
                         CircleAvatar(
-                          radius: 14.r, // Scaled
-                          backgroundColor: const Color(0xFF1877F2).withValues(alpha: 0.2), // Premium subtle background
+                          radius: 14.r,
+                          backgroundColor: const Color(0xFF1877F2).withValues(alpha: 0.2),
                           child: Icon(
-                            Icons.person_outline, // Premium outlined icon
+                            Icons.person_outline,
                             color: const Color(0xFF1877F2),
-                            size: 16.sp, // Scaled
+                            size: 16.sp,
                           ),
                         ),
-                        SizedBox(width: 8.w), // Scaled
+                        SizedBox(width: 8.w),
                         if (!isAuthor)
                           Text(
                             notice.authorName,
                             style: TextStyle(
                               color: Colors.white70,
-                              fontSize: 14.sp, // Scaled
+                              fontSize: 14.sp,
                             ),
                           ),
                       ],
@@ -230,36 +212,36 @@ class _NoticeTabState extends ConsumerState<NoticeTab> {
                       Text(
                         "You",
                         style: TextStyle(
-                          color: const Color(0xFF1877F2), // Premium Blue
-                          fontSize: 14.sp, // Scaled
+                          color: const Color(0xFF1877F2),
+                          fontSize: 14.sp,
                           fontWeight: FontWeight.bold,
                         ),
                       ),
                   ],
                 ),
-                SizedBox(height: 16.h), // Scaled
+                SizedBox(height: 16.h),
                 Text(
                   notice.title,
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                   style: TextStyle(
                     color: Colors.white,
-                    fontSize: 18.sp, // Scaled
+                    fontSize: 18.sp,
                     fontWeight: FontWeight.bold,
                   ),
                 ),
-                SizedBox(height: 8.h), // Scaled
+                SizedBox(height: 8.h),
                 Text(
                   notice.body,
                   maxLines: 3,
                   overflow: TextOverflow.ellipsis,
                   style: TextStyle(
                     color: Colors.white54,
-                    fontSize: 14.sp, // Scaled
+                    fontSize: 14.sp,
                     height: 1.4,
                   ),
                 ),
-                SizedBox(height: 16.h), // Scaled
+                SizedBox(height: 16.h),
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   crossAxisAlignment: CrossAxisAlignment.end,
@@ -268,7 +250,7 @@ class _NoticeTabState extends ConsumerState<NoticeTab> {
                       DateFormat('MM/dd/yyyy').format(notice.createdAt),
                       style: TextStyle(
                         color: Colors.white38,
-                        fontSize: 12.sp, // Scaled
+                        fontSize: 12.sp,
                       ),
                     ),
                     if (isAuthor)
@@ -281,20 +263,15 @@ class _NoticeTabState extends ConsumerState<NoticeTab> {
                               borderRadius: BorderRadius.circular(6.r),
                               splashColor: Colors.blueAccent.withValues(alpha: 0.1),
                               onTap: () {
-                                HapticFeedback.lightImpact(); // iOS UX
-                                Navigator.push(
-                                  context,
-                                  MaterialPageRoute(
-                                    builder: (_) => EditAnnouncementScreen(notice: notice),
-                                  ),
-                                );
+                                HapticFeedback.lightImpact();
+                                Navigator.pushNamed(context, AppRoutes.editAnnouncement, arguments: notice);
                               },
                               child: Padding(
-                                padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 4.h), // Scaled
+                                padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 4.h),
                                 child: Row(
                                   mainAxisSize: MainAxisSize.min,
                                   children: [
-                                    Icon(Icons.edit_outlined, color: Colors.blueAccent, size: 20.sp), // Scaled & Outlined
+                                    Icon(Icons.edit_outlined, color: Colors.blueAccent, size: 20.sp),
                                     SizedBox(width: 4.w),
                                     Text("Edit", style: TextStyle(color: Colors.blueAccent, fontSize: 14.sp)),
                                   ],
@@ -302,22 +279,22 @@ class _NoticeTabState extends ConsumerState<NoticeTab> {
                               ),
                             ),
                           ),
-                          SizedBox(width: 12.w), // Scaled
+                          SizedBox(width: 12.w),
                           Material(
                             color: Colors.transparent,
                             child: InkWell(
                               borderRadius: BorderRadius.circular(6.r),
                               splashColor: Colors.redAccent.withValues(alpha: 0.1),
                               onTap: () {
-                                HapticFeedback.mediumImpact(); // iOS UX
+                                HapticFeedback.mediumImpact();
                                 _showDeleteConfirmation(context, notice.id);
                               },
                               child: Padding(
-                                padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 4.h), // Scaled
+                                padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 4.h),
                                 child: Row(
                                   mainAxisSize: MainAxisSize.min,
                                   children: [
-                                    Icon(Icons.delete_outline, color: Colors.redAccent, size: 20.sp), // Scaled & Outlined
+                                    Icon(Icons.delete_outline, color: Colors.redAccent, size: 20.sp),
                                     SizedBox(width: 4.w),
                                     Text("Delete", style: TextStyle(color: Colors.redAccent, fontSize: 14.sp)),
                                   ],
@@ -337,7 +314,6 @@ class _NoticeTabState extends ConsumerState<NoticeTab> {
     );
   }
 
-  // MODIFICATION: iOS Action Sheet Implementation
   void _showDeleteConfirmation(BuildContext context, String noticeId) {
     showCupertinoModalPopup(
       context: context,
@@ -354,8 +330,8 @@ class _NoticeTabState extends ConsumerState<NoticeTab> {
           CupertinoActionSheetAction(
             isDestructiveAction: true,
             onPressed: () async {
-              HapticFeedback.heavyImpact(); // iOS UX - Confirm Destructive Action
-              Navigator.pop(context); // Close sheet first
+              HapticFeedback.heavyImpact();
+              Navigator.pop(context);
               try {
                 await ref.read(announcementRepositoryProvider).softDeleteAnnouncement(noticeId);
                 if (context.mounted) {

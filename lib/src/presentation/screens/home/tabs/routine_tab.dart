@@ -1,15 +1,20 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart'; // ADDED: For HapticFeedback
+import 'package:flutter/services.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:firebase_auth/firebase_auth.dart' as firebase_auth;
 import 'package:intl/intl.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+
 import '../../../../data/repositories/user_repository.dart';
 import '../../../../data/repositories/routine_repository.dart';
-import '../../../../providers/sync_controller.dart'; // ADDED: For sync button
+import '../../../../providers/sync_controller.dart';
+import '../../../../providers/notification_settings_provider.dart';
+import '../../../../services/local_notification_service.dart';
 
 class RoutineTab extends ConsumerStatefulWidget {
   const RoutineTab({super.key});
+
   @override
   ConsumerState<RoutineTab> createState() => _RoutineTabState();
 }
@@ -17,7 +22,6 @@ class RoutineTab extends ConsumerStatefulWidget {
 class _RoutineTabState extends ConsumerState<RoutineTab> {
   late DateTime selectedDate;
   late List<DateTime> currentWeek;
-
   final List<Color> cardColors = [
     const Color(0xFF5C6BC0),
     const Color(0xFF9C27B0),
@@ -26,7 +30,6 @@ class _RoutineTabState extends ConsumerState<RoutineTab> {
     const Color(0xFFE91E63),
   ];
 
-  // FIX: Updated the reference slots to exactly match the database's new JSON start/end times
   static const List<Map<String, String>> _fixedSlots = [
     {"start": "09:30", "end": "10:20"},
     {"start": "10:25", "end": "11:15"},
@@ -70,7 +73,6 @@ class _RoutineTabState extends ConsumerState<RoutineTab> {
     return nowMin >= startMin && nowMin <= endMin;
   }
 
-  // Cross-references the database classes against the 6 fixed slots to find missing breaks
   List<dynamic> _generateTimeline(List<dynamic> routines) {
     if (routines.isEmpty) return [];
     List<dynamic> timeline = [];
@@ -78,7 +80,6 @@ class _RoutineTabState extends ConsumerState<RoutineTab> {
 
     for (var slot in _fixedSlots) {
       final matchingClasses = routines.where((r) => r.startTime == slot["start"]).toList();
-
       if (matchingClasses.isNotEmpty) {
         for (var routine in matchingClasses) {
           timeline.add({
@@ -93,11 +94,109 @@ class _RoutineTabState extends ConsumerState<RoutineTab> {
           "type": "break",
           "startTime": slot["start"]!,
           "endTime": slot["end"]!,
-          "durationText": "50m", // FIX: Updated duration back to 50m to match the actual JSON slot length
+          "durationText": "50m",
         });
       }
     }
     return timeline;
+  }
+
+  Future<List<dynamic>> _fetchAllRoutinesSafely(dynamic user) async {
+    List<dynamic> allRoutines = [];
+    for (int i = 1; i <= 7; i++) {
+      final daily = user.role == 'teacher'
+          ? await ref.read(routineRepositoryProvider).watchTeacherDailyRoutines(user.internalId, user.name, i).first
+          : await ref.read(routineRepositoryProvider).watchDailyRoutines(user.semester, user.section, i).first;
+      allRoutines.addAll(daily);
+    }
+    return allRoutines;
+  }
+
+  void _showNotificationSettingsSheet(BuildContext context, dynamic user) {
+    HapticFeedback.lightImpact();
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: const Color(0xFF1E1E1E),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(20.r))),
+      builder: (ctx) => Padding(
+        padding: EdgeInsets.symmetric(horizontal: 24.w, vertical: 32.h),
+        child: Consumer(
+          builder: (context, ref, child) {
+            final settingsAsync = ref.watch(notificationSettingsProvider);
+
+            return settingsAsync.when(
+              data: (settings) {
+                return Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text("Class Alarms", style: TextStyle(color: Colors.white, fontSize: 20.sp, fontWeight: FontWeight.bold)),
+                    SizedBox(height: 8.h),
+                    Text("Get notified before your classes start.", style: TextStyle(color: Colors.white54, fontSize: 14.sp)),
+                    SizedBox(height: 24.h),
+                    SwitchListTile(
+                      contentPadding: EdgeInsets.zero,
+                      title: Text("Enable Alarms", style: TextStyle(color: Colors.white, fontSize: 16.sp)),
+                      activeColor: const Color(0xFF1877F2),
+                      value: settings.isRoutineAlarmEnabled,
+                      onChanged: (val) async {
+                        HapticFeedback.selectionClick();
+                        await ref.read(notificationSettingsProvider.notifier).updateSettings(val, settings.alarmLeadTimeMinutes);
+
+                        if (val) {
+                          try {
+                            final routines = await _fetchAllRoutinesSafely(user);
+                            await ref.read(localNotificationServiceProvider).scheduleClassRoutines(routines, settings.alarmLeadTimeMinutes);
+                            if (ctx.mounted) ScaffoldMessenger.of(ctx).showSnackBar(const SnackBar(content: Text("Alarms scheduled!"), backgroundColor: Colors.green));
+                          } catch (e) {
+                            debugPrint("Failed to schedule alarms: $e");
+                            if (ctx.mounted) ScaffoldMessenger.of(ctx).showSnackBar(SnackBar(content: Text("Failed to schedule alarms"), backgroundColor: Colors.redAccent));
+                          }
+                        } else {
+                          await ref.read(localNotificationServiceProvider).cancelAllClassRoutines();
+                        }
+                      },
+                    ),
+                    if (settings.isRoutineAlarmEnabled) ...[
+                      SizedBox(height: 16.h),
+                      Text("Remind me before class:", style: TextStyle(color: Colors.white54, fontSize: 14.sp)),
+                      SizedBox(height: 12.h),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                        children: [5, 10, 15, 30].map((mins) {
+                          final isSelected = settings.alarmLeadTimeMinutes == mins;
+                          return ChoiceChip(
+                            label: Text("${mins}m", style: TextStyle(color: isSelected ? Colors.white : Colors.white70)),
+                            selected: isSelected,
+                            selectedColor: const Color(0xFF1877F2),
+                            backgroundColor: Colors.black26,
+                            onSelected: (selected) async {
+                              if (selected) {
+                                HapticFeedback.selectionClick();
+                                await ref.read(notificationSettingsProvider.notifier).updateSettings(true, mins);
+                                try {
+                                  final routines = await _fetchAllRoutinesSafely(user);
+                                  await ref.read(localNotificationServiceProvider).scheduleClassRoutines(routines, mins);
+                                } catch (e) {
+                                  debugPrint("Failed to update alarms: $e");
+                                }
+                              }
+                            },
+                          );
+                        }).toList(),
+                      ),
+                    ],
+                    SizedBox(height: 20.h),
+                  ],
+                );
+              },
+              loading: () => const Center(child: CircularProgressIndicator()),
+              error: (_, __) => const Text("Failed to load settings", style: TextStyle(color: Colors.red)),
+            );
+          },
+        ),
+      ),
+    );
   }
 
   @override
@@ -106,6 +205,7 @@ class _RoutineTabState extends ConsumerState<RoutineTab> {
     if (uid == null) {
       return Center(child: Text("Please login", style: TextStyle(color: Colors.white, fontSize: 16.sp)));
     }
+
     return SafeArea(
       child: StreamBuilder(
         stream: ref.watch(userRepositoryProvider).watchUser(uid),
@@ -115,10 +215,11 @@ class _RoutineTabState extends ConsumerState<RoutineTab> {
           }
           final user = userSnapshot.data;
           if (user == null) return const SizedBox();
+
           return Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              _buildHeader(user.role, user.semester),
+              _buildHeader(user.role, user.semester, user),
               SizedBox(height: 20.h),
               _buildDateSelector(),
               Padding(
@@ -142,7 +243,6 @@ class _RoutineTabState extends ConsumerState<RoutineTab> {
                     }
 
                     final timeline = _generateTimeline(routines);
-
                     return ListView.builder(
                       padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 10.h),
                       itemCount: timeline.length,
@@ -165,8 +265,11 @@ class _RoutineTabState extends ConsumerState<RoutineTab> {
     );
   }
 
-  Widget _buildHeader(String role, int semester) {
+  Widget _buildHeader(String role, int semester, dynamic user) {
     final syncState = ref.watch(syncControllerProvider);
+    // Observe settings to reactively update the bell icon state
+    final settingsAsync = ref.watch(notificationSettingsProvider);
+
     return Padding(
       padding: EdgeInsets.symmetric(horizontal: 24.w, vertical: 16.h),
       child: Row(
@@ -190,12 +293,31 @@ class _RoutineTabState extends ConsumerState<RoutineTab> {
               ),
             ],
           ),
-          const Spacer(),
-          Text(
-            role == 'teacher' ? "Teacher Schedule" : "${semester}th Semester",
-            style: TextStyle(color: Colors.white70, fontSize: 16.sp, fontWeight: FontWeight.w500),
-          ),
+
           SizedBox(width: 12.w),
+          Expanded(
+            child: Text(
+              role == 'teacher' ? "Teacher Schedule" : "${semester}th Semester",
+              style: TextStyle(color: Colors.white70, fontSize: 16.sp, fontWeight: FontWeight.w500),
+              textAlign: TextAlign.right,
+              overflow: TextOverflow.ellipsis,
+            ),
+          ),
+          SizedBox(width: 8.w),
+
+          IconButton(
+            icon: Icon(
+              settingsAsync.value?.isRoutineAlarmEnabled == true ? Icons.notifications_active : Icons.notifications_off_outlined,
+              color: settingsAsync.value?.isRoutineAlarmEnabled == true ? Colors.amber : Colors.white54,
+              size: 24.sp,
+            ),
+            padding: EdgeInsets.zero,
+            constraints: const BoxConstraints(),
+            tooltip: "Class Alarms",
+            onPressed: () => _showNotificationSettingsSheet(context, user),
+          ),
+          SizedBox(width: 8.w),
+
           syncState.isLoading
               ? SizedBox(
             width: 20.w,
@@ -208,7 +330,7 @@ class _RoutineTabState extends ConsumerState<RoutineTab> {
             constraints: const BoxConstraints(),
             tooltip: "Sync Routine",
             onPressed: () async {
-              HapticFeedback.lightImpact();
+              HapticFeedback.lightImpact(); // iOS UX
               try {
                 await ref.read(syncControllerProvider.notifier).syncAllData();
                 if (context.mounted) {
@@ -364,17 +486,15 @@ class _RoutineTabState extends ConsumerState<RoutineTab> {
   }
 
   Widget _buildBreakSlot(String startTime, String endTime, String durationText) {
-    // A playful array of messages to give life to empty slots
     List<String> goofyMessages = [
-      "Time to chill 🎮",
-      "Grab a snack 🍕",
-      "Power nap time 😴",
-      "Coffee break ☕",
-      "Touch some grass 🌱",
-      "Brain cooling down 🥶",
-      "Scroll some memes 📱"
+      "Time to chill",
+      "Grab a snack",
+      "Power nap time",
+      "Coffee break",
+      "Touch some grass",
+      "Brain cooling down",
+      "Scroll some memes"
     ];
-    // Pick a deterministic random message based on the time so it stays consistent per slot
     String randomMsg = goofyMessages[(startTime.hashCode + endTime.hashCode).abs() % goofyMessages.length];
 
     return IntrinsicHeight(
@@ -404,7 +524,7 @@ class _RoutineTabState extends ConsumerState<RoutineTab> {
               child: Container(
                 padding: EdgeInsets.symmetric(vertical: 20.h, horizontal: 16.w),
                 decoration: BoxDecoration(
-                  color: const Color(0xFF1877F2).withOpacity(0.1), // Subtle matching blue tint
+                  color: const Color(0xFF1877F2).withOpacity(0.1),
                   borderRadius: BorderRadius.circular(16.r),
                   border: Border.all(color: const Color(0xFF1877F2).withOpacity(0.3), width: 1.5.w),
                 ),

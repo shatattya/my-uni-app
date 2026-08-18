@@ -1,14 +1,14 @@
 import 'package:firebase_auth/firebase_auth.dart' as firebase_auth;
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:firebase_messaging/firebase_messaging.dart'; // Added for FCM unsubscription
+import 'package:firebase_messaging/firebase_messaging.dart';
+
 import '../data/repositories/user_repository.dart';
-import '../data/repositories/routine_repository.dart'; // ADDED: To reset sync metadata
-import '../data/local/app_database.dart'; // Added to access the database wipe
-import '../providers/db_provider.dart'; // Added to inject the DB
+import '../data/repositories/routine_repository.dart';
+import '../data/local/app_database.dart';
+import '../providers/db_provider.dart';
 
 final authServiceProvider = Provider<AuthService>((ref) {
-  // MODIFICATION: Injected the RoutineRepository to handle metadata resets
   return AuthService(
     ref.watch(userRepositoryProvider),
     ref.watch(routineRepositoryProvider),
@@ -19,8 +19,8 @@ final authServiceProvider = Provider<AuthService>((ref) {
 class AuthService {
   final firebase_auth.FirebaseAuth _auth = firebase_auth.FirebaseAuth.instance;
   final UserRepository _userRepo;
-  final RoutineRepository _routineRepo; // ADDED
-  final AppDatabase _db; // Added database dependency
+  final RoutineRepository _routineRepo;
+  final AppDatabase _db;
 
   AuthService(this._userRepo, this._routineRepo, this._db);
 
@@ -37,7 +37,6 @@ class AuthService {
 
     firebase_auth.UserCredential credential = await _auth
         .createUserWithEmailAndPassword(email: email, password: password);
-
     final uid = credential.user!.uid;
 
     await FirebaseFirestore.instance.collection("students").doc(internalId).set({
@@ -52,20 +51,16 @@ class AuthService {
     });
 
     await _userRepo.syncUser(uid);
-
-    // MODIFICATION: Sign out immediately so they aren't auto-logged in
     await _auth.signOut();
-
     return credential;
   }
 
-  // ADDED: New Teacher Sign Up
+  // New Teacher Sign Up
   Future<firebase_auth.UserCredential> signUpTeacher({
     required String email,
     required String password,
     required String name,
   }) async {
-
     // Strict enforcement of teacher email domain
     if (!email.endsWith("@bgctub.ac.bd")) {
       throw firebase_auth.FirebaseAuthException(
@@ -76,7 +71,6 @@ class AuthService {
 
     firebase_auth.UserCredential credential = await _auth
         .createUserWithEmailAndPassword(email: email, password: password);
-
     final uid = credential.user!.uid;
 
     // Save to 'teachers' collection using the email as the Document ID
@@ -91,20 +85,16 @@ class AuthService {
 
     // Sync to Local SQLite immediately
     await _userRepo.syncUser(uid);
-
-    // MODIFICATION: Sign out immediately so they aren't auto-logged in
     await _auth.signOut();
-
     return credential;
   }
 
-  // Existing Login (Unchanged)
+  // Existing Login
   Future<firebase_auth.UserCredential> login({
     required String idOrEmail,
     required String password,
   }) async {
     String email;
-
     if (idOrEmail.contains("@")) {
       if (!idOrEmail.endsWith("@bgctub.ac.bd")) {
         throw firebase_auth.FirebaseAuthException(
@@ -123,11 +113,10 @@ class AuthService {
     );
 
     await _userRepo.syncUser(credential.user!.uid);
-
     return credential;
   }
 
-  // MODIFICATION: Centralized secure sign-out method
+  // Centralized secure sign-out method
   Future<void> signOut() async {
     try {
       // 1. Delete the FCM token.
@@ -144,5 +133,42 @@ class AuthService {
 
     // 4. Actually sign out of Firebase
     await _auth.signOut();
+  }
+
+  // ADDED: Centralized secure account deletion method
+  Future<void> deleteAccount({
+    required String password,
+    required String role,
+    required String docId,
+  }) async {
+    final user = _auth.currentUser;
+    if (user == null || user.email == null) {
+      throw Exception("Authentication session invalid.");
+    }
+
+    // 1. Re-authenticate to satisfy Firebase's sensitive action requirements
+    final cred = firebase_auth.EmailAuthProvider.credential(
+      email: user.email!,
+      password: password,
+    );
+    await user.reauthenticateWithCredential(cred);
+
+    // 2. Delete Firestore Profile Document
+    final collection = role == 'teacher' ? 'teachers' : 'students';
+    await FirebaseFirestore.instance.collection(collection).doc(docId).delete();
+
+    // 3. Delete FCM token to stop future notifications
+    try {
+      await FirebaseMessaging.instance.deleteToken();
+    } catch (e) {
+      print("DEBUG: Failed to delete FCM token during account deletion: $e");
+    }
+
+    // 4. Wipe Local Database & Reset Sync State
+    _routineRepo.resetSyncMetadata();
+    await _db.clearAllData();
+
+    // 5. Delete the Firebase Auth User
+    await user.delete();
   }
 }

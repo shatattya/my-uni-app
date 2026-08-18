@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart'; // ADDED: For Haptic Feedback and InputFormatters
-import 'package:flutter_screenutil/flutter_screenutil.dart'; // Added
+import 'package:flutter/services.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../../../services/auth_service.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'privacy_policy_screen.dart'; // ADDED: Import the new Privacy Policy screen
+import '../../routes/app_router.dart';
 
 class SignupScreen extends ConsumerStatefulWidget {
   const SignupScreen({super.key});
@@ -23,10 +23,7 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
   bool _passwordHidden = true;
   bool _confirmPasswordHidden = true;
   bool isLoading = false;
-
-  // MODIFICATION: Added Privacy Policy State
   bool _isPolicyAccepted = false;
-
   final nameController = TextEditingController();
   final idController = TextEditingController();
   final passwordController = TextEditingController();
@@ -36,7 +33,6 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
 
   void validateName(String value) {
     if (value.isEmpty) { setState(() => nameError = null); return; }
-    // UX ENHANCEMENT: Restrict strictly to letters and spaces matching the input formatter
     final regex = RegExp(r'^[a-zA-Z ]+$');
     if (!regex.hasMatch(value)) {
       setState(() => nameError = "Name can only contain letters and spaces");
@@ -94,7 +90,6 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
 
   void validateSection(String value) {
     if (value.isEmpty) { setState(() => sectionError = null); return; }
-    // UX FIX: Removed manual text replacement here as input formatter now handles capitalization safely
     if (value != "A" && value != "B" && value != "C") {
       setState(() => sectionError = "Section must be A, B, or C");
     } else {
@@ -113,17 +108,57 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
     super.dispose();
   }
 
+  void _showResultDialog({required String title, required String message, required bool isSuccess}) {
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: const Color(0xFF1E1E1E),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16.r)),
+        title: Row(
+          children: [
+            Icon(
+              isSuccess ? Icons.check_circle_outline : Icons.error_outline,
+              color: isSuccess ? Colors.green : Colors.redAccent,
+              size: 28.sp,
+            ),
+            SizedBox(width: 10.w),
+            Text(title, style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 18.sp)),
+          ],
+        ),
+        content: Text(message, style: TextStyle(color: Colors.white70, fontSize: 15.sp, height: 1.4)),
+        actions: [
+          TextButton(
+            onPressed: () {
+              Navigator.pop(ctx);
+              if (isSuccess) {
+                Navigator.pushReplacementNamed(context, AppRoutes.login);
+              }
+            },
+            child: Text("OK", style: TextStyle(color: const Color(0xFF1877F2), fontSize: 16.sp, fontWeight: FontWeight.bold)),
+          ),
+        ],
+      ),
+    );
+  }
+
   void handleSignup() async {
-    // MODIFICATION: Enforce Form Validity and Policy Acceptance with Haptic Feedback
     if (!isFormValid()) {
-      HapticFeedback.heavyImpact(); // iOS UX warning
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Please fix the errors before signing up"), backgroundColor: Colors.redAccent));
+      HapticFeedback.heavyImpact();
+      _showResultDialog(
+        title: "Invalid Form",
+        message: "Please fix the errors in the form before signing up.",
+        isSuccess: false,
+      );
       return;
     }
-
     if (!_isPolicyAccepted) {
-      HapticFeedback.heavyImpact(); // iOS UX warning
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("You must accept the Privacy Policy to create an account."), backgroundColor: Colors.redAccent));
+      HapticFeedback.heavyImpact();
+      _showResultDialog(
+        title: "Policy Required",
+        message: "You must accept the Privacy Policy to create an account.",
+        isSuccess: false,
+      );
       return;
     }
 
@@ -138,21 +173,35 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
         semester: int.parse(semesterController.text),
         section: sectionController.text,
       );
-      if (!mounted) return;
-      HapticFeedback.mediumImpact(); // iOS UX success
-      Navigator.pop(context, "Account created successfully. Please log in.");
 
+      if (!mounted) return;
+      setState(() => isLoading = false);
+      HapticFeedback.mediumImpact();
+      _showResultDialog(
+        title: "Success",
+        message: "Account created successfully. Please log in to continue.",
+        isSuccess: true,
+      );
     } on FirebaseAuthException catch (e) {
       setState(() => isLoading = false);
-      String message = "Signup failed";
-      if (e.code == 'email-already-in-use') message = "An account with this Internal ID already exists";
+      String message = "Signup failed. Please try again.";
+      if (e.code == 'email-already-in-use') message = "An account with this Internal ID already exists.";
+
       HapticFeedback.heavyImpact();
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(message), backgroundColor: Colors.redAccent));
+      _showResultDialog(
+        title: "Signup Failed",
+        message: message,
+        isSuccess: false,
+      );
     } catch (e) {
       setState(() => isLoading = false);
       if (mounted) {
         HapticFeedback.heavyImpact();
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("Error saving profile: ${e.toString().split(']').last}"), backgroundColor: Colors.redAccent));
+        _showResultDialog(
+          title: "Error",
+          message: "An unexpected error occurred: ${e.toString().split(']').last}",
+          isSuccess: false,
+        );
       }
     }
   }
@@ -163,7 +212,6 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
     return true;
   }
 
-  // Refactored helper for clean, perfectly scaled inputs
   Widget _buildTextField({
     required String label,
     required String hint,
@@ -174,8 +222,8 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
     bool obscureText = false,
     bool showVisibilityToggle = false,
     VoidCallback? onToggleVisibility,
-    List<TextInputFormatter>? inputFormatters, // ADDED: For input restrictions
-    int? maxLength, // ADDED: For length restrictions
+    List<TextInputFormatter>? inputFormatters,
+    int? maxLength,
   }) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -191,7 +239,7 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
           maxLength: maxLength,
           style: TextStyle(color: Colors.black, fontSize: 16.sp),
           decoration: InputDecoration(
-            counterText: "", // UX ENHANCEMENT: Hide the character counter for a cleaner look
+            counterText: "",
             hintText: hint,
             hintStyle: TextStyle(color: Colors.black54, fontSize: 16.sp),
             filled: true,
@@ -221,20 +269,17 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
 
   @override
   Widget build(BuildContext context) {
-    // MODIFICATION: Wrap Scaffold in GestureDetector for iOS Keyboard dismiss
     return GestureDetector(
       onTap: () => FocusScope.of(context).unfocus(),
       child: Scaffold(
         backgroundColor: Colors.black,
         body: SafeArea(
           child: SingleChildScrollView(
-            padding: EdgeInsets.symmetric(horizontal: 28.w), // Scaled
+            padding: EdgeInsets.symmetric(horizontal: 28.w),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 SizedBox(height: 20.h),
-
-                // UX ENHANCEMENT: Restrict name input
                 _buildTextField(
                   label: "Full Name",
                   hint: "Enter Your Full Name",
@@ -246,7 +291,6 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
                     FilteringTextInputFormatter.allow(RegExp(r'[a-zA-Z ]')),
                   ],
                 ),
-
                 _buildTextField(
                   label: "Internal ID",
                   hint: "Enter Your Internal ID",
@@ -255,7 +299,6 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
                   onChanged: validateInternalId,
                   errorText: internalIdError,
                 ),
-
                 _buildTextField(
                   label: "Password",
                   hint: "********",
@@ -266,7 +309,6 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
                   showVisibilityToggle: true,
                   onToggleVisibility: () => setState(() => _passwordHidden = !_passwordHidden),
                 ),
-
                 _buildTextField(
                   label: "Confirm Password",
                   hint: "********",
@@ -277,7 +319,6 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
                   showVisibilityToggle: true,
                   onToggleVisibility: () => setState(() => _confirmPasswordHidden = !_confirmPasswordHidden),
                 ),
-
                 _buildTextField(
                   label: "Semester",
                   hint: "Enter Your Semester",
@@ -286,8 +327,6 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
                   onChanged: validateSemester,
                   errorText: semesterError,
                 ),
-
-                // UX ENHANCEMENT: Restrict section input and auto-capitalize
                 _buildTextField(
                   label: "Section",
                   hint: "Enter Your Section",
@@ -305,8 +344,6 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
                     }),
                   ],
                 ),
-
-                // MODIFICATION: Privacy Policy Checkbox Row
                 Row(
                   crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
@@ -330,7 +367,7 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
                       child: GestureDetector(
                         onTap: () {
                           HapticFeedback.lightImpact();
-                          Navigator.push(context, MaterialPageRoute(builder: (_) => const PrivacyPolicyScreen()));
+                          Navigator.pushNamed(context, AppRoutes.privacyPolicy);
                         },
                         child: Text.rich(
                           TextSpan(
@@ -352,18 +389,16 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
                   ],
                 ),
                 SizedBox(height: 24.h),
-
                 SizedBox(
                   width: double.infinity,
                   height: 56.h,
                   child: ElevatedButton(
                     onPressed: isLoading ? null : handleSignup,
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xFF1877F2), // Premium Blue
+                      backgroundColor: const Color(0xFF1877F2),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(16.r),
                       ),
-                      // Visual feedback if disabled (opacity trick)
                       disabledBackgroundColor: const Color(0xFF1877F2).withValues(alpha: 0.5),
                     ),
                     child: isLoading
@@ -377,12 +412,11 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
                       style: TextStyle(
                         fontSize: 18.sp,
                         fontWeight: FontWeight.w600,
-                        color: Colors.white, // High contrast
+                        color: Colors.white,
                       ),
                     ),
                   ),
                 ),
-
                 SizedBox(height: 40.h),
               ],
             ),

@@ -8,14 +8,9 @@ import '../../../../data/repositories/user_repository.dart';
 import '../../../../data/repositories/live_event_repository.dart'; // For dynamic event button
 import '../../../../services/update_service.dart';
 import '../../../widgets/update_notice_sheet.dart';
-import '../contact_us_screen.dart';
-import '../exam_routine_screen.dart';
-import '../live_events_screen.dart'; // ADDED: Import for the Live Events Screen
-import '../../attendance/attendance_setup_screen.dart';
-import '../../attendance/attendance_export_screen.dart';
-import '../developer_triage_screen.dart';
-import '../../books_catalog_screen.dart';
-import '../../notes_catalog_screen.dart';
+
+// MODIFICATION: Imported centralized routing constants and removed direct screen imports
+import '../../../routes/app_router.dart';
 
 class HomeTab extends ConsumerStatefulWidget {
   const HomeTab({super.key});
@@ -29,10 +24,8 @@ class _HomeTabState extends ConsumerState<HomeTab> {
 
   void _manualUpdateCheck() async {
     setState(() => _isCheckingUpdate = true);
-
     final updateService = ref.read(updateServiceProvider);
     final info = await updateService.checkForUpdates();
-
     setState(() => _isCheckingUpdate = false);
 
     if (mounted) {
@@ -100,34 +93,33 @@ class _HomeTabState extends ConsumerState<HomeTab> {
                         ),
                         children: [
                           const HomeFeatureTile(icon: Icons.calendar_today_outlined, label: "Academic\nCalendar"),
-
                           if (!isTeacher)
                             HomeFeatureTile(
                               icon: Icons.assignment_outlined,
                               label: "Exam\nRoutine",
                               onTap: () {
-                                Navigator.push(context, MaterialPageRoute(builder: (_) => const ExamRoutineScreen()));
+                                // MODIFICATION: Used named route
+                                Navigator.pushNamed(context, AppRoutes.examRoutine);
                               },
                             ),
-
                           HomeFeatureTile(
                             icon: Icons.picture_as_pdf_outlined,
                             label: "Notes",
                             onTap: () {
-                              Navigator.push(context, MaterialPageRoute(builder: (_) => const NotesCatalogScreen()));
+                              // MODIFICATION: Used named route
+                              Navigator.pushNamed(context, AppRoutes.notes);
                             },
                           ),
                           HomeFeatureTile(
                             icon: Icons.menu_book_outlined,
                             label: "Books",
                             onTap: () {
-                              Navigator.push(context, MaterialPageRoute(builder: (_) => const BooksCatalogScreen()));
+                              // MODIFICATION: Used named route
+                              Navigator.pushNamed(context, AppRoutes.books);
                             },
                           ),
-
                           if (!isTeacher)
                             const HomeFeatureTile(icon: Icons.directions_bus_outlined, label: "Bus\nSchedule"),
-
                           const HomeFeatureTile(icon: Icons.sports_score_outlined, label: "Clubs"),
 
                           // Dynamic Live Events Button natively routed
@@ -139,8 +131,8 @@ class _HomeTabState extends ConsumerState<HomeTab> {
                                 icon: Icons.emoji_events_outlined,
                                 label: snapshot.data ?? "Events",
                                 onTap: () {
-                                  // MODIFICATION: Wired up the live events screen natively
-                                  Navigator.push(context, MaterialPageRoute(builder: (_) => const LiveEventsScreen()));
+                                  // MODIFICATION: Used named route
+                                  Navigator.pushNamed(context, AppRoutes.liveEvents);
                                 },
                               );
                             },
@@ -151,14 +143,16 @@ class _HomeTabState extends ConsumerState<HomeTab> {
                               icon: Icons.sentiment_satisfied_outlined,
                               label: "Attendance",
                               onTap: () {
-                                Navigator.push(context, MaterialPageRoute(builder: (_) => const AttendanceSetupScreen()));
+                                // MODIFICATION: Used named route
+                                Navigator.pushNamed(context, AppRoutes.attendanceSetup);
                               },
                             ),
                             HomeFeatureTile(
                               icon: Icons.ios_share_outlined,
                               label: "Attendance\nDashboard",
                               onTap: () {
-                                Navigator.push(context, MaterialPageRoute(builder: (_) => const AttendanceExportScreen()));
+                                // MODIFICATION: Used named route
+                                Navigator.pushNamed(context, AppRoutes.attendanceExport);
                               },
                             ),
                           ],
@@ -168,7 +162,8 @@ class _HomeTabState extends ConsumerState<HomeTab> {
                               icon: Icons.pending_actions_outlined,
                               label: "Pending",
                               onTap: () {
-                                Navigator.push(context, MaterialPageRoute(builder: (_) => const DeveloperTriageScreen()));
+                                // MODIFICATION: Used named route
+                                Navigator.pushNamed(context, AppRoutes.devTriage);
                               },
                             ),
                         ],
@@ -208,7 +203,7 @@ class _HomeTabState extends ConsumerState<HomeTab> {
             ),
             SizedBox(height: 8.h),
             Text(
-              "Look What Is Going On In Campus –\nNotices, Events & Academics",
+              "Look What Is Going On In Campus  \nNotices, Events & Academics",
               style: TextStyle(fontSize: 15.sp, color: Colors.white.withValues(alpha: 0.9), height: 1.3),
             ),
           ],
@@ -243,7 +238,6 @@ class _HomeTabState extends ConsumerState<HomeTab> {
               ),
             ),
             SizedBox(height: 20.h),
-
             StreamBuilder(
               stream: userStream,
               builder: (context, snapshot) {
@@ -276,9 +270,7 @@ class _HomeTabState extends ConsumerState<HomeTab> {
                 );
               },
             ),
-
             SizedBox(height: 40.h),
-
             Padding(
               padding: EdgeInsets.symmetric(horizontal: 20.w),
               child: Column(
@@ -297,7 +289,8 @@ class _HomeTabState extends ConsumerState<HomeTab> {
                     label: "Contact Us",
                     onTap: () {
                       Navigator.pop(context);
-                      Navigator.push(context, MaterialPageRoute(builder: (_) => const ContactUsScreen()));
+                      // MODIFICATION: Used named route
+                      Navigator.pushNamed(context, AppRoutes.contact);
                     },
                   ),
                 ],
