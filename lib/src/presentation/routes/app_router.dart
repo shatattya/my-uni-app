@@ -23,6 +23,10 @@ import '../screens/home/create_announcement_screen.dart';
 import '../screens/home/announcement_detail_screen.dart';
 import '../screens/home/edit_announcement_screen.dart';
 
+// MODIFICATION: Imported the new developer panel screens
+import '../screens/home/system_insights_screen.dart';
+import '../screens/home/manage_users_screen.dart';
+
 class AppRoutes {
   static const String auth = '/';
   static const String welcome = '/welcome';
@@ -45,6 +49,10 @@ class AppRoutes {
   static const String createAnnouncement = '/announcement/create';
   static const String detailAnnouncement = '/announcement/detail';
   static const String editAnnouncement = '/announcement/edit';
+
+  // MODIFICATION: Added routing constants for dev panel modules
+  static const String systemInsights = '/dev/insights';
+  static const String manageUsers = '/dev/users';
 }
 
 class AppRouter {
@@ -112,6 +120,13 @@ class AppRouter {
           return _buildSlideRoute(EditAnnouncementScreen(notice: notice), settings);
         }
         return _errorRoute(settings);
+
+    // MODIFICATION: Wired new Dev panel routes
+      case AppRoutes.systemInsights:
+        return _buildSlideRoute(const SystemInsightsScreen(), settings);
+      case AppRoutes.manageUsers:
+        return _buildSlideRoute(const ManageUsersScreen(), settings);
+
       default:
         return _errorRoute(settings);
     }

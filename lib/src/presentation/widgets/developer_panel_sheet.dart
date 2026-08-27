@@ -2,6 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'routine_upload_sheet.dart';
 
+// MODIFICATION: Import app router to handle module navigation
+import '../routes/app_router.dart';
+
 class DeveloperPanelSheet extends StatelessWidget {
   const DeveloperPanelSheet({super.key});
 
@@ -58,7 +61,6 @@ class DeveloperPanelSheet extends StatelessWidget {
           SizedBox(height: 24.h),
 
           // --- MENU OPTIONS ---
-
           _buildMenuOption(
             icon: Icons.cloud_upload_outlined,
             title: "Update Routine Database",
@@ -69,32 +71,28 @@ class DeveloperPanelSheet extends StatelessWidget {
               RoutineUploadSheet.show(context); // Open the existing routine sheet
             },
           ),
-
           SizedBox(height: 16.h),
-
           _buildMenuOption(
             icon: Icons.analytics_outlined,
             title: "System Insights",
             subtitle: "View database reads, active users, and logs",
             color: Colors.teal,
             onTap: () {
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text("System Insights module coming soon.")),
-              );
+              // MODIFICATION: Navigate to the actual System Insights screen
+              Navigator.pop(context);
+              Navigator.pushNamed(context, AppRoutes.systemInsights);
             },
           ),
-
           SizedBox(height: 16.h),
-
           _buildMenuOption(
             icon: Icons.people_outline,
             title: "Manage Users",
             subtitle: "Edit permissions, assign CRs, or suspend accounts",
             color: Colors.deepPurpleAccent,
             onTap: () {
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text("User Management module coming soon.")),
-              );
+              // MODIFICATION: Navigate to the actual Manage Users screen
+              Navigator.pop(context);
+              Navigator.pushNamed(context, AppRoutes.manageUsers);
             },
           ),
         ],
