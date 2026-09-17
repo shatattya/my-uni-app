@@ -91,16 +91,13 @@ class _TeacherProfileScreenState extends ConsumerState<TeacherProfileScreen> {
                       );
                       return;
                     }
-
                     setState(() => isDeleting = true);
-
                     try {
                       await ref.read(authServiceProvider).deleteAccount(
                         password: passwordController.text,
                         role: 'teacher',
                         docId: user.internalId,
                       );
-
                       if (!ctx.mounted) return;
                       Navigator.of(ctx, rootNavigator: true).pushNamedAndRemoveUntil(
                         AppRoutes.auth,
@@ -152,106 +149,117 @@ class _TeacherProfileScreenState extends ConsumerState<TeacherProfileScreen> {
             final String email = firebaseUser.email ?? user.internalId;
 
             return SingleChildScrollView(
+              physics: const BouncingScrollPhysics(),
               child: Column(
                 children: [
-                  SizedBox(height: 40.h),
+                  SizedBox(height: 30.h),
+                  // Avatar Header
                   CircleAvatar(
-                    radius: 60.r,
+                    radius: 54.r,
                     backgroundColor: Colors.transparent,
                     backgroundImage: AssetImage("assets/avatars/$formattedAvatarId.png"),
                   ),
-                  SizedBox(height: 20.h),
+                  SizedBox(height: 16.h),
                   Text(
                     user.name,
                     style: TextStyle(fontSize: 24.sp, color: Colors.white, fontWeight: FontWeight.bold),
                   ),
-                  SizedBox(height: 16.h),
+                  SizedBox(height: 12.h),
                   Container(
-                    padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 6.h),
-                    decoration: BoxDecoration(color: const Color(0xFF1877F2), borderRadius: BorderRadius.circular(20.r)),
-                    child: Text("Teacher", style: TextStyle(color: Colors.white, fontSize: 12.sp)),
+                    padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 4.h),
+                    decoration: BoxDecoration(color: const Color(0xFF1877F2), borderRadius: BorderRadius.circular(12.r)),
+                    child: Text("Teacher", style: TextStyle(color: Colors.white, fontSize: 12.sp, fontWeight: FontWeight.bold)),
+                  ),
+                  SizedBox(height: 30.h),
+
+                  // Group 1: Professional Info
+                  Padding(
+                    padding: EdgeInsets.symmetric(horizontal: 20.w),
+                    child: _buildGroupedCard([
+                      _buildInfoRow(Icons.email_rounded, "E-mail", email, showDivider: false),
+                    ]),
                   ),
                   SizedBox(height: 24.h),
-                  GestureDetector(
-                    onTap: () async {
-                      HapticFeedback.mediumImpact();
-                      await ref.read(authServiceProvider).signOut();
-                      if (!context.mounted) return;
-                      Navigator.of(context).pushNamedAndRemoveUntil(
-                        AppRoutes.auth,
-                            (route) => false,
-                      );
-                    },
-                    child: Text("Log out", style: TextStyle(color: Colors.redAccent, fontSize: 16.sp, fontWeight: FontWeight.w500)),
-                  ),
-                  SizedBox(height: 60.h),
+
+                  // Group 2: Actions
                   Padding(
-                    padding: EdgeInsets.symmetric(horizontal: 30.w),
-                    child: Row(
-                      children: [
-                        Icon(Icons.badge_outlined, color: Colors.white, size: 22.sp),
-                        SizedBox(width: 15.w),
-                        Text("E-mail : $email", style: TextStyle(color: Colors.white, fontSize: 16.sp)),
-                      ],
-                    ),
-                  ),
-                  SizedBox(height: 40.h),
-                  Padding(
-                    padding: EdgeInsets.symmetric(horizontal: 30.w),
-                    child: Column(
-                      children: [
-                        Consumer(
-                            builder: (context, ref, child) {
-                              final syncState = ref.watch(syncControllerProvider);
-                              return _actionRow(
-                                icon: Icons.sync_outlined,
-                                title: "Sync Data",
-                                action: syncState.isLoading ? "Syncing..." : "Sync",
-                                color: syncState.isLoading ? Colors.white54 : const Color(0xFF1877F2),
-                                onTap: syncState.isLoading ? () {} : () async {
-                                  HapticFeedback.lightImpact();
-                                  try {
-                                    await ref.read(syncControllerProvider.notifier).syncAllData();
-                                    if (context.mounted) {
-                                      ScaffoldMessenger.of(context).showSnackBar(
-                                        const SnackBar(content: Text("Data synced successfully!"), backgroundColor: Colors.green),
-                                      );
-                                    }
-                                  } catch (e) {
-                                    if (context.mounted) {
-                                      ScaffoldMessenger.of(context).showSnackBar(
-                                        SnackBar(content: Text(e.toString().replaceAll("Exception: ", "")), backgroundColor: Colors.redAccent),
-                                      );
-                                    }
+                    padding: EdgeInsets.symmetric(horizontal: 20.w),
+                    child: Consumer(
+                        builder: (context, ref, child) {
+                          final syncState = ref.watch(syncControllerProvider);
+                          return _buildGroupedCard([
+                            _buildActionRow(
+                              icon: Icons.sync_rounded,
+                              title: "Sync Data",
+                              trailingText: syncState.isLoading ? "Syncing..." : null,
+                              trailingWidget: syncState.isLoading
+                                  ? SizedBox(width: 16.w, height: 16.w, child: const CircularProgressIndicator(color: Colors.white54, strokeWidth: 2))
+                                  : null,
+                              showDivider: true,
+                              onTap: syncState.isLoading ? null : () async {
+                                HapticFeedback.lightImpact();
+                                try {
+                                  await ref.read(syncControllerProvider.notifier).syncAllData();
+                                  if (context.mounted) {
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      const SnackBar(content: Text("Data synced successfully!"), backgroundColor: Colors.green),
+                                    );
                                   }
-                                },
-                              );
-                            }
-                        ),
-                        SizedBox(height: 25.h),
-                        _actionRow(
-                          icon: Icons.edit_outlined,
-                          title: "Edit Profile",
-                          action: "Edit",
-                          color: const Color(0xFF1877F2),
-                          onTap: () {
-                            HapticFeedback.lightImpact();
-                            Navigator.pushNamed(context, AppRoutes.editTeacherProfile);
-                          },
-                        ),
-                        SizedBox(height: 25.h),
-                        _actionRow(
-                          icon: Icons.delete_outline,
-                          title: "Delete Account",
-                          action: "Delete",
-                          color: Colors.redAccent,
-                          onTap: () {
-                            HapticFeedback.heavyImpact();
-                            _showDeleteAccountDialog(context, user);
-                          },
-                        ),
-                      ],
+                                } catch (e) {
+                                  if (context.mounted) {
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      SnackBar(content: Text(e.toString().replaceAll("Exception: ", "")), backgroundColor: Colors.redAccent),
+                                    );
+                                  }
+                                }
+                              },
+                            ),
+                            _buildActionRow(
+                              icon: Icons.edit_rounded,
+                              title: "Edit Profile",
+                              showDivider: false,
+                              onTap: () {
+                                HapticFeedback.lightImpact();
+                                Navigator.pushNamed(context, AppRoutes.editTeacherProfile);
+                              },
+                            ),
+                          ]);
+                        }
                     ),
+                  ),
+                  SizedBox(height: 24.h),
+
+                  // Group 3: Danger Zone
+                  Padding(
+                    padding: EdgeInsets.symmetric(horizontal: 20.w),
+                    child: _buildGroupedCard([
+                      _buildActionRow(
+                        icon: Icons.logout_rounded,
+                        title: "Log Out",
+                        textColor: Colors.redAccent,
+                        iconColor: Colors.redAccent,
+                        showDivider: true,
+                        hideChevron: true,
+                        onTap: () async {
+                          HapticFeedback.mediumImpact();
+                          await ref.read(authServiceProvider).signOut();
+                          if (!context.mounted) return;
+                          Navigator.of(context).pushNamedAndRemoveUntil(AppRoutes.auth, (route) => false);
+                        },
+                      ),
+                      _buildActionRow(
+                        icon: Icons.person_remove_rounded,
+                        title: "Delete Account",
+                        textColor: Colors.redAccent,
+                        iconColor: Colors.redAccent,
+                        showDivider: false,
+                        hideChevron: true,
+                        onTap: () {
+                          HapticFeedback.heavyImpact();
+                          _showDeleteAccountDialog(context, user);
+                        },
+                      ),
+                    ]),
                   ),
                   SizedBox(height: 40.h),
                 ],
@@ -263,32 +271,79 @@ class _TeacherProfileScreenState extends ConsumerState<TeacherProfileScreen> {
     );
   }
 
-  Widget _actionRow({
-    required IconData icon,
-    required String title,
-    required String action,
-    required Color color,
-    required VoidCallback onTap
-  }) {
-    return Material(
-      color: Colors.transparent,
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(8.r),
-        splashColor: color.withValues(alpha: 0.15),
-        highlightColor: Colors.transparent,
-        child: Padding(
-          padding: EdgeInsets.symmetric(vertical: 10.h, horizontal: 8.w),
+  Widget _buildGroupedCard(List<Widget> children) {
+    return Container(
+      decoration: BoxDecoration(
+        color: const Color(0xFF1C1C1E),
+        borderRadius: BorderRadius.circular(16.r),
+      ),
+      child: Column(
+        children: children,
+      ),
+    );
+  }
+
+  Widget _buildInfoRow(IconData icon, String title, String value, {required bool showDivider}) {
+    return Column(
+      children: [
+        Padding(
+          padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 14.h),
           child: Row(
             children: [
-              Icon(icon, color: Colors.white, size: 22.sp),
-              SizedBox(width: 15.w),
+              Icon(icon, color: Colors.white54, size: 22.sp),
+              SizedBox(width: 16.w),
               Text(title, style: TextStyle(color: Colors.white, fontSize: 16.sp)),
               const Spacer(),
-              Text(action, style: TextStyle(color: color, fontSize: 16.sp)),
+              // Ensure long emails truncate cleanly
+              Flexible(child: Text(value, style: TextStyle(color: Colors.white54, fontSize: 15.sp), overflow: TextOverflow.ellipsis, textAlign: TextAlign.right)),
             ],
           ),
         ),
+        if (showDivider) Divider(color: Colors.white12, height: 1.h, indent: 54.w),
+      ],
+    );
+  }
+
+  Widget _buildActionRow({
+    required IconData icon,
+    required String title,
+    String? trailingText,
+    Widget? trailingWidget,
+    Color textColor = Colors.white,
+    Color iconColor = Colors.white,
+    required bool showDivider,
+    bool hideChevron = false,
+    VoidCallback? onTap,
+  }) {
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(16.r),
+      highlightColor: Colors.white10,
+      splashColor: Colors.transparent,
+      child: Column(
+        children: [
+          Padding(
+            padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 14.h),
+            child: Row(
+              children: [
+                Icon(icon, color: iconColor, size: 22.sp),
+                SizedBox(width: 16.w),
+                Text(title, style: TextStyle(color: textColor, fontSize: 16.sp)),
+                const Spacer(),
+                if (trailingText != null)
+                  Text(trailingText, style: TextStyle(color: Colors.white54, fontSize: 14.sp)),
+                if (trailingWidget != null)
+                  Padding(padding: EdgeInsets.only(left: 8.w), child: trailingWidget),
+                if (!hideChevron)
+                  Padding(
+                    padding: EdgeInsets.only(left: 8.w),
+                    child: Icon(Icons.chevron_right_rounded, color: Colors.white30, size: 20.sp),
+                  ),
+              ],
+            ),
+          ),
+          if (showDivider) Divider(color: Colors.white12, height: 1.h, indent: 54.w),
+        ],
       ),
     );
   }

@@ -5,11 +5,9 @@ import 'package:firebase_auth/firebase_auth.dart' as firebase_auth;
 
 import '../../../widgets/home_feature_tile.dart';
 import '../../../../data/repositories/user_repository.dart';
-import '../../../../data/repositories/live_event_repository.dart'; // For dynamic event button
+import '../../../../data/repositories/live_event_repository.dart';
 import '../../../../services/update_service.dart';
 import '../../../widgets/update_notice_sheet.dart';
-
-// MODIFICATION: Imported centralized routing constants and removed direct screen imports
 import '../../../routes/app_router.dart';
 
 class HomeTab extends ConsumerStatefulWidget {
@@ -98,7 +96,6 @@ class _HomeTabState extends ConsumerState<HomeTab> {
                               icon: Icons.assignment_outlined,
                               label: "Exam\nRoutine",
                               onTap: () {
-                                // MODIFICATION: Used named route
                                 Navigator.pushNamed(context, AppRoutes.examRoutine);
                               },
                             ),
@@ -106,7 +103,6 @@ class _HomeTabState extends ConsumerState<HomeTab> {
                             icon: Icons.picture_as_pdf_outlined,
                             label: "Notes",
                             onTap: () {
-                              // MODIFICATION: Used named route
                               Navigator.pushNamed(context, AppRoutes.notes);
                             },
                           ),
@@ -114,15 +110,10 @@ class _HomeTabState extends ConsumerState<HomeTab> {
                             icon: Icons.menu_book_outlined,
                             label: "Books",
                             onTap: () {
-                              // MODIFICATION: Used named route
                               Navigator.pushNamed(context, AppRoutes.books);
                             },
                           ),
-                          if (!isTeacher)
-                            const HomeFeatureTile(icon: Icons.directions_bus_outlined, label: "Bus\nSchedule"),
                           const HomeFeatureTile(icon: Icons.sports_score_outlined, label: "Clubs"),
-
-                          // Dynamic Live Events Button natively routed
                           FutureBuilder<String>(
                             future: ref.read(liveEventRepositoryProvider).getHomeTabButtonLabel(),
                             initialData: "Events",
@@ -131,19 +122,16 @@ class _HomeTabState extends ConsumerState<HomeTab> {
                                 icon: Icons.emoji_events_outlined,
                                 label: snapshot.data ?? "Events",
                                 onTap: () {
-                                  // MODIFICATION: Used named route
                                   Navigator.pushNamed(context, AppRoutes.liveEvents);
                                 },
                               );
                             },
                           ),
-
                           if (isTeacher) ...[
                             HomeFeatureTile(
                               icon: Icons.sentiment_satisfied_outlined,
                               label: "Attendance",
                               onTap: () {
-                                // MODIFICATION: Used named route
                                 Navigator.pushNamed(context, AppRoutes.attendanceSetup);
                               },
                             ),
@@ -151,18 +139,15 @@ class _HomeTabState extends ConsumerState<HomeTab> {
                               icon: Icons.ios_share_outlined,
                               label: "Attendance\nDashboard",
                               onTap: () {
-                                // MODIFICATION: Used named route
                                 Navigator.pushNamed(context, AppRoutes.attendanceExport);
                               },
                             ),
                           ],
-
                           if (isDev)
                             HomeFeatureTile(
                               icon: Icons.pending_actions_outlined,
                               label: "Pending",
                               onTap: () {
-                                // MODIFICATION: Used named route
                                 Navigator.pushNamed(context, AppRoutes.devTriage);
                               },
                             ),
@@ -289,7 +274,6 @@ class _HomeTabState extends ConsumerState<HomeTab> {
                     label: "Contact Us",
                     onTap: () {
                       Navigator.pop(context);
-                      // MODIFICATION: Used named route
                       Navigator.pushNamed(context, AppRoutes.contact);
                     },
                   ),

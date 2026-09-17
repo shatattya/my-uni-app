@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -8,7 +9,6 @@ import 'package:intl/intl.dart';
 import '../../data/local/app_database.dart';
 import '../../data/repositories/note_repository.dart';
 
-// Preserved State Providers
 final noteSearchQueryProvider = StateProvider.autoDispose<String>((ref) => '');
 final noteSemesterProvider = StateProvider.autoDispose<int>((ref) => 1);
 
@@ -21,7 +21,6 @@ class NotesCatalogScreen extends ConsumerStatefulWidget {
 
 class _NotesCatalogScreenState extends ConsumerState<NotesCatalogScreen>
     with WidgetsBindingObserver, AutomaticKeepAliveClientMixin {
-
   @override
   bool get wantKeepAlive => true;
 
@@ -60,7 +59,6 @@ class _NotesCatalogScreenState extends ConsumerState<NotesCatalogScreen>
     }
   }
 
-  // MODIFICATION: Added Download Confirmation Popup for Ad Integration
   void _showDownloadDialog(Note note) {
     showDialog(
       context: context,
@@ -138,171 +136,179 @@ class _NotesCatalogScreenState extends ConsumerState<NotesCatalogScreen>
 
     return Scaffold(
       backgroundColor: Colors.black,
-      body: CustomScrollView(
-        physics: const BouncingScrollPhysics(),
-        slivers: [
-          SliverAppBar(
-            backgroundColor: Colors.black,
-            title: const Text('Notes Library', style: TextStyle(color: Colors.white, fontWeight: FontWeight.w800)),
-            pinned: true,
-            iconTheme: const IconThemeData(color: Colors.white),
-            actions: [
-              Padding(
-                padding: EdgeInsets.only(right: 8.w),
-                child: TextButton.icon(
-                  onPressed: _showRequestBottomSheet,
-                  icon: const Icon(Icons.add_circle_outline, color: Colors.orangeAccent),
-                  label: const Text('Request Note', style: TextStyle(color: Colors.orangeAccent, fontWeight: FontWeight.bold)),
-                ),
-              )
-            ],
-          ),
-          SliverToBoxAdapter(
-            child: Padding(
-              padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 10.h),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  TextField(
-                    controller: _searchController,
-                    style: const TextStyle(color: Colors.white),
-                    decoration: InputDecoration(
-                      hintText: 'Search notes by title or subject...',
-                      hintStyle: const TextStyle(color: Colors.grey),
-                      prefixIcon: const Icon(Icons.search, color: Colors.grey),
-                      filled: true,
-                      fillColor: const Color(0xFF1A1A1A),
-                      contentPadding: EdgeInsets.symmetric(vertical: 0, horizontal: 16.w),
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12.r),
-                        borderSide: BorderSide.none,
+      body: GestureDetector(
+        behavior: HitTestBehavior.opaque,
+        onHorizontalDragEnd: (details) {
+          final velocity = details.primaryVelocity ?? 0;
+          if (velocity < -300 && currentSemester < 8) {
+            ref.read(noteSemesterProvider.notifier).state = currentSemester + 1;
+            HapticFeedback.selectionClick();
+          } else if (velocity > 300 && currentSemester > 1) {
+            ref.read(noteSemesterProvider.notifier).state = currentSemester - 1;
+            HapticFeedback.selectionClick();
+          }
+        },
+        child: CustomScrollView(
+          physics: const BouncingScrollPhysics(),
+          slivers: [
+            SliverAppBar(
+              backgroundColor: Colors.black,
+              title: const Text('Notes Library', style: TextStyle(color: Colors.white, fontWeight: FontWeight.w800)),
+              pinned: true,
+              iconTheme: const IconThemeData(color: Colors.white),
+              actions: [
+                Padding(
+                  padding: EdgeInsets.only(right: 8.w),
+                  child: TextButton.icon(
+                    onPressed: _showRequestBottomSheet,
+                    icon: const Icon(Icons.add_circle_outline, color: Colors.orangeAccent),
+                    label: const Text('Request Note', style: TextStyle(color: Colors.orangeAccent, fontWeight: FontWeight.bold)),
+                  ),
+                )
+              ],
+            ),
+            SliverToBoxAdapter(
+              child: Padding(
+                padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 10.h),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    TextField(
+                      controller: _searchController,
+                      style: const TextStyle(color: Colors.white),
+                      decoration: InputDecoration(
+                        hintText: 'Search notes by title or subject...',
+                        hintStyle: const TextStyle(color: Colors.grey),
+                        prefixIcon: const Icon(Icons.search, color: Colors.grey),
+                        filled: true,
+                        fillColor: const Color(0xFF1A1A1A),
+                        contentPadding: EdgeInsets.symmetric(vertical: 0, horizontal: 16.w),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12.r),
+                          borderSide: BorderSide.none,
+                        ),
+                      ),
+                      onChanged: (val) => ref.read(noteSearchQueryProvider.notifier).state = val,
+                    ),
+                    SizedBox(height: 20.h),
+                    SizedBox(
+                      height: 42.h,
+                      child: ListView.builder(
+                        scrollDirection: Axis.horizontal,
+                        physics: const BouncingScrollPhysics(),
+                        itemCount: 8,
+                        itemBuilder: (context, index) {
+                          final semester = index + 1;
+                          final isSelected = currentSemester == semester;
+                          return GestureDetector(
+                            onTap: () {
+                              ref.read(noteSemesterProvider.notifier).state = semester;
+                              HapticFeedback.selectionClick();
+                            },
+                            child: AnimatedContainer(
+                              duration: const Duration(milliseconds: 250),
+                              margin: EdgeInsets.only(right: 12.w),
+                              padding: EdgeInsets.symmetric(horizontal: 24.w),
+                              decoration: BoxDecoration(
+                                gradient: isSelected
+                                    ? const LinearGradient(colors: [Color(0xFF4B7BFF), Color(0xFF00C9A7)])
+                                    : null,
+                                color: isSelected ? null : const Color(0xFF1A1A1A),
+                                borderRadius: BorderRadius.circular(20.r),
+                                border: Border.all(
+                                  color: isSelected ? Colors.transparent : Colors.grey.shade800,
+                                  width: 1,
+                                ),
+                              ),
+                              alignment: Alignment.center,
+                              child: Text(
+                                'Sem $semester',
+                                style: TextStyle(
+                                  color: isSelected ? Colors.white : Colors.grey,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                            ),
+                          );
+                        },
                       ),
                     ),
-                    onChanged: (val) => ref.read(noteSearchQueryProvider.notifier).state = val,
-                  ),
-                  SizedBox(height: 20.h),
-                  SizedBox(
-                    height: 42.h,
-                    child: ListView.builder(
-                      scrollDirection: Axis.horizontal,
-                      physics: const BouncingScrollPhysics(),
-                      itemCount: 8,
-                      itemBuilder: (context, index) {
-                        final semester = index + 1;
-                        final isSelected = currentSemester == semester;
-                        return GestureDetector(
-                          onTap: () => ref.read(noteSemesterProvider.notifier).state = semester,
-                          child: AnimatedContainer(
-                            duration: const Duration(milliseconds: 250),
-                            margin: EdgeInsets.only(right: 12.w),
-                            padding: EdgeInsets.symmetric(horizontal: 24.w),
-                            decoration: BoxDecoration(
-                              // MODIFICATION: Added vibrant gradient for selected state
-                              gradient: isSelected
-                                  ? const LinearGradient(colors: [Color(0xFF4B7BFF), Color(0xFF00C9A7)])
-                                  : null,
-                              color: isSelected ? null : const Color(0xFF1A1A1A),
-                              borderRadius: BorderRadius.circular(20.r),
-                              border: Border.all(
-                                color: isSelected ? Colors.transparent : Colors.grey.shade800,
-                                width: 1,
-                              ),
-                            ),
-                            alignment: Alignment.center,
-                            child: Text(
-                              'Sem $semester',
-                              style: TextStyle(
-                                color: isSelected ? Colors.white : Colors.grey,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                          ),
-                        );
-                      },
-                    ),
-                  ),
-                ],
+                  ],
+                ),
               ),
             ),
-          ),
+            StreamBuilder<List<Note>>(
+              stream: ref.read(noteRepositoryProvider).watchNotesForSemester(currentSemester),
+              builder: (context, snapshot) {
+                if (snapshot.connectionState == ConnectionState.waiting) {
+                  return const SliverFillRemaining(
+                    child: Center(child: CircularProgressIndicator(color: Colors.orangeAccent)),
+                  );
+                }
+                if (snapshot.hasError) {
+                  return const SliverFillRemaining(
+                    child: Center(child: Text('Error loading notes.', style: TextStyle(color: Colors.red))),
+                  );
+                }
+                final notes = snapshot.data ?? [];
+                final filteredNotes = notes.where((n) {
+                  return n.title.toLowerCase().contains(searchQuery) ||
+                      n.subjectName.toLowerCase().contains(searchQuery);
+                }).toList();
 
-          StreamBuilder<List<Note>>(
-            stream: ref.read(noteRepositoryProvider).watchNotesForSemester(currentSemester),
-            builder: (context, snapshot) {
-              if (snapshot.connectionState == ConnectionState.waiting) {
-                return const SliverFillRemaining(
-                  child: Center(child: CircularProgressIndicator(color: Colors.orangeAccent)),
-                );
-              }
-              if (snapshot.hasError) {
-                return const SliverFillRemaining(
-                  child: Center(child: Text('Error loading notes.', style: TextStyle(color: Colors.red))),
-                );
-              }
+                if (filteredNotes.isEmpty) {
+                  return SliverFillRemaining(
+                    child: Center(
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Icon(Icons.description, color: Colors.grey.shade800, size: 64.sp),
+                            SizedBox(height: 16.h),
+                            const Text('No notes found.', style: TextStyle(color: Colors.grey)),
+                          ],
+                        )
+                    ),
+                  );
+                }
 
-              final notes = snapshot.data ?? [];
-              final filteredNotes = notes.where((n) {
-                return n.title.toLowerCase().contains(searchQuery) ||
-                    n.subjectName.toLowerCase().contains(searchQuery);
-              }).toList();
-
-              if (filteredNotes.isEmpty) {
-                return SliverFillRemaining(
-                  child: Center(
-                      child: Column(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Icon(Icons.description, color: Colors.grey.shade800, size: 64.sp),
-                          SizedBox(height: 16.h),
-                          const Text('No notes found.', style: TextStyle(color: Colors.grey)),
-                        ],
-                      )
+                return SliverPadding(
+                  padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 8.h),
+                  sliver: SliverList(
+                    delegate: SliverChildBuilderDelegate(
+                          (context, index) {
+                        final note = filteredNotes[index];
+                        return _NoteTile(
+                          note: note,
+                          onTap: () => _showDownloadDialog(note),
+                        );
+                      },
+                      childCount: filteredNotes.length,
+                    ),
                   ),
                 );
-              }
-
-              return SliverPadding(
-                padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 8.h),
-                sliver: SliverList(
-                  delegate: SliverChildBuilderDelegate(
-                        (context, index) {
-                      final note = filteredNotes[index];
-                      return _NoteTile(
-                        note: note,
-                        // MODIFICATION: Intercepted link open to trigger popup
-                        onTap: () => _showDownloadDialog(note),
-                      );
-                    },
-                    childCount: filteredNotes.length,
-                  ),
-                ),
-              );
-            },
-          ),
-        ],
+              },
+            ),
+          ],
+        ),
       ),
     );
   }
 }
 
-// -----------------------------------------------------------------
-// Vibrant Note Tile UI Component
-// -----------------------------------------------------------------
 class _NoteTile extends StatelessWidget {
   final Note note;
   final VoidCallback onTap;
 
   const _NoteTile({required this.note, required this.onTap});
 
-  // Helper to generate a vibrant color based on the note's subject name
   Color _getVibrantColor(String text) {
     final colors = [
-      const Color(0xFFFF4B4B), // Red
-      const Color(0xFF4B7BFF), // Blue
-      const Color(0xFF00C9A7), // Teal
-      const Color(0xFFFF8F00), // Orange
-      const Color(0xFFB54BFF), // Purple
-      const Color(0xFFFF4B91), // Pink
+      const Color(0xFFFF4B4B),
+      const Color(0xFF4B7BFF),
+      const Color(0xFF00C9A7),
+      const Color(0xFFFF8F00),
+      const Color(0xFFB54BFF),
+      const Color(0xFFFF4B91),
     ];
     return colors[text.hashCode.abs() % colors.length];
   }
@@ -319,7 +325,6 @@ class _NoteTile extends StatelessWidget {
         decoration: BoxDecoration(
           color: const Color(0xFF161616),
           borderRadius: BorderRadius.circular(16.r),
-          // MODIFICATION: Added subtle colorful glow matching the accent color
           boxShadow: [
             BoxShadow(
               color: accentColor.withOpacity(0.08),
@@ -333,7 +338,6 @@ class _NoteTile extends StatelessWidget {
             Container(
               padding: EdgeInsets.all(12.w),
               decoration: BoxDecoration(
-                // MODIFICATION: Vibrant gradient background for the icon
                 gradient: LinearGradient(
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
@@ -359,7 +363,7 @@ class _NoteTile extends StatelessWidget {
                   ),
                   SizedBox(height: 4.h),
                   Text(
-                    '${note.subjectName} • ${note.authorName}',
+                    '${note.subjectName}   ${note.authorName}',
                     style: TextStyle(color: Colors.grey.shade400, fontSize: 13.sp),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
@@ -382,9 +386,6 @@ class _NoteTile extends StatelessWidget {
   }
 }
 
-// -----------------------------------------------------------------
-// Internal Request Form Widget (Bottom Sheet)
-// -----------------------------------------------------------------
 class _NoteRequestForm extends ConsumerStatefulWidget {
   const _NoteRequestForm();
 
@@ -395,7 +396,6 @@ class _NoteRequestForm extends ConsumerStatefulWidget {
 class _NoteRequestFormState extends ConsumerState<_NoteRequestForm> {
   final _subjectNameController = TextEditingController();
   final _semesterController = TextEditingController();
-
   bool _isSubmitting = false;
   String _cooldownMessage = '';
 
@@ -537,21 +537,18 @@ class _NoteRequestFormState extends ConsumerState<_NoteRequestForm> {
             style: TextStyle(color: Colors.white, fontSize: 20, fontWeight: FontWeight.bold),
           ),
           SizedBox(height: 20.h),
-
           _buildFormTextField(
             controller: _subjectNameController,
             hint: 'Subject Name (Required)',
             maxLength: 60,
           ),
           SizedBox(height: 12.h),
-
           _buildFormTextField(
             controller: _semesterController,
             hint: 'Semester (1-8)',
             keyboardType: TextInputType.number,
           ),
           SizedBox(height: 24.h),
-
           SizedBox(
             width: double.infinity,
             height: 50.h,

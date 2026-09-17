@@ -1,14 +1,15 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:intl/intl.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 
 import '../../data/local/app_database.dart';
 import '../../data/repositories/book_repository.dart';
 
-// Preserved State Providers
 final bookSearchQueryProvider = StateProvider.autoDispose<String>((ref) => '');
 final bookSemesterProvider = StateProvider.autoDispose<int>((ref) => 1);
 
@@ -21,13 +22,10 @@ class BooksCatalogScreen extends ConsumerStatefulWidget {
 
 class _BooksCatalogScreenState extends ConsumerState<BooksCatalogScreen>
     with WidgetsBindingObserver, AutomaticKeepAliveClientMixin {
-
   @override
   bool get wantKeepAlive => true;
 
   final TextEditingController _searchController = TextEditingController();
-
-  final Set<String> _precachedUrls = {};
 
   @override
   void initState() {
@@ -139,180 +137,171 @@ class _BooksCatalogScreenState extends ConsumerState<BooksCatalogScreen>
 
     return Scaffold(
       backgroundColor: Colors.black,
-      body: CustomScrollView(
-        physics: const BouncingScrollPhysics(),
-        slivers: [
-          SliverAppBar(
-            backgroundColor: Colors.black,
-            title: const Text('Books Library', style: TextStyle(color: Colors.white, fontWeight: FontWeight.w800)),
-            pinned: true,
-            iconTheme: const IconThemeData(color: Colors.white),
-            actions: [
-              Padding(
-                padding: EdgeInsets.only(right: 8.w),
-                child: TextButton.icon(
-                  onPressed: _showRequestBottomSheet,
-                  icon: const Icon(Icons.add_circle_outline, color: Colors.blueAccent),
-                  label: const Text('Request Book', style: TextStyle(color: Colors.blueAccent, fontWeight: FontWeight.bold)),
-                ),
-              )
-            ],
-          ),
-          SliverToBoxAdapter(
-            child: Padding(
-              padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 10.h),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  TextField(
-                    controller: _searchController,
-                    style: const TextStyle(color: Colors.white),
-                    decoration: InputDecoration(
-                      hintText: 'Search books by name or author...',
-                      hintStyle: const TextStyle(color: Colors.grey),
-                      prefixIcon: const Icon(Icons.search, color: Colors.grey),
-                      filled: true,
-                      fillColor: const Color(0xFF1A1A1A),
-                      contentPadding: EdgeInsets.symmetric(vertical: 0, horizontal: 16.w),
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12.r),
-                        borderSide: BorderSide.none,
+      body: GestureDetector(
+        behavior: HitTestBehavior.opaque,
+        onHorizontalDragEnd: (details) {
+          final velocity = details.primaryVelocity ?? 0;
+          if (velocity < -300 && currentSemester < 8) {
+            ref.read(bookSemesterProvider.notifier).state = currentSemester + 1;
+            HapticFeedback.selectionClick();
+          } else if (velocity > 300 && currentSemester > 1) {
+            ref.read(bookSemesterProvider.notifier).state = currentSemester - 1;
+            HapticFeedback.selectionClick();
+          }
+        },
+        child: CustomScrollView(
+          physics: const BouncingScrollPhysics(),
+          slivers: [
+            SliverAppBar(
+              backgroundColor: Colors.black,
+              title: const Text('Books Library', style: TextStyle(color: Colors.white, fontWeight: FontWeight.w800)),
+              pinned: true,
+              iconTheme: const IconThemeData(color: Colors.white),
+              actions: [
+                Padding(
+                  padding: EdgeInsets.only(right: 8.w),
+                  child: TextButton.icon(
+                    onPressed: _showRequestBottomSheet,
+                    icon: const Icon(Icons.add_circle_outline, color: Colors.blueAccent),
+                    label: const Text('Request Book', style: TextStyle(color: Colors.blueAccent, fontWeight: FontWeight.bold)),
+                  ),
+                )
+              ],
+            ),
+            SliverToBoxAdapter(
+              child: Padding(
+                padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 10.h),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    TextField(
+                      controller: _searchController,
+                      style: const TextStyle(color: Colors.white),
+                      decoration: InputDecoration(
+                        hintText: 'Search books by name or author...',
+                        hintStyle: const TextStyle(color: Colors.grey),
+                        prefixIcon: const Icon(Icons.search, color: Colors.grey),
+                        filled: true,
+                        fillColor: const Color(0xFF1A1A1A),
+                        contentPadding: EdgeInsets.symmetric(vertical: 0, horizontal: 16.w),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12.r),
+                          borderSide: BorderSide.none,
+                        ),
+                      ),
+                      onChanged: (val) => ref.read(bookSearchQueryProvider.notifier).state = val,
+                    ),
+                    SizedBox(height: 20.h),
+                    SizedBox(
+                      height: 42.h,
+                      child: ListView.builder(
+                        scrollDirection: Axis.horizontal,
+                        physics: const BouncingScrollPhysics(),
+                        itemCount: 8,
+                        itemBuilder: (context, index) {
+                          final semester = index + 1;
+                          final isSelected = currentSemester == semester;
+                          return GestureDetector(
+                            onTap: () {
+                              ref.read(bookSemesterProvider.notifier).state = semester;
+                              HapticFeedback.selectionClick();
+                            },
+                            child: AnimatedContainer(
+                              duration: const Duration(milliseconds: 250),
+                              margin: EdgeInsets.only(right: 12.w),
+                              padding: EdgeInsets.symmetric(horizontal: 24.w),
+                              decoration: BoxDecoration(
+                                gradient: isSelected
+                                    ? const LinearGradient(colors: [Color(0xFF4B7BFF), Color(0xFF00C9A7)])
+                                    : null,
+                                color: isSelected ? null : const Color(0xFF1A1A1A),
+                                borderRadius: BorderRadius.circular(20.r),
+                                border: Border.all(
+                                  color: isSelected ? Colors.transparent : Colors.grey.shade800,
+                                  width: 1,
+                                ),
+                              ),
+                              alignment: Alignment.center,
+                              child: Text(
+                                'Sem $semester',
+                                style: TextStyle(
+                                  color: isSelected ? Colors.white : Colors.grey,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                            ),
+                          );
+                        },
                       ),
                     ),
-                    onChanged: (val) => ref.read(bookSearchQueryProvider.notifier).state = val,
-                  ),
-                  SizedBox(height: 20.h),
-                  SizedBox(
-                    height: 42.h,
-                    child: ListView.builder(
-                      scrollDirection: Axis.horizontal,
-                      physics: const BouncingScrollPhysics(),
-                      itemCount: 8,
-                      itemBuilder: (context, index) {
-                        final semester = index + 1;
-                        final isSelected = currentSemester == semester;
-                        return GestureDetector(
-                          onTap: () => ref.read(bookSemesterProvider.notifier).state = semester,
-                          child: AnimatedContainer(
-                            duration: const Duration(milliseconds: 250),
-                            margin: EdgeInsets.only(right: 12.w),
-                            padding: EdgeInsets.symmetric(horizontal: 24.w),
-                            decoration: BoxDecoration(
-                              gradient: isSelected
-                                  ? const LinearGradient(colors: [Color(0xFF4B7BFF), Color(0xFF00C9A7)])
-                                  : null,
-                              color: isSelected ? null : const Color(0xFF1A1A1A),
-                              borderRadius: BorderRadius.circular(20.r),
-                              border: Border.all(
-                                color: isSelected ? Colors.transparent : Colors.grey.shade800,
-                                width: 1,
-                              ),
-                            ),
-                            alignment: Alignment.center,
-                            child: Text(
-                              'Sem $semester',
-                              style: TextStyle(
-                                color: isSelected ? Colors.white : Colors.grey,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                          ),
-                        );
-                      },
-                    ),
-                  ),
-                ],
+                  ],
+                ),
               ),
             ),
-          ),
+            StreamBuilder<List<Book>>(
+              stream: ref.read(bookRepositoryProvider).watchBooksForSemester(currentSemester),
+              builder: (context, snapshot) {
+                if (snapshot.connectionState == ConnectionState.waiting) {
+                  return const SliverFillRemaining(
+                    child: Center(child: CircularProgressIndicator(color: Colors.blueAccent)),
+                  );
+                }
+                if (snapshot.hasError) {
+                  return const SliverFillRemaining(
+                    child: Center(child: Text('Error loading books.', style: TextStyle(color: Colors.red))),
+                  );
+                }
+                final books = snapshot.data ?? [];
+                final filteredBooks = books.where((b) {
+                  return b.title.toLowerCase().contains(searchQuery) ||
+                      b.author.toLowerCase().contains(searchQuery);
+                }).toList();
 
-          StreamBuilder<List<Book>>(
-            stream: ref.read(bookRepositoryProvider).watchBooksForSemester(currentSemester),
-            builder: (context, snapshot) {
-              if (snapshot.connectionState == ConnectionState.waiting) {
-                return const SliverFillRemaining(
-                  child: Center(child: CircularProgressIndicator(color: Colors.blueAccent)),
-                );
-              }
-              if (snapshot.hasError) {
-                return const SliverFillRemaining(
-                  child: Center(child: Text('Error loading books.', style: TextStyle(color: Colors.red))),
-                );
-              }
+                if (filteredBooks.isEmpty) {
+                  return SliverFillRemaining(
+                    child: Center(
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Icon(Icons.menu_book, color: Colors.grey.shade800, size: 64.sp),
+                            SizedBox(height: 16.h),
+                            const Text('No books found.', style: TextStyle(color: Colors.grey)),
+                          ],
+                        )
+                    ),
+                  );
+                }
 
-              final books = snapshot.data ?? [];
-              final filteredBooks = books.where((b) {
-                return b.title.toLowerCase().contains(searchQuery) ||
-                    b.author.toLowerCase().contains(searchQuery);
-              }).toList();
-
-              final unprecachedBooks = filteredBooks.where((b) => b.coverUrl.isNotEmpty && !_precachedUrls.contains(b.coverUrl)).toList();
-              if (unprecachedBooks.isNotEmpty) {
-                WidgetsBinding.instance.addPostFrameCallback((_) {
-                  if (!mounted) return;
-                  for (var book in unprecachedBooks) {
-                    _precachedUrls.add(book.coverUrl);
-                    // MODIFICATION: Handled the ImageResourceService socket exception natively
-                    // via the explicit onError callback parameter.
-                    precacheImage(
-                      NetworkImage(book.coverUrl),
-                      context,
-                      onError: (exception, stackTrace) {
-                        // Silently swallow SocketExceptions/timeouts to keep the console clean.
-                        // The UI will gracefully fallback to the colored background anyway.
+                return SliverPadding(
+                  padding: EdgeInsets.all(16.w),
+                  sliver: SliverGrid(
+                    gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                      crossAxisCount: 2,
+                      mainAxisSpacing: 16.h,
+                      crossAxisSpacing: 16.w,
+                      childAspectRatio: 0.6,
+                    ),
+                    delegate: SliverChildBuilderDelegate(
+                          (context, index) {
+                        final book = filteredBooks[index];
+                        return _BookCard(
+                          book: book,
+                          onTap: () => _showDownloadDialog(book),
+                        );
                       },
-                    );
-                  }
-                });
-              }
-
-              if (filteredBooks.isEmpty) {
-                return SliverFillRemaining(
-                  child: Center(
-                      child: Column(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Icon(Icons.menu_book, color: Colors.grey.shade800, size: 64.sp),
-                          SizedBox(height: 16.h),
-                          const Text('No books found.', style: TextStyle(color: Colors.grey)),
-                        ],
-                      )
+                      childCount: filteredBooks.length,
+                    ),
                   ),
                 );
-              }
-
-              return SliverPadding(
-                padding: EdgeInsets.all(16.w),
-                sliver: SliverGrid(
-                  gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                    crossAxisCount: 2,
-                    mainAxisSpacing: 16.h,
-                    crossAxisSpacing: 16.w,
-                    childAspectRatio: 0.6,
-                  ),
-                  delegate: SliverChildBuilderDelegate(
-                        (context, index) {
-                      final book = filteredBooks[index];
-                      return _BookCard(
-                        book: book,
-                        onTap: () => _showDownloadDialog(book),
-                      );
-                    },
-                    childCount: filteredBooks.length,
-                  ),
-                ),
-              );
-            },
-          ),
-        ],
+              },
+            ),
+          ],
+        ),
       ),
     );
   }
 }
 
-// -----------------------------------------------------------------
-// Vibrant Book Card UI Component
-// -----------------------------------------------------------------
 class _BookCard extends StatelessWidget {
   final Book book;
   final VoidCallback onTap;
@@ -321,12 +310,12 @@ class _BookCard extends StatelessWidget {
 
   Color _getVibrantColor(String title) {
     final colors = [
-      const Color(0xFFFF4B4B), // Red
-      const Color(0xFF4B7BFF), // Blue
-      const Color(0xFF00C9A7), // Teal
-      const Color(0xFFFF8F00), // Orange
-      const Color(0xFFB54BFF), // Purple
-      const Color(0xFFFF4B91), // Pink
+      const Color(0xFFFF4B4B),
+      const Color(0xFF4B7BFF),
+      const Color(0xFF00C9A7),
+      const Color(0xFFFF8F00),
+      const Color(0xFFB54BFF),
+      const Color(0xFFFF4B91),
     ];
     return colors[title.hashCode.abs() % colors.length];
   }
@@ -374,29 +363,23 @@ class _BookCard extends StatelessWidget {
                     ),
                   ),
                   if (book.coverUrl.isNotEmpty)
-                    Image.network(
-                      book.coverUrl,
+                    CachedNetworkImage(
+                      imageUrl: book.coverUrl,
                       fit: BoxFit.cover,
                       width: double.infinity,
                       height: double.infinity,
-                      gaplessPlayback: true,
-                      loadingBuilder: (context, child, loadingProgress) {
-                        if (loadingProgress == null) return child;
-                        return Center(
-                            child: SizedBox(
-                              width: 24.w,
-                              height: 24.w,
-                              child: CircularProgressIndicator(
-                                color: accentColor,
-                                strokeWidth: 3,
-                                value: loadingProgress.expectedTotalBytes != null
-                                    ? loadingProgress.cumulativeBytesLoaded / loadingProgress.expectedTotalBytes!
-                                    : null,
-                              ),
-                            )
-                        );
-                      },
-                      errorBuilder: (_, __, ___) => const SizedBox(),
+                      fadeInDuration: const Duration(milliseconds: 250),
+                      placeholder: (context, url) => Center(
+                          child: SizedBox(
+                            width: 24.w,
+                            height: 24.w,
+                            child: CircularProgressIndicator(
+                              color: accentColor,
+                              strokeWidth: 3,
+                            ),
+                          )
+                      ),
+                      errorWidget: (context, url, error) => const SizedBox(),
                     ),
                   Positioned(
                     top: 8,
@@ -450,9 +433,6 @@ class _BookCard extends StatelessWidget {
   }
 }
 
-// -----------------------------------------------------------------
-// Internal Request Form Widget (Bottom Sheet)
-// -----------------------------------------------------------------
 class _BookRequestForm extends ConsumerStatefulWidget {
   const _BookRequestForm();
 
@@ -465,7 +445,6 @@ class _BookRequestFormState extends ConsumerState<_BookRequestForm> {
   final _authorController = TextEditingController();
   final _semesterController = TextEditingController();
   final _isbnController = TextEditingController();
-
   bool _isSubmitting = false;
   String _cooldownMessage = '';
 
@@ -613,34 +592,29 @@ class _BookRequestFormState extends ConsumerState<_BookRequestForm> {
             style: TextStyle(color: Colors.white, fontSize: 20, fontWeight: FontWeight.bold),
           ),
           SizedBox(height: 20.h),
-
           _buildFormTextField(
             controller: _bookNameController,
             hint: 'Book Name (Required)',
             maxLength: 60,
           ),
           SizedBox(height: 12.h),
-
           _buildFormTextField(
             controller: _authorController,
             hint: 'Author Name (Required)',
             maxLength: 60,
           ),
           SizedBox(height: 12.h),
-
           _buildFormTextField(
             controller: _semesterController,
             hint: 'Semester (1-8)',
             keyboardType: TextInputType.number,
           ),
           SizedBox(height: 12.h),
-
           _buildFormTextField(
             controller: _isbnController,
             hint: 'ISBN (Optional)',
           ),
           SizedBox(height: 24.h),
-
           SizedBox(
             width: double.infinity,
             height: 50.h,

@@ -3,6 +3,7 @@ import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:firebase_auth/firebase_auth.dart' as firebase_auth;
+
 import 'tabs/home_tab.dart';
 import 'tabs/routine_tab.dart';
 import 'tabs/notice_tab.dart';
@@ -22,6 +23,8 @@ class HomeScreen extends ConsumerStatefulWidget {
 
 class _HomeScreenState extends ConsumerState<HomeScreen> {
   int _currentIndex = 0;
+  late PageController _pageController;
+
   final List<Widget> _screens = const [
     HomeTab(),
     RoutineTab(),
@@ -32,12 +35,19 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   @override
   void initState() {
     super.initState();
+    _pageController = PageController(initialPage: _currentIndex);
     _setupInteractedMessage();
     Future.delayed(const Duration(seconds: 7), () {
       if (mounted) {
         _checkForUpdatesSilently();
       }
     });
+  }
+
+  @override
+  void dispose() {
+    _pageController.dispose();
+    super.dispose();
   }
 
   Future<void> _checkForUpdatesSilently() async {
@@ -48,7 +58,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         UpdateNoticeSheet.show(context, info);
       }
     } catch (e) {
-      print("DEBUG: Background update check failed: $e");
+      debugPrint("DEBUG: Background update check failed: $e");
     }
   }
 
@@ -67,17 +77,24 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
 
   Future<void> _navigateToNotices(RemoteMessage message) async {
     setState(() => _currentIndex = 2);
+    if (_pageController.hasClients) {
+      _pageController.jumpToPage(2);
+    }
+
     final String? noticeId = message.data['id'] ?? message.data['noticeId'] ?? message.data['announcementId'];
     if (noticeId != null) {
       try {
         await ref.read(announcementRepositoryProvider).syncAnnouncements();
         final uid = firebase_auth.FirebaseAuth.instance.currentUser?.uid;
         if (uid == null) return;
+
         final user = await ref.read(userRepositoryProvider).watchUser(uid).first;
         if (user == null) return;
+
         final notices = await ref.read(announcementRepositoryProvider)
             .watchMyAnnouncements(user.semester, user.section, user.role, user.id)
             .first;
+
         dynamic targetNotice;
         for (var n in notices) {
           if (n.id == noticeId) {
@@ -89,7 +106,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
           Navigator.pushNamed(context, AppRoutes.detailAnnouncement, arguments: targetNotice);
         }
       } catch (e) {
-        print("DEBUG: Deep link to AnnouncementDetailScreen failed: $e");
+        debugPrint("DEBUG: Deep link to AnnouncementDetailScreen failed: $e");
       }
     }
   }
@@ -98,7 +115,15 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.black,
-      body: IndexedStack(index: _currentIndex, children: _screens),
+      body: PageView(
+        controller: _pageController,
+        // Using default PageScrollPhysics provides the smoothest, platform-adaptive feel
+        // without the rigid resistance caused by forcing BouncingScrollPhysics universally.
+        onPageChanged: (index) {
+          setState(() => _currentIndex = index);
+        },
+        children: _screens,
+      ),
       bottomNavigationBar: Container(
         height: 95.h,
         padding: EdgeInsets.only(top: 10.h, bottom: 12.h),
@@ -120,7 +145,11 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     bool isActive = _currentIndex == index;
     return Expanded(
       child: GestureDetector(
-        onTap: () => setState(() => _currentIndex = index),
+        onTap: () {
+          setState(() => _currentIndex = index);
+          // Jump immediately skips the intermediate tab glimpses
+          _pageController.jumpToPage(index);
+        },
         behavior: HitTestBehavior.opaque,
         child: Container(
           margin: EdgeInsets.symmetric(horizontal: 12.w),

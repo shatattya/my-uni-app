@@ -1,10 +1,11 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart'; // ADDED: Required for input formatting
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+
 import '../../../providers/profile_controller.dart';
 import '../../../data/repositories/user_repository.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 import '../../widgets/avatar_picker_sheet.dart';
 
 class EditStudentProfileScreen extends ConsumerStatefulWidget {
@@ -18,6 +19,7 @@ class _EditStudentProfileScreenState extends ConsumerState<EditStudentProfileScr
   final nameController = TextEditingController();
   final semesterController = TextEditingController();
   final sectionController = TextEditingController();
+
   final currentPasswordController = TextEditingController();
   final passwordController = TextEditingController();
   final confirmPasswordController = TextEditingController();
@@ -28,8 +30,6 @@ class _EditStudentProfileScreenState extends ConsumerState<EditStudentProfileScr
 
   int currentAvatarId = 1;
   String userRole = 'student';
-
-  // FIX: The Bulletproof Update Lock
   bool _isUpdating = false;
 
   @override
@@ -71,8 +71,7 @@ class _EditStudentProfileScreenState extends ConsumerState<EditStudentProfileScr
       return;
     }
 
-    setState(() => _isUpdating = true); // Lock the state locally
-
+    setState(() => _isUpdating = true);
     ref.read(profileControllerProvider.notifier).updateStudentProfile(
       name: nameController.text.trim(),
       semester: int.parse(semesterController.text),
@@ -87,20 +86,17 @@ class _EditStudentProfileScreenState extends ConsumerState<EditStudentProfileScr
   Widget build(BuildContext context) {
     final formattedAvatarId = currentAvatarId.toString().padLeft(2, '0');
 
-    // BUG FIX: The Bulletproof Local Listener Lock
     ref.listen<AsyncValue<void>>(profileControllerProvider, (prev, next) {
-      if (!_isUpdating) return; // Completely ignore updates not triggered by this specific screen instance
-
+      if (!_isUpdating) return;
       if (!next.isLoading) {
-        setState(() => _isUpdating = false); // Release the lock
-
+        setState(() => _isUpdating = false);
         if (next.hasError) {
-          if (!context.mounted) return; // Prevent crash if user swiped back
+          if (!context.mounted) return;
           ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(content: Text(next.error.toString().replaceAll("Exception: ", "")), backgroundColor: Colors.redAccent)
           );
         } else if (next.hasValue) {
-          if (!context.mounted) return; // Prevent crash if user swiped back
+          if (!context.mounted) return;
           Navigator.pop(context);
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(content: Text("Profile updated successfully!"), backgroundColor: Colors.green),
@@ -109,96 +105,132 @@ class _EditStudentProfileScreenState extends ConsumerState<EditStudentProfileScr
       }
     });
 
-    // iOS UX FIX: Wrap Scaffold in GestureDetector to dismiss keyboard on tap outside
     return GestureDetector(
       onTap: () => FocusScope.of(context).unfocus(),
       child: Scaffold(
         backgroundColor: Colors.black,
-        appBar: AppBar(backgroundColor: Colors.black, elevation: 0),
+        appBar: AppBar(
+          backgroundColor: Colors.black,
+          elevation: 0,
+          title: Text("Edit Profile", style: TextStyle(color: Colors.white, fontSize: 18.sp, fontWeight: FontWeight.bold)),
+          centerTitle: true,
+          iconTheme: const IconThemeData(color: Colors.white),
+        ),
         body: SingleChildScrollView(
-          padding: EdgeInsets.symmetric(horizontal: 28.w),
+          padding: EdgeInsets.symmetric(horizontal: 24.w, vertical: 16.h),
           child: Column(
             children: [
               Center(
-                child: Stack(
-                  alignment: Alignment.center,
-                  children: [
-                    CircleAvatar(
-                      radius: 60.r,
-                      backgroundColor: Colors.white,
-                      child: CircleAvatar(
-                        radius: 58.r,
-                        backgroundColor: Colors.black,
+                child: GestureDetector(
+                  onTap: () {
+                    AvatarPickerSheet.show(context, userRole, (id) {
+                      setState(() => currentAvatarId = id);
+                    });
+                  },
+                  child: Stack(
+                    alignment: Alignment.bottomRight,
+                    children: [
+                      CircleAvatar(
+                        radius: 45.r,
+                        backgroundColor: Colors.white12,
                         backgroundImage: AssetImage("assets/avatars/$formattedAvatarId.png"),
                       ),
+                      Container(
+                        padding: EdgeInsets.all(6.r),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFF1877F2),
+                          shape: BoxShape.circle,
+                          border: Border.all(color: Colors.black, width: 2.w),
+                        ),
+                        child: Icon(Icons.camera_alt, color: Colors.white, size: 16.sp),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              SizedBox(height: 32.h),
+
+              // Basic Info Group
+              Container(
+                decoration: BoxDecoration(
+                  color: const Color(0xFF161616),
+                  borderRadius: BorderRadius.circular(16.r),
+                  border: Border.all(color: Colors.white12, width: 1),
+                ),
+                child: Column(
+                  children: [
+                    _buildCompactField(
+                      "Full Name",
+                      nameController,
+                      maxLength: 35,
+                      inputFormatters: [FilteringTextInputFormatter.allow(RegExp(r'[a-zA-Z ]'))],
+                    ),
+                    Divider(color: Colors.white12, height: 1.h, indent: 16.w, endIndent: 16.w),
+                    _buildCompactField("Semester", semesterController, isNumber: true),
+                    Divider(color: Colors.white12, height: 1.h, indent: 16.w, endIndent: 16.w),
+                    _buildCompactField(
+                      "Section",
+                      sectionController,
+                      maxLength: 1,
+                      inputFormatters: [
+                        FilteringTextInputFormatter.allow(RegExp(r'[a-cA-C]')),
+                        TextInputFormatter.withFunction((oldValue, newValue) {
+                          return TextEditingValue(text: newValue.text.toUpperCase(), selection: newValue.selection);
+                        }),
+                      ],
                     ),
                   ],
                 ),
               ),
-              SizedBox(height: 16.h),
-              GestureDetector(
-                onTap: () {
-                  AvatarPickerSheet.show(context, userRole, (id) {
-                    setState(() => currentAvatarId = id);
-                  });
-                },
-                child: Text("Change Picture", style: TextStyle(color: const Color(0xFF1877F2), fontSize: 16.sp)),
-              ),
-              SizedBox(height: 30.h),
 
-              // UX ENHANCEMENT: Restrict name to a-z, A-Z, spaces, and max 35 characters
-              _buildField(
-                "Full Name",
-                nameController,
-                maxLength: 35,
-                inputFormatters: [
-                  FilteringTextInputFormatter.allow(RegExp(r'[a-zA-Z ]')),
-                ],
-              ),
-              _buildField("Semester", semesterController, isNumber: true),
+              SizedBox(height: 24.h),
 
-              // UX ENHANCEMENT: Restrict section to a, b, c and auto-capitalize
-              _buildField(
-                "Section",
-                sectionController,
-                maxLength: 1,
-                inputFormatters: [
-                  FilteringTextInputFormatter.allow(RegExp(r'[a-cA-C]')),
-                  TextInputFormatter.withFunction((oldValue, newValue) {
-                    return TextEditingValue(
-                      text: newValue.text.toUpperCase(),
-                      selection: newValue.selection,
-                    );
-                  }),
-                ],
-              ),
-
-              Divider(color: Colors.white24, thickness: 1, height: 40.h),
-
-              _buildField(
-                  "Current Password (Required if changing password)",
-                  currentPasswordController,
-                  isPassword: true,
-                  obscureText: _obscureCurrent,
-                  onToggleVisibility: () => setState(() => _obscureCurrent = !_obscureCurrent)
-              ),
-              _buildField(
-                  "New Password",
-                  passwordController,
-                  isPassword: true,
-                  obscureText: _obscureNew,
-                  onToggleVisibility: () => setState(() => _obscureNew = !_obscureNew)
-              ),
-              _buildField(
-                  "Confirm New Password",
-                  confirmPasswordController,
-                  isPassword: true,
-                  obscureText: _obscureConfirm,
-                  onToggleVisibility: () => setState(() => _obscureConfirm = !_obscureConfirm)
+              // Password Group (Collapsible)
+              Container(
+                decoration: BoxDecoration(
+                  color: const Color(0xFF161616),
+                  borderRadius: BorderRadius.circular(16.r),
+                  border: Border.all(color: Colors.white12, width: 1),
+                ),
+                child: Theme(
+                  data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
+                  child: ExpansionTile(
+                    tilePadding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 4.h),
+                    iconColor: const Color(0xFF1877F2),
+                    collapsedIconColor: Colors.white54,
+                    title: Text("Change Password", style: TextStyle(color: Colors.white, fontSize: 16.sp, fontWeight: FontWeight.w500)),
+                    children: [
+                      Divider(color: Colors.white12, height: 1.h),
+                      _buildCompactField(
+                        "Current Password",
+                        currentPasswordController,
+                        isPassword: true,
+                        obscureText: _obscureCurrent,
+                        onToggleVisibility: () => setState(() => _obscureCurrent = !_obscureCurrent),
+                      ),
+                      Divider(color: Colors.white12, height: 1.h, indent: 16.w, endIndent: 16.w),
+                      _buildCompactField(
+                        "New Password",
+                        passwordController,
+                        isPassword: true,
+                        obscureText: _obscureNew,
+                        onToggleVisibility: () => setState(() => _obscureNew = !_obscureNew),
+                      ),
+                      Divider(color: Colors.white12, height: 1.h, indent: 16.w, endIndent: 16.w),
+                      _buildCompactField(
+                        "Confirm New Password",
+                        confirmPasswordController,
+                        isPassword: true,
+                        obscureText: _obscureConfirm,
+                        onToggleVisibility: () => setState(() => _obscureConfirm = !_obscureConfirm),
+                      ),
+                      SizedBox(height: 8.h),
+                    ],
+                  ),
+                ),
               ),
 
               SizedBox(height: 40.h),
-
               SizedBox(
                 width: double.infinity,
                 height: 56.h,
@@ -210,7 +242,7 @@ class _EditStudentProfileScreenState extends ConsumerState<EditStudentProfileScr
                   ),
                   child: _isUpdating
                       ? SizedBox(height: 20.h, width: 20.h, child: const CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
-                      : Text("Update", style: TextStyle(color: Colors.white, fontSize: 18.sp, fontWeight: FontWeight.w600)),
+                      : Text("Save Changes", style: TextStyle(color: Colors.white, fontSize: 18.sp, fontWeight: FontWeight.bold)),
                 ),
               ),
               SizedBox(height: 40.h),
@@ -221,8 +253,7 @@ class _EditStudentProfileScreenState extends ConsumerState<EditStudentProfileScr
     );
   }
 
-  // MODIFIED: Added inputFormatters and maxLength parameters
-  Widget _buildField(
+  Widget _buildCompactField(
       String label,
       TextEditingController controller, {
         bool isNumber = false,
@@ -232,39 +263,25 @@ class _EditStudentProfileScreenState extends ConsumerState<EditStudentProfileScr
         List<TextInputFormatter>? inputFormatters,
         int? maxLength,
       }) {
-    return Padding(
-      padding: EdgeInsets.only(bottom: 20.h),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(label, style: TextStyle(color: Colors.white, fontSize: 14.sp, fontWeight: FontWeight.w500)),
-          SizedBox(height: 8.h),
-          TextField(
-            controller: controller,
-            obscureText: obscureText,
-            keyboardType: isNumber ? TextInputType.number : TextInputType.text,
-            style: TextStyle(color: Colors.white, fontSize: 16.sp),
-            inputFormatters: inputFormatters,
-            maxLength: maxLength,
-            decoration: InputDecoration(
-              counterText: "", // UX ENHANCEMENT: Hide character counter to keep UI clean
-              filled: false,
-              enabledBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(12.r),
-                borderSide: const BorderSide(color: Colors.white30),
-              ),
-              focusedBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(12.r),
-                borderSide: const BorderSide(color: Color(0xFF1877F2)),
-              ),
-              contentPadding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 16.h),
-              suffixIcon: isPassword ? IconButton(
-                icon: Icon(obscureText ? Icons.visibility_off_outlined : Icons.visibility_outlined, color: Colors.white54, size: 24.sp),
-                onPressed: onToggleVisibility,
-              ) : null,
-            ),
-          ),
-        ],
+    return TextFormField(
+      controller: controller,
+      obscureText: obscureText,
+      keyboardType: isNumber ? TextInputType.number : TextInputType.text,
+      style: TextStyle(color: Colors.white, fontSize: 16.sp),
+      inputFormatters: inputFormatters,
+      maxLength: maxLength,
+      decoration: InputDecoration(
+        labelText: label,
+        labelStyle: TextStyle(color: Colors.white54, fontSize: 14.sp),
+        counterText: "",
+        filled: true,
+        fillColor: Colors.transparent,
+        border: InputBorder.none,
+        contentPadding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 12.h),
+        suffixIcon: isPassword ? IconButton(
+          icon: Icon(obscureText ? Icons.visibility_off_outlined : Icons.visibility_outlined, color: Colors.white54, size: 20.sp),
+          onPressed: onToggleVisibility,
+        ) : null,
       ),
     );
   }
