@@ -1,0 +1,704 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // ----------------------------------------------------------------------
+    // Authentication / roles
+    // ----------------------------------------------------------------------
+
+    function signedIn() {
+      return request.auth != null;
+    }
+
+    function currentUid() {
+      return request.auth.uid;
+    }
+
+    function currentRolePath() {
+      return /databases/$(database)/documents/roles/$(currentUid());
+    }
+
+    function currentAdminPath() {
+      return /databases/$(database)/documents/admins/$(currentUid());
+    }
+
+    function isAdmin() {
+      return signedIn()
+        && exists(currentAdminPath());
+    }
+
+    function hasRoleFlag(fieldName) {
+      return signedIn()
+        && exists(currentRolePath())
+        && get(currentRolePath()).data.get(fieldName, false) == true;
+    }
+
+    function isDeveloper() {
+      return isAdmin() || hasRoleFlag('isDev');
+    }
+
+    function isCR() {
+      return isAdmin() || hasRoleFlag('isCR');
+    }
+
+    function canManageUsers() {
+      return isAdmin() || isDeveloper();
+    }
+
+    // ----------------------------------------------------------------------
+    // Teacher detection
+    //
+    // A user is a teacher when:
+    //   1. They are authenticated.
+    //   2. Their Firebase Auth email is a BGC Trust University Bangladesh
+    //      address.
+    //   3. A matching document exists in teachers/{email}.
+    //
+    // No additional teacher ACL collection is required.
+    // ----------------------------------------------------------------------
+
+    function isTeacher() {
+      return signedIn()
+        && request.auth.token.email != null
+        && request.auth.token.email.matches(
+          '^[^@]+@bgctub[.]ac[.]bd$'
+        )
+        && exists(
+          /databases/$(database)/documents/teachers/$(request.auth.token.email)
+        );
+    }
+
+    function canPublishAnnouncements() {
+      return isAdmin()
+        || isDeveloper()
+        || isCR()
+        || isTeacher();
+    }
+
+    // ----------------------------------------------------------------------
+    // Student validation
+    // ----------------------------------------------------------------------
+
+    function validStudentProfile(data) {
+      return data.get('role', '') == 'student'
+        && data.get('uid', '') is string
+        && data.get('internalId', '') is string
+        && data.get('semester', 0) is int
+        && data.get('semester', 0) >= 1
+        && data.get('semester', 0) <= 8
+        && data.get('section', '') is string
+        && data.get('section', '') in ['A', 'B', 'C']
+        && data.get('name', '') is string
+        && data.get('name', '').size() > 0
+        && data.get('name', '').size() <= 100
+        && data.get('avatarId', 1) is int;
+    }
+
+    // ----------------------------------------------------------------------
+    // Teacher validation
+    // ----------------------------------------------------------------------
+
+    function validTeacherProfile(data) {
+      return data.get('role', '') == 'teacher'
+        && data.get('uid', '') is string
+        && data.get('name', '') is string
+        && data.get('name', '').size() > 0
+        && data.get('name', '').size() <= 100;
+    }
+
+    // ----------------------------------------------------------------------
+    // Announcement validation
+    // ----------------------------------------------------------------------
+
+    function validAnnouncement(data) {
+      return data.get('title', '') is string
+        && data.get('title', '').size() > 0
+        && data.get('title', '').size() <= 200
+        && data.get('body', '') is string
+        && data.get('body', '').size() > 0
+        && data.get('body', '').size() <= 10000
+        && data.get('authorUid', '') == currentUid()
+        && data.get('authorName', '') is string
+        && data.get('isDeleted', false) == false
+        && data.get('isGlobal', false) is bool
+        && data.get('targetGroups', []) is list
+        && data.get('targetSemesters', []) is list
+        && data.get('targetSections', []) is list
+        && data.get('createdAt', null) == request.time;
+    }
+
+    // ----------------------------------------------------------------------
+    // Request validation
+    // ----------------------------------------------------------------------
+
+    function validRequestType() {
+      return request.resource.data.get('type', '') == 'book'
+        || request.resource.data.get('type', '') == 'note';
+    }
+
+    function bangladeshDateKey() {
+      let bd = request.time + duration.value(6, 'h');
+
+      return string(bd.year())
+        + '-'
+        + (
+          bd.month() < 10
+            ? '0' + string(bd.month())
+            : string(bd.month())
+        )
+        + '-'
+        + (
+          bd.day() < 10
+            ? '0' + string(bd.day())
+            : string(bd.day())
+        );
+    }
+
+    function isCanonicalBookRequestId(requestId) {
+      return requestId
+        == currentUid()
+        + '_book_'
+        + bangladeshDateKey();
+    }
+
+    function isCanonicalNoteRequestId(requestId) {
+      return requestId
+        == currentUid()
+        + '_note_'
+        + bangladeshDateKey();
+    }
+
+    // ----------------------------------------------------------------------
+    // Legacy users
+    // ----------------------------------------------------------------------
+
+    match /users/{userId} {
+      allow read: if signedIn();
+      allow write: if false;
+    }
+
+    // ----------------------------------------------------------------------
+    // Admins
+    // ----------------------------------------------------------------------
+
+    match /admins/{adminUid} {
+      allow read: if signedIn()
+        && (
+          adminUid == currentUid()
+          || isAdmin()
+        );
+
+      allow write: if false;
+    }
+
+    // ----------------------------------------------------------------------
+    // Roles
+    // ----------------------------------------------------------------------
+
+    match /roles/{roleUid} {
+
+      allow read: if signedIn()
+        && (
+          roleUid == currentUid()
+          || canManageUsers()
+        );
+
+      allow create: if canManageUsers()
+        && request.resource.data.keys().hasOnly([
+          'isDev',
+          'isCR',
+          'updatedAt'
+        ])
+        && request.resource.data.get('isDev', false) is bool
+        && request.resource.data.get('isCR', false) is bool
+        && request.resource.data.get('updatedAt', null)
+            == request.time;
+
+      allow update: if canManageUsers()
+        && request.resource.data.diff(resource.data)
+          .affectedKeys()
+          .hasOnly([
+            'isDev',
+            'isCR',
+            'updatedAt'
+          ])
+        && request.resource.data.get('isDev', false) is bool
+        && request.resource.data.get('isCR', false) is bool
+        && request.resource.data.get('updatedAt', null)
+            == request.time;
+
+      allow delete: if isAdmin();
+    }
+
+    // ----------------------------------------------------------------------
+    // Students
+    // ----------------------------------------------------------------------
+
+    match /students/{internalId} {
+
+      allow create: if signedIn()
+        && request.resource.data.get('uid', '') == currentUid()
+        && request.resource.data.get('internalId', '') == internalId
+        && validStudentProfile(request.resource.data)
+        && request.resource.data.get('isDev', false) == false
+        && request.resource.data.get('isCR', false) == false;
+
+      allow read: if signedIn()
+        && (
+          resource.data.get('uid', '') == currentUid()
+          || isTeacher()
+          || canManageUsers()
+        );
+
+      allow update: if signedIn()
+        && (
+          (
+            resource.data.get('uid', '') == currentUid()
+            && request.resource.data.diff(resource.data)
+              .affectedKeys()
+              .hasOnly([
+                'name',
+                'semester',
+                'section',
+                'avatarId',
+                'lastProfileUpdate',
+                'updatedAt'
+              ])
+            && validStudentProfile(request.resource.data)
+            && request.resource.data.get('uid', '') == currentUid()
+            && request.resource.data.get('internalId', '') == internalId
+            && request.resource.data.get('role', '')
+                == resource.data.get('role', '')
+            && request.resource.data.get('isDev', false)
+                == resource.data.get('isDev', false)
+            && request.resource.data.get('isCR', false)
+                == resource.data.get('isCR', false)
+            && (
+              resource.data.get('lastProfileUpdate', null) == null
+              ||
+              request.time >=
+                resource.data.lastProfileUpdate
+                + duration.value(15, 'd')
+            )
+            && request.resource.data.get('lastProfileUpdate', null)
+                == request.time
+          )
+          ||
+          (
+            canManageUsers()
+            && request.resource.data.diff(resource.data)
+              .affectedKeys()
+              .hasOnly([
+                'name',
+                'semester',
+                'section',
+                'avatarId',
+                'lastProfileUpdate',
+                'isDev',
+                'isCR',
+                'updatedAt'
+              ])
+            && validStudentProfile(request.resource.data)
+            && request.resource.data.get('uid', '')
+                == resource.data.get('uid', '')
+            && request.resource.data.get('internalId', '')
+                == resource.data.get('internalId', '')
+            && request.resource.data.get('role', '')
+                == resource.data.get('role', '')
+          )
+        );
+
+      allow delete: if signedIn()
+        && (
+          resource.data.get('uid', '') == currentUid()
+          || canManageUsers()
+        );
+    }
+
+    // ----------------------------------------------------------------------
+    // Teachers
+    // ----------------------------------------------------------------------
+
+    match /teachers/{email} {
+
+      allow create: if signedIn()
+        && request.auth.token.email == email
+        && request.resource.data.get('uid', '') == currentUid()
+        && validTeacherProfile(request.resource.data)
+        && email.matches(
+          '^[^@]+@bgctub[.]ac[.]bd$'
+        );
+
+      allow read: if signedIn()
+        && (
+          resource.data.get('uid', '') == currentUid()
+          || isTeacher()
+          || canManageUsers()
+        );
+
+      allow update: if signedIn()
+        && (
+          (
+            resource.data.get('uid', '') == currentUid()
+            && request.resource.data.diff(resource.data)
+              .affectedKeys()
+              .hasOnly([
+                'name',
+                'avatarId',
+                'updatedAt'
+              ])
+            && request.resource.data.get('uid', '')
+                == resource.data.get('uid', '')
+            && request.resource.data.get('role', '')
+                == resource.data.get('role', '')
+            && validTeacherProfile(request.resource.data)
+          )
+          ||
+          (
+            canManageUsers()
+            && request.resource.data.diff(resource.data)
+              .affectedKeys()
+              .hasOnly([
+                'name',
+                'avatarId',
+                'updatedAt'
+              ])
+            && request.resource.data.get('uid', '')
+                == resource.data.get('uid', '')
+            && request.resource.data.get('role', '')
+                == resource.data.get('role', '')
+            && validTeacherProfile(request.resource.data)
+          )
+        );
+
+      allow delete: if signedIn()
+        && (
+          resource.data.get('uid', '') == currentUid()
+          || canManageUsers()
+        );
+    }
+
+    // ----------------------------------------------------------------------
+    // Announcements
+    // ----------------------------------------------------------------------
+
+    match /announcements/{announcementId} {
+
+      allow read: if signedIn();
+
+      allow create: if signedIn()
+        && canPublishAnnouncements()
+        && validAnnouncement(request.resource.data)
+        && request.resource.data.keys().hasOnly([
+          'title',
+          'body',
+          'authorName',
+          'authorUid',
+          'isDeleted',
+          'targetGroups',
+          'targetSemesters',
+          'targetSections',
+          'isGlobal',
+          'createdAt'
+        ])
+        && (
+          (
+            request.resource.data.isGlobal == true
+            && request.resource.data.targetGroups.size() == 0
+            && request.resource.data.targetSemesters.size() == 0
+            && request.resource.data.targetSections.size() == 0
+          )
+          ||
+          (
+            request.resource.data.isGlobal == false
+            && request.resource.data.targetGroups.size() > 0
+            && request.resource.data.targetGroups.size() <= 20
+          )
+        );
+
+      allow update: if signedIn()
+        && canPublishAnnouncements()
+        && (
+          resource.data.authorUid == currentUid()
+          || isDeveloper()
+          || isAdmin()
+        )
+        && request.resource.data.diff(resource.data)
+          .affectedKeys()
+          .hasOnly([
+            'title',
+            'body',
+            'targetGroups',
+            'targetSemesters',
+            'targetSections',
+            'isGlobal'
+          ])
+        && request.resource.data.authorUid
+            == resource.data.authorUid
+        && request.resource.data.createdAt
+            == resource.data.createdAt
+        && (
+          (
+            request.resource.data.isGlobal == true
+            && request.resource.data.targetGroups.size() == 0
+            && request.resource.data.targetSemesters.size() == 0
+            && request.resource.data.targetSections.size() == 0
+          )
+          ||
+          (
+            request.resource.data.isGlobal == false
+            && request.resource.data.targetGroups.size() > 0
+            && request.resource.data.targetGroups.size() <= 20
+          )
+        );
+
+      allow update: if signedIn()
+        && canPublishAnnouncements()
+        && (
+          resource.data.authorUid == currentUid()
+          || isDeveloper()
+          || isAdmin()
+        )
+        && request.resource.data.diff(resource.data)
+          .affectedKeys()
+          .hasOnly([
+            'isDeleted'
+          ])
+        && request.resource.data.isDeleted == true;
+
+      allow delete: if false;
+    }
+
+    // ----------------------------------------------------------------------
+    // Routines master data
+    // ----------------------------------------------------------------------
+
+    match /routines/{routineId} {
+      allow read: if signedIn();
+      allow write: if canManageUsers();
+    }
+
+    // ----------------------------------------------------------------------
+    // Attendance
+    //
+    // Teacher authorization intentionally remains simple:
+    //
+    //   teachers/{authenticated email} exists
+    //                     ↓
+    //                   teacher
+    //                     ↓
+    //              attendance access
+    //
+    // Course ownership/teacher course lists continue to come from the
+    // routines/master JSON already used by the application.
+    // ----------------------------------------------------------------------
+
+    match /attendance_records/{recordId} {
+
+      function validAttendanceFields(data) {
+        return data.get('attendanceId', '')
+            is string
+          && data.get('attendanceId', '') == recordId
+
+          && data.get('subjectId', '')
+            is string
+          && data.get('subjectId', '').size() > 0
+          && data.get('subjectId', '').size() <= 200
+
+          && data.get('semester', 0)
+            is int
+          && data.get('semester', 0) >= 1
+          && data.get('semester', 0) <= 8
+
+          && data.get('section', '')
+            in ['A', 'B', 'C']
+
+          && data.get('date', '')
+            is string
+          && data.get('date', '').matches(
+            '^[0-9]{4}-[0-9]{2}-[0-9]{2}$'
+          )
+
+          && data.get('presentStudentIds', [])
+            is list
+          && data.get('presentStudentIds', []).size() <= 500
+
+          && data.get('updatedByUid', '')
+            is string
+          && data.get('updatedByUid', '')
+            == currentUid()
+
+          && data.get('revision', 0)
+            is int
+          && data.get('revision', 0) >= 1
+
+          && data.get('updatedAt', null)
+            is timestamp;
+      }
+
+      allow read: if signedIn()
+        && (
+          isTeacher()
+          || canManageUsers()
+        );
+
+      // Teacher or developer/admin can create attendance.
+      allow create: if signedIn()
+        && validAttendanceFields(request.resource.data)
+        && request.resource.data.keys().hasOnly([
+          'attendanceId',
+          'subjectId',
+          'semester',
+          'section',
+          'date',
+          'presentStudentIds',
+          'teacherUid',
+          'createdByUid',
+          'updatedByUid',
+          'revision',
+          'createdAt',
+          'updatedAt'
+        ])
+        && request.resource.data.createdAt
+            == request.time
+        && request.resource.data.updatedAt
+            == request.time
+        && request.resource.data.revision
+            == 1
+        && request.resource.data.createdByUid
+            == currentUid()
+        && (
+          isTeacher()
+          || canManageUsers()
+        );
+
+      // Teacher or developer/admin can update attendance.
+      allow update: if signedIn()
+        && validAttendanceFields(request.resource.data)
+        && request.resource.data.diff(resource.data)
+          .affectedKeys()
+          .hasOnly([
+            'subjectId',
+            'semester',
+            'section',
+            'date',
+            'presentStudentIds',
+            'teacherUid',
+            'createdByUid',
+            'updatedByUid',
+            'revision',
+            'updatedAt'
+          ])
+        && request.resource.data.attendanceId
+            == resource.data.attendanceId
+        && request.resource.data.createdAt
+            == resource.data.get('createdAt', null)
+        && request.resource.data.revision
+            == resource.data.get('revision', 0) + 1
+        && request.resource.data.updatedAt
+            == request.time
+        && (
+          isTeacher()
+          || canManageUsers()
+        );
+
+      allow delete: if canManageUsers();
+    }
+
+    // ----------------------------------------------------------------------
+    // Metadata
+    // ----------------------------------------------------------------------
+
+    match /metadata/{document} {
+      allow read: if signedIn();
+      allow write: if canManageUsers();
+    }
+
+    // ----------------------------------------------------------------------
+    // Requests
+    // ----------------------------------------------------------------------
+
+    match /requests/{requestId} {
+
+      allow read: if signedIn()
+        && (
+          canManageUsers()
+          || resource.data.get('requesterUid', '') == currentUid()
+        );
+
+      allow create: if signedIn()
+        && request.resource.data.get('requesterUid', '')
+            == currentUid()
+        && validRequestType()
+        && request.resource.data.get('status', '') == 'pending'
+        && request.resource.data.get('createdAt', null)
+            == request.time
+        && (
+          (
+            request.resource.data.get('type', '') == 'book'
+            && isCanonicalBookRequestId(requestId)
+            && request.resource.data.keys().hasOnly([
+              'type',
+              'requesterUid',
+              'bookName',
+              'authorName',
+              'semester',
+              'isbn',
+              'status',
+              'createdAt'
+            ])
+            && request.resource.data.get('bookName', '')
+                is string
+            && request.resource.data.get('bookName', '').size() > 0
+            && request.resource.data.get('bookName', '').size() <= 300
+            && request.resource.data.get('authorName', '')
+                is string
+            && request.resource.data.get('authorName', '').size() <= 300
+            && request.resource.data.get('semester', 0)
+                is int
+            && request.resource.data.get('semester', 0) >= 1
+            && request.resource.data.get('semester', 0) <= 8
+            && request.resource.data.get('isbn', '')
+                is string
+            && request.resource.data.get('isbn', '').size() <= 32
+          )
+          ||
+          (
+            request.resource.data.get('type', '') == 'note'
+            && isCanonicalNoteRequestId(requestId)
+            && request.resource.data.keys().hasOnly([
+              'type',
+              'requesterUid',
+              'subjectName',
+              'semester',
+              'status',
+              'createdAt'
+            ])
+            && request.resource.data.get('subjectName', '')
+                is string
+            && request.resource.data.get('subjectName', '').size() > 0
+            && request.resource.data.get('subjectName', '').size() <= 300
+            && request.resource.data.get('semester', 0)
+                is int
+            && request.resource.data.get('semester', 0) >= 1
+            && request.resource.data.get('semester', 0) <= 8
+          )
+        );
+
+      allow update: if canManageUsers()
+        && request.resource.data.diff(resource.data)
+          .affectedKeys()
+          .hasOnly([
+            'status',
+            'updatedAt'
+          ])
+        && request.resource.data.get('status', '')
+            in ['pending', 'uploaded', 'rejected']
+        && request.resource.data.get('updatedAt', null)
+            == request.time;
+
+      allow delete: if false;
+    }
+  }
+}

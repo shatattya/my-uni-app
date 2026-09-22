@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-
+import '../../data/local/app_database.dart';
 // Screens
 import '../screens/auth/auth_wrapper.dart';
 import '../screens/welcome/welcome_screen.dart';
@@ -115,10 +115,15 @@ class AppRouter {
         }
         return _errorRoute(settings);
       case AppRoutes.editAnnouncement:
-        final notice = settings.arguments;
-        if (notice != null) {
-          return _buildSlideRoute(EditAnnouncementScreen(notice: notice), settings);
+        final args = settings.arguments;
+
+        if (args is Announcement) {
+          return _buildSlideRoute(
+            EditAnnouncementScreen(notice: args),
+            settings,
+          );
         }
+
         return _errorRoute(settings);
 
     // MODIFICATION: Wired new Dev panel routes

@@ -1,13 +1,13 @@
 import 'dart:convert';
-import 'package:flutter/foundation.dart'; // ADDED: For debugPrint
+import '../../../providers/db_provider.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart'; // ADDED: For Haptic Feedback
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-
-import '../../../data/repositories/attendance_repository.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import '../../../data/local/app_database.dart';
-import '../../../providers/db_provider.dart';
+import '../../../data/models/attendance_draft.dart';
+import '../../../data/repositories/attendance_repository.dart';
 
 class AttendanceMarkingScreen extends ConsumerStatefulWidget {
   final String subjectName;
@@ -24,15 +24,20 @@ class AttendanceMarkingScreen extends ConsumerStatefulWidget {
   });
 
   @override
-  ConsumerState<AttendanceMarkingScreen> createState() => _AttendanceMarkingScreenState();
+  ConsumerState<AttendanceMarkingScreen> createState() =>
+      _AttendanceMarkingScreenState();
 }
 
-class _AttendanceMarkingScreenState extends ConsumerState<AttendanceMarkingScreen> {
+class _AttendanceMarkingScreenState
+    extends ConsumerState<AttendanceMarkingScreen> {
   bool _isLoading = true;
+  bool _isSaving = false;
+
   List<CachedStudent> _students = [];
 
-  // Stores only the IDs of present students. Everyone else is implicitly absent.
-  final Set<String> _presentStudentIds = {};
+  // Only present students are stored.
+  // Students absent from this set are considered absent.
+  final Set<String> _presentStudentIds = <String>{};
 
   @override
   void initState() {
@@ -45,97 +50,217 @@ class _AttendanceMarkingScreenState extends ConsumerState<AttendanceMarkingScree
       final repo = ref.read(attendanceRepositoryProvider);
       final db = ref.read(dbProvider);
 
-      // 1. Load the student roster
-      final students = await repo.getStudents(widget.semester, widget.section);
+      // Load the class roster.
+      final students = await repo.getStudents(
+        widget.semester,
+        widget.section,
+      );
 
-      // 2. Check if an attendance record already exists for this class/date
-      final cleanSubject = widget.subjectName.replaceAll(' ', '_');
-      final normalizedSection = widget.section.toUpperCase().trim();
-      final String attendanceId = "${cleanSubject}_${widget.semester}_${normalizedSection}_${widget.date}";
+      final normalizedSubject = _normalizeSubject(widget.subjectName);
+      final normalizedSection = widget.section.trim().toUpperCase();
+      final normalizedDate = widget.date.trim();
 
-      final existingRecord = await (db.select(db.attendanceRecords)
-        ..where((a) => a.attendanceId.equals(attendanceId)))
+      // Look up the existing local attendance record using its actual
+      // identifying fields instead of duplicating the repository's
+      // attendance-ID generation logic here.
+      final existingRecord = await (db.select(
+        db.attendanceRecords,
+      )
+        ..where(
+              (a) => a.subjectId.equals(normalizedSubject),
+        )
+        ..where(
+              (a) => a.semester.equals(widget.semester),
+        )
+        ..where(
+              (a) => a.section.equals(normalizedSection),
+        )
+        ..where(
+              (a) => a.date.equals(normalizedDate),
+        ))
           .getSingleOrNull();
 
-      // 3. If it exists, pre-load the present students into our Set so the teacher can edit them
-      if (existingRecord != null && mounted) {
-        // BUG FIX: Safe JSON parsing to prevent FormatException from crashing screen initialization
-        try {
-          final decoded = jsonDecode(existingRecord.presentStudentIds);
-          if (decoded is List) {
-            final presentIds = List<String>.from(decoded);
-            _presentStudentIds.addAll(presentIds);
-          }
-        } catch (e) {
-          debugPrint("DEBUG: Malformed JSON in existing attendance record: $e");
-        }
+      if (existingRecord != null) {
+        _presentStudentIds
+          ..clear()
+          ..addAll(
+            _decodePresentStudentIds(
+              existingRecord.presentStudentIds,
+            ),
+          );
       }
 
-      if (mounted) {
-        setState(() {
-          _students = students;
-          _isLoading = false;
-        });
+      if (!mounted) {
+        return;
       }
+
+      setState(() {
+        _students = students;
+        _isLoading = false;
+      });
+    } on FirebaseException catch (e, stackTrace) {
+      debugPrint(
+        'Attendance: Firebase error while loading attendance: '
+            '${e.code}: ${e.message}',
+      );
+      debugPrint('$stackTrace');
+
+      if (!mounted) {
+        return;
+      }
+
+      setState(() {
+        _isLoading = false;
+      });
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            e.message ?? 'Failed to load attendance data.',
+          ),
+          backgroundColor: Colors.redAccent,
+        ),
+      );
+    } catch (e, stackTrace) {
+      debugPrint(
+        'Attendance: failed to load students or existing record: $e',
+      );
+      debugPrint('$stackTrace');
+
+      if (!mounted) {
+        return;
+      }
+
+      setState(() {
+        _isLoading = false;
+      });
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Failed to load students.'),
+          backgroundColor: Colors.redAccent,
+        ),
+      );
+    }
+  }
+
+  String _normalizeSubject(String value) {
+    return value.trim().replaceAll(
+      RegExp(r'\s+'),
+      ' ',
+    );
+  }
+
+  Set<String> _decodePresentStudentIds(String json) {
+    try {
+      final decoded = jsonDecode(json);
+
+      if (decoded is! List) {
+        return <String>{};
+      }
+
+      return decoded
+          .whereType<String>()
+          .map((id) => id.trim())
+          .where((id) => id.isNotEmpty)
+          .toSet();
     } catch (e) {
-      debugPrint("DEBUG: Failed to load students or existing record: $e");
-      if (mounted) {
-        setState(() => _isLoading = false);
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text("Failed to load students"), backgroundColor: Colors.redAccent),
-        );
-      }
+      debugPrint(
+        'Attendance: malformed local presentStudentIds: $e',
+      );
+
+      return <String>{};
     }
   }
 
-  // MODIFICATION: No setState here. The child widget repaints itself instantly,
-  // we just silently record the state change for saving later. (Huge performance boost)
-  void _toggleAttendance(String studentId, bool isPresent) {
+  void _toggleAttendance(
+      String studentId,
+      bool isPresent,
+      ) {
+    final normalizedId = studentId.trim();
+
+    if (normalizedId.isEmpty) {
+      return;
+    }
+
     if (isPresent) {
-      _presentStudentIds.add(studentId);
+      _presentStudentIds.add(normalizedId);
     } else {
-      _presentStudentIds.remove(studentId);
+      _presentStudentIds.remove(normalizedId);
     }
   }
 
-  // MODIFICATION: Added Bulk Actions
   void _markAllPresent() {
-    HapticFeedback.mediumImpact(); // iOS UX action confirm
+    if (_isSaving || _students.isEmpty) {
+      return;
+    }
+
+    HapticFeedback.mediumImpact();
+
     setState(() {
-      _presentStudentIds.addAll(_students.map((s) => s.studentId));
+      _presentStudentIds.addAll(
+        _students
+            .map((student) => student.studentId.trim())
+            .where((id) => id.isNotEmpty),
+      );
     });
   }
 
   void _markAllAbsent() {
-    HapticFeedback.mediumImpact(); // iOS UX action confirm
+    if (_isSaving || _students.isEmpty) {
+      return;
+    }
+
+    HapticFeedback.mediumImpact();
+
     setState(() {
       _presentStudentIds.clear();
     });
   }
 
-  void _showSaveConfirmationDialog() {
-    HapticFeedback.mediumImpact(); // iOS UX prompt
-    final int presentCount = _presentStudentIds.length;
-    final int absentCount = _students.length - presentCount;
+  Future<void> _showSaveConfirmationDialog() async {
+    if (_isSaving || _students.isEmpty) {
+      return;
+    }
 
-    showDialog(
+    HapticFeedback.mediumImpact();
+
+    final presentCount = _presentStudentIds.length;
+    final absentCount = _students.length - presentCount;
+
+    final shouldSave = await showDialog<bool>(
       context: context,
-      builder: (context) {
+      barrierDismissible: !_isSaving,
+      builder: (dialogContext) {
         return Dialog(
-          backgroundColor: const Color(0xFF2C2C2E), // Dark grey from mockup
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16.r)),
+          backgroundColor: const Color(0xFF2C2C2E),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16.r),
+          ),
           child: Padding(
-            padding: EdgeInsets.symmetric(vertical: 30.h, horizontal: 24.w),
+            padding: EdgeInsets.symmetric(
+              vertical: 30.h,
+              horizontal: 24.w,
+            ),
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
                 Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    Text("Present  :  ", style: TextStyle(color: Colors.white, fontSize: 22.sp)),
                     Text(
-                        presentCount.toString().padLeft(2, '0'),
-                        style: TextStyle(color: const Color(0xFF34C759), fontSize: 22.sp) // Green
+                      'Present  :  ',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 22.sp,
+                      ),
+                    ),
+                    Text(
+                      presentCount.toString().padLeft(2, '0'),
+                      style: TextStyle(
+                        color: const Color(0xFF34C759),
+                        fontSize: 22.sp,
+                      ),
                     ),
                   ],
                 ),
@@ -143,10 +268,19 @@ class _AttendanceMarkingScreenState extends ConsumerState<AttendanceMarkingScree
                 Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    Text("Absent   :  ", style: TextStyle(color: Colors.white, fontSize: 22.sp)),
                     Text(
-                        absentCount.toString().padLeft(2, '0'),
-                        style: TextStyle(color: const Color(0xFFFF3B30), fontSize: 22.sp) // Red
+                      'Absent   :  ',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 22.sp,
+                      ),
+                    ),
+                    Text(
+                      absentCount.toString().padLeft(2, '0'),
+                      style: TextStyle(
+                        color: const Color(0xFFFF3B30),
+                        fontSize: 22.sp,
+                      ),
                     ),
                   ],
                 ),
@@ -155,21 +289,30 @@ class _AttendanceMarkingScreenState extends ConsumerState<AttendanceMarkingScree
                   mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                   children: [
                     TextButton(
-                      onPressed: () => Navigator.pop(context),
+                      onPressed: () {
+                        Navigator.of(dialogContext).pop(false);
+                      },
                       child: Text(
-                          "Cancel",
-                          style: TextStyle(color: const Color(0xFFFF3B30), fontSize: 18.sp, fontWeight: FontWeight.w500)
+                        'Cancel',
+                        style: TextStyle(
+                          color: const Color(0xFFFF3B30),
+                          fontSize: 18.sp,
+                          fontWeight: FontWeight.w500,
+                        ),
                       ),
                     ),
                     TextButton(
                       onPressed: () {
-                        HapticFeedback.heavyImpact(); // Confirm save
-                        Navigator.pop(context); // Close dialog
-                        _saveAttendance();
+                        HapticFeedback.heavyImpact();
+                        Navigator.of(dialogContext).pop(true);
                       },
                       child: Text(
-                          "Save",
-                          style: TextStyle(color: const Color(0xFF5667FD), fontSize: 18.sp, fontWeight: FontWeight.w500)
+                        'Save',
+                        style: TextStyle(
+                          color: const Color(0xFF5667FD),
+                          fontSize: 18.sp,
+                          fontWeight: FontWeight.w500,
+                        ),
                       ),
                     ),
                   ],
@@ -180,13 +323,25 @@ class _AttendanceMarkingScreenState extends ConsumerState<AttendanceMarkingScree
         );
       },
     );
+
+    if (shouldSave == true && mounted) {
+      await _saveAttendance();
+    }
   }
 
   Future<void> _saveAttendance() async {
-    setState(() => _isLoading = true);
+    if (_isSaving || !mounted) {
+      return;
+    }
+
+    setState(() {
+      _isSaving = true;
+    });
 
     try {
-      await ref.read(attendanceRepositoryProvider).saveAttendance(
+      final result = await ref
+          .read(attendanceRepositoryProvider)
+          .saveAttendance(
         subjectName: widget.subjectName,
         semester: widget.semester,
         section: widget.section,
@@ -194,24 +349,83 @@ class _AttendanceMarkingScreenState extends ConsumerState<AttendanceMarkingScree
         presentStudentIds: _presentStudentIds.toList(),
       );
 
-      if (mounted) {
-        // BUG FIX: Show SnackBar before popping to prevent "deactivated context" exceptions
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text("Attendance saved successfully!"), backgroundColor: Colors.green),
-        );
-        if (Navigator.canPop(context)) {
-          Navigator.pop(context); // Return to setup screen/home
-        }
+      if (!mounted) {
+        return;
       }
-    } catch (e) {
-      debugPrint("DEBUG: Error saving attendance: $e");
+
+      final String message;
+
+      switch (result) {
+        case AttendanceSaveResult.cloudSynced:
+          message = 'Attendance saved successfully.';
+        case AttendanceSaveResult.queuedForSync:
+          message =
+          'Attendance saved locally and queued for synchronization.';
+      }
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(message),
+          backgroundColor:
+          result == AttendanceSaveResult.cloudSynced
+              ? Colors.green
+              : Colors.orange,
+        ),
+      );
+
+      if (Navigator.canPop(context)) {
+        Navigator.pop(context);
+      }
+    } on AttendanceAuthorizationException catch (e) {
+      _showError(e.message);
+    } on AttendanceConflictException catch (e) {
+      _showError(e.message);
+    } on AttendanceValidationException catch (e) {
+      _showError(e.message);
+    } on AttendanceException catch (e) {
+      _showError(e.message);
+    } on FirebaseException catch (e) {
+      debugPrint(
+        'Attendance: unexpected Firebase error: '
+            '${e.code}: ${e.message}',
+      );
+
+      _showError(
+        e.message ?? 'Failed to save attendance.',
+      );
+    } catch (e, stackTrace) {
+      debugPrint(
+        'Attendance: unexpected save error: $e',
+      );
+      debugPrint('$stackTrace');
+
+      _showError(
+        'Failed to save attendance.',
+      );
+    } finally {
       if (mounted) {
-        setState(() => _isLoading = false);
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text("Failed to save attendance."), backgroundColor: Colors.redAccent),
-        );
+        setState(() {
+          _isSaving = false;
+        });
       }
     }
+  }
+
+  void _showError(String message) {
+    if (!mounted) {
+      return;
+    }
+
+    setState(() {
+      _isSaving = false;
+    });
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(message),
+        backgroundColor: Colors.redAccent,
+      ),
+    );
   }
 
   @override
@@ -222,33 +436,67 @@ class _AttendanceMarkingScreenState extends ConsumerState<AttendanceMarkingScree
         backgroundColor: Colors.black,
         elevation: 0,
         centerTitle: true,
-        iconTheme: const IconThemeData(color: Colors.white),
+        iconTheme: const IconThemeData(
+          color: Colors.white,
+        ),
         title: Text(
-          "Attendance",
-          style: TextStyle(color: Colors.white, fontSize: 22.sp, fontWeight: FontWeight.w500),
+          'Attendance',
+          style: TextStyle(
+            color: Colors.white,
+            fontSize: 22.sp,
+            fontWeight: FontWeight.w500,
+          ),
         ),
       ),
       body: _isLoading
-          ? const Center(child: CircularProgressIndicator(color: Color(0xFF5667FD)))
+          ? const Center(
+        child: CircularProgressIndicator(
+          color: Color(0xFF5667FD),
+        ),
+      )
           : SafeArea(
         child: Column(
           children: [
             SizedBox(height: 10.h),
 
-            // MODIFICATION: Top Bar for Bulk Actions (iOS Style)
             if (_students.isNotEmpty)
               Padding(
-                padding: EdgeInsets.symmetric(horizontal: 24.w),
+                padding: EdgeInsets.symmetric(
+                  horizontal: 24.w,
+                ),
                 child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  mainAxisAlignment:
+                  MainAxisAlignment.spaceBetween,
                   children: [
                     TextButton(
-                      onPressed: _markAllAbsent,
-                      child: Text("Absent All", style: TextStyle(color: const Color(0xFFFF3B30), fontSize: 16.sp, fontWeight: FontWeight.w500)),
+                      onPressed:
+                      _isSaving ? null : _markAllAbsent,
+                      child: Text(
+                        'Absent All',
+                        style: TextStyle(
+                          color: _isSaving
+                              ? const Color(0xFFFF3B30)
+                              .withValues(alpha: 0.4)
+                              : const Color(0xFFFF3B30),
+                          fontSize: 16.sp,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
                     ),
                     TextButton(
-                      onPressed: _markAllPresent,
-                      child: Text("Present All", style: TextStyle(color: const Color(0xFF34C759), fontSize: 16.sp, fontWeight: FontWeight.w500)),
+                      onPressed:
+                      _isSaving ? null : _markAllPresent,
+                      child: Text(
+                        'Present All',
+                        style: TextStyle(
+                          color: _isSaving
+                              ? const Color(0xFF34C759)
+                              .withValues(alpha: 0.4)
+                              : const Color(0xFF34C759),
+                          fontSize: 16.sp,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
                     ),
                   ],
                 ),
@@ -258,46 +506,88 @@ class _AttendanceMarkingScreenState extends ConsumerState<AttendanceMarkingScree
               child: _students.isEmpty
                   ? Center(
                 child: Text(
-                  "No students found for this section.",
-                  style: TextStyle(color: Colors.white54, fontSize: 16.sp),
+                  'No students found for this section.',
+                  style: TextStyle(
+                    color: Colors.white54,
+                    fontSize: 16.sp,
+                  ),
                 ),
               )
                   : ListView.builder(
-                padding: EdgeInsets.symmetric(horizontal: 28.w, vertical: 8.h),
+                padding: EdgeInsets.symmetric(
+                  horizontal: 28.w,
+                  vertical: 8.h,
+                ),
                 itemCount: _students.length,
-                physics: const BouncingScrollPhysics(), // Native iOS scroll feel
+                physics:
+                const BouncingScrollPhysics(),
                 itemBuilder: (context, index) {
                   final student = _students[index];
-                  final isPresent = _presentStudentIds.contains(student.studentId);
 
-                  // MODIFICATION: Use the micro-targeted stateful widget
+                  final isPresent =
+                  _presentStudentIds.contains(
+                    student.studentId,
+                  );
+
                   return _StudentTile(
-                    key: ValueKey("${student.studentId}_$isPresent"), // Forces rebuild ONLY if bulk action changes initial state
+                    key: ValueKey(
+                      '${student.studentId}_$isPresent',
+                    ),
                     student: student,
                     initialIsPresent: isPresent,
-                    onToggle: (newStatus) => _toggleAttendance(student.studentId, newStatus),
+                    onToggle: (newStatus) {
+                      if (_isSaving) {
+                        return;
+                      }
+
+                      _toggleAttendance(
+                        student.studentId,
+                        newStatus,
+                      );
+                    },
                   );
                 },
               ),
             ),
 
-            // Save Button Area
             if (_students.isNotEmpty)
               Padding(
-                padding: EdgeInsets.only(left: 28.w, right: 28.w, bottom: 40.h, top: 10.h),
+                padding: EdgeInsets.only(
+                  left: 28.w,
+                  right: 28.w,
+                  bottom: 40.h,
+                  top: 10.h,
+                ),
                 child: SizedBox(
                   width: double.infinity,
                   height: 56.h,
                   child: ElevatedButton(
-                    onPressed: _showSaveConfirmationDialog,
+                    onPressed: _isSaving
+                        ? null
+                        : _showSaveConfirmationDialog,
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xFF5667FD),
+                      backgroundColor:
+                      const Color(0xFF5667FD),
+                      disabledBackgroundColor:
+                      const Color(0xFF5667FD)
+                          .withValues(alpha: 0.5),
                       shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(24.r),
+                        borderRadius:
+                        BorderRadius.circular(24.r),
                       ),
                     ),
-                    child: Text(
-                      "Save",
+                    child: _isSaving
+                        ? SizedBox(
+                      width: 24.w,
+                      height: 24.w,
+                      child:
+                      const CircularProgressIndicator(
+                        strokeWidth: 2.5,
+                        color: Colors.white,
+                      ),
+                    )
+                        : Text(
+                      'Save',
                       style: TextStyle(
                         fontSize: 18.sp,
                         fontWeight: FontWeight.bold,
@@ -314,7 +604,6 @@ class _AttendanceMarkingScreenState extends ConsumerState<AttendanceMarkingScree
   }
 }
 
-// MODIFICATION: Extracted Stateful Widget for Micro-Targeted Rebuilds
 class _StudentTile extends StatefulWidget {
   final CachedStudent student;
   final bool initialIsPresent;
@@ -341,24 +630,57 @@ class _StudentTileState extends State<_StudentTile> {
   }
 
   @override
+  void didUpdateWidget(
+      covariant _StudentTile oldWidget,
+      ) {
+    super.didUpdateWidget(oldWidget);
+
+    if (oldWidget.initialIsPresent !=
+        widget.initialIsPresent) {
+      _isPresent = widget.initialIsPresent;
+    }
+  }
+
+  void _handleTap() {
+    HapticFeedback.selectionClick();
+
+    final newStatus = !_isPresent;
+
+    setState(() {
+      _isPresent = newStatus;
+    });
+
+    widget.onToggle(newStatus);
+  }
+
+  @override
   Widget build(BuildContext context) {
-    final displayId = widget.student.studentId.length >= 3
-        ? widget.student.studentId.substring(widget.student.studentId.length - 3)
-        : widget.student.studentId;
+    final studentId = widget.student.studentId;
+
+    final displayId = studentId.length >= 3
+        ? studentId.substring(studentId.length - 3)
+        : studentId;
 
     return GestureDetector(
-      onTap: () {
-        HapticFeedback.selectionClick(); // iOS UX micro-interaction
-        setState(() => _isPresent = !_isPresent);
-        widget.onToggle(_isPresent);
-      },
+      onTap: _handleTap,
       child: AnimatedContainer(
-        duration: const Duration(milliseconds: 150), // Snappy native feel
-        margin: EdgeInsets.only(bottom: 16.h),
-        padding: EdgeInsets.symmetric(horizontal: 24.w, vertical: 20.h),
+        duration: const Duration(
+          milliseconds: 150,
+        ),
+        margin: EdgeInsets.only(
+          bottom: 16.h,
+        ),
+        padding: EdgeInsets.symmetric(
+          horizontal: 24.w,
+          vertical: 20.h,
+        ),
         decoration: BoxDecoration(
-          color: _isPresent ? const Color(0xFF34C759) : const Color(0xFFFF3B30),
-          borderRadius: BorderRadius.circular(30.r), // Pill shape matching mockup
+          color: _isPresent
+              ? const Color(0xFF34C759)
+              : const Color(0xFFFF3B30),
+          borderRadius: BorderRadius.circular(
+            30.r,
+          ),
         ),
         child: Row(
           children: [
@@ -366,7 +688,11 @@ class _StudentTileState extends State<_StudentTile> {
               width: 50.w,
               child: Text(
                 displayId,
-                style: TextStyle(color: Colors.black87, fontSize: 18.sp, fontWeight: FontWeight.w500),
+                style: TextStyle(
+                  color: Colors.black87,
+                  fontSize: 18.sp,
+                  fontWeight: FontWeight.w500,
+                ),
               ),
             ),
             Expanded(
@@ -374,13 +700,21 @@ class _StudentTileState extends State<_StudentTile> {
                 widget.student.name,
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
-                style: TextStyle(color: Colors.black87, fontSize: 18.sp, fontWeight: FontWeight.w500),
+                style: TextStyle(
+                  color: Colors.black87,
+                  fontSize: 18.sp,
+                  fontWeight: FontWeight.w500,
+                ),
               ),
             ),
             SizedBox(width: 12.w),
             Text(
-              _isPresent ? "P" : "A",
-              style: TextStyle(color: Colors.black87, fontSize: 18.sp, fontWeight: FontWeight.bold),
+              _isPresent ? 'P' : 'A',
+              style: TextStyle(
+                color: Colors.black87,
+                fontSize: 18.sp,
+                fontWeight: FontWeight.bold,
+              ),
             ),
           ],
         ),

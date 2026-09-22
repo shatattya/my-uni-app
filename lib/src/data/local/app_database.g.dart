@@ -571,6 +571,14 @@ class $AnnouncementsTable extends Announcements
   late final GeneratedColumn<String> targetSections = GeneratedColumn<String>(
       'target_sections', aliasedName, false,
       type: DriftSqlType.string, requiredDuringInsert: true);
+  static const VerificationMeta _targetGroupsMeta =
+      const VerificationMeta('targetGroups');
+  @override
+  late final GeneratedColumn<String> targetGroups = GeneratedColumn<String>(
+      'target_groups', aliasedName, false,
+      type: DriftSqlType.string,
+      requiredDuringInsert: false,
+      defaultValue: const Constant('[]'));
   static const VerificationMeta _isGlobalMeta =
       const VerificationMeta('isGlobal');
   @override
@@ -597,6 +605,7 @@ class $AnnouncementsTable extends Announcements
         isDeleted,
         targetSemesters,
         targetSections,
+        targetGroups,
         isGlobal,
         createdAt
       ];
@@ -659,6 +668,12 @@ class $AnnouncementsTable extends Announcements
     } else if (isInserting) {
       context.missing(_targetSectionsMeta);
     }
+    if (data.containsKey('target_groups')) {
+      context.handle(
+          _targetGroupsMeta,
+          targetGroups.isAcceptableOrUnknown(
+              data['target_groups']!, _targetGroupsMeta));
+    }
     if (data.containsKey('is_global')) {
       context.handle(_isGlobalMeta,
           isGlobal.isAcceptableOrUnknown(data['is_global']!, _isGlobalMeta));
@@ -694,6 +709,8 @@ class $AnnouncementsTable extends Announcements
           DriftSqlType.string, data['${effectivePrefix}target_semesters'])!,
       targetSections: attachedDatabase.typeMapping.read(
           DriftSqlType.string, data['${effectivePrefix}target_sections'])!,
+      targetGroups: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}target_groups'])!,
       isGlobal: attachedDatabase.typeMapping
           .read(DriftSqlType.bool, data['${effectivePrefix}is_global'])!,
       createdAt: attachedDatabase.typeMapping
@@ -716,6 +733,7 @@ class Announcement extends DataClass implements Insertable<Announcement> {
   final bool isDeleted;
   final String targetSemesters;
   final String targetSections;
+  final String targetGroups;
   final bool isGlobal;
   final DateTime createdAt;
   const Announcement(
@@ -727,6 +745,7 @@ class Announcement extends DataClass implements Insertable<Announcement> {
       required this.isDeleted,
       required this.targetSemesters,
       required this.targetSections,
+      required this.targetGroups,
       required this.isGlobal,
       required this.createdAt});
   @override
@@ -740,6 +759,7 @@ class Announcement extends DataClass implements Insertable<Announcement> {
     map['is_deleted'] = Variable<bool>(isDeleted);
     map['target_semesters'] = Variable<String>(targetSemesters);
     map['target_sections'] = Variable<String>(targetSections);
+    map['target_groups'] = Variable<String>(targetGroups);
     map['is_global'] = Variable<bool>(isGlobal);
     map['created_at'] = Variable<DateTime>(createdAt);
     return map;
@@ -755,6 +775,7 @@ class Announcement extends DataClass implements Insertable<Announcement> {
       isDeleted: Value(isDeleted),
       targetSemesters: Value(targetSemesters),
       targetSections: Value(targetSections),
+      targetGroups: Value(targetGroups),
       isGlobal: Value(isGlobal),
       createdAt: Value(createdAt),
     );
@@ -772,6 +793,7 @@ class Announcement extends DataClass implements Insertable<Announcement> {
       isDeleted: serializer.fromJson<bool>(json['isDeleted']),
       targetSemesters: serializer.fromJson<String>(json['targetSemesters']),
       targetSections: serializer.fromJson<String>(json['targetSections']),
+      targetGroups: serializer.fromJson<String>(json['targetGroups']),
       isGlobal: serializer.fromJson<bool>(json['isGlobal']),
       createdAt: serializer.fromJson<DateTime>(json['createdAt']),
     );
@@ -788,6 +810,7 @@ class Announcement extends DataClass implements Insertable<Announcement> {
       'isDeleted': serializer.toJson<bool>(isDeleted),
       'targetSemesters': serializer.toJson<String>(targetSemesters),
       'targetSections': serializer.toJson<String>(targetSections),
+      'targetGroups': serializer.toJson<String>(targetGroups),
       'isGlobal': serializer.toJson<bool>(isGlobal),
       'createdAt': serializer.toJson<DateTime>(createdAt),
     };
@@ -802,6 +825,7 @@ class Announcement extends DataClass implements Insertable<Announcement> {
           bool? isDeleted,
           String? targetSemesters,
           String? targetSections,
+          String? targetGroups,
           bool? isGlobal,
           DateTime? createdAt}) =>
       Announcement(
@@ -813,6 +837,7 @@ class Announcement extends DataClass implements Insertable<Announcement> {
         isDeleted: isDeleted ?? this.isDeleted,
         targetSemesters: targetSemesters ?? this.targetSemesters,
         targetSections: targetSections ?? this.targetSections,
+        targetGroups: targetGroups ?? this.targetGroups,
         isGlobal: isGlobal ?? this.isGlobal,
         createdAt: createdAt ?? this.createdAt,
       );
@@ -831,6 +856,9 @@ class Announcement extends DataClass implements Insertable<Announcement> {
       targetSections: data.targetSections.present
           ? data.targetSections.value
           : this.targetSections,
+      targetGroups: data.targetGroups.present
+          ? data.targetGroups.value
+          : this.targetGroups,
       isGlobal: data.isGlobal.present ? data.isGlobal.value : this.isGlobal,
       createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
     );
@@ -847,6 +875,7 @@ class Announcement extends DataClass implements Insertable<Announcement> {
           ..write('isDeleted: $isDeleted, ')
           ..write('targetSemesters: $targetSemesters, ')
           ..write('targetSections: $targetSections, ')
+          ..write('targetGroups: $targetGroups, ')
           ..write('isGlobal: $isGlobal, ')
           ..write('createdAt: $createdAt')
           ..write(')'))
@@ -854,8 +883,18 @@ class Announcement extends DataClass implements Insertable<Announcement> {
   }
 
   @override
-  int get hashCode => Object.hash(id, title, body, authorName, authorUid,
-      isDeleted, targetSemesters, targetSections, isGlobal, createdAt);
+  int get hashCode => Object.hash(
+      id,
+      title,
+      body,
+      authorName,
+      authorUid,
+      isDeleted,
+      targetSemesters,
+      targetSections,
+      targetGroups,
+      isGlobal,
+      createdAt);
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
@@ -868,6 +907,7 @@ class Announcement extends DataClass implements Insertable<Announcement> {
           other.isDeleted == this.isDeleted &&
           other.targetSemesters == this.targetSemesters &&
           other.targetSections == this.targetSections &&
+          other.targetGroups == this.targetGroups &&
           other.isGlobal == this.isGlobal &&
           other.createdAt == this.createdAt);
 }
@@ -881,6 +921,7 @@ class AnnouncementsCompanion extends UpdateCompanion<Announcement> {
   final Value<bool> isDeleted;
   final Value<String> targetSemesters;
   final Value<String> targetSections;
+  final Value<String> targetGroups;
   final Value<bool> isGlobal;
   final Value<DateTime> createdAt;
   final Value<int> rowid;
@@ -893,6 +934,7 @@ class AnnouncementsCompanion extends UpdateCompanion<Announcement> {
     this.isDeleted = const Value.absent(),
     this.targetSemesters = const Value.absent(),
     this.targetSections = const Value.absent(),
+    this.targetGroups = const Value.absent(),
     this.isGlobal = const Value.absent(),
     this.createdAt = const Value.absent(),
     this.rowid = const Value.absent(),
@@ -906,6 +948,7 @@ class AnnouncementsCompanion extends UpdateCompanion<Announcement> {
     this.isDeleted = const Value.absent(),
     required String targetSemesters,
     required String targetSections,
+    this.targetGroups = const Value.absent(),
     this.isGlobal = const Value.absent(),
     required DateTime createdAt,
     this.rowid = const Value.absent(),
@@ -925,6 +968,7 @@ class AnnouncementsCompanion extends UpdateCompanion<Announcement> {
     Expression<bool>? isDeleted,
     Expression<String>? targetSemesters,
     Expression<String>? targetSections,
+    Expression<String>? targetGroups,
     Expression<bool>? isGlobal,
     Expression<DateTime>? createdAt,
     Expression<int>? rowid,
@@ -938,6 +982,7 @@ class AnnouncementsCompanion extends UpdateCompanion<Announcement> {
       if (isDeleted != null) 'is_deleted': isDeleted,
       if (targetSemesters != null) 'target_semesters': targetSemesters,
       if (targetSections != null) 'target_sections': targetSections,
+      if (targetGroups != null) 'target_groups': targetGroups,
       if (isGlobal != null) 'is_global': isGlobal,
       if (createdAt != null) 'created_at': createdAt,
       if (rowid != null) 'rowid': rowid,
@@ -953,6 +998,7 @@ class AnnouncementsCompanion extends UpdateCompanion<Announcement> {
       Value<bool>? isDeleted,
       Value<String>? targetSemesters,
       Value<String>? targetSections,
+      Value<String>? targetGroups,
       Value<bool>? isGlobal,
       Value<DateTime>? createdAt,
       Value<int>? rowid}) {
@@ -965,6 +1011,7 @@ class AnnouncementsCompanion extends UpdateCompanion<Announcement> {
       isDeleted: isDeleted ?? this.isDeleted,
       targetSemesters: targetSemesters ?? this.targetSemesters,
       targetSections: targetSections ?? this.targetSections,
+      targetGroups: targetGroups ?? this.targetGroups,
       isGlobal: isGlobal ?? this.isGlobal,
       createdAt: createdAt ?? this.createdAt,
       rowid: rowid ?? this.rowid,
@@ -998,6 +1045,9 @@ class AnnouncementsCompanion extends UpdateCompanion<Announcement> {
     if (targetSections.present) {
       map['target_sections'] = Variable<String>(targetSections.value);
     }
+    if (targetGroups.present) {
+      map['target_groups'] = Variable<String>(targetGroups.value);
+    }
     if (isGlobal.present) {
       map['is_global'] = Variable<bool>(isGlobal.value);
     }
@@ -1021,6 +1071,7 @@ class AnnouncementsCompanion extends UpdateCompanion<Announcement> {
           ..write('isDeleted: $isDeleted, ')
           ..write('targetSemesters: $targetSemesters, ')
           ..write('targetSections: $targetSections, ')
+          ..write('targetGroups: $targetGroups, ')
           ..write('isGlobal: $isGlobal, ')
           ..write('createdAt: $createdAt, ')
           ..write('rowid: $rowid')
@@ -4307,6 +4358,7 @@ typedef $$AnnouncementsTableCreateCompanionBuilder = AnnouncementsCompanion
   Value<bool> isDeleted,
   required String targetSemesters,
   required String targetSections,
+  Value<String> targetGroups,
   Value<bool> isGlobal,
   required DateTime createdAt,
   Value<int> rowid,
@@ -4321,6 +4373,7 @@ typedef $$AnnouncementsTableUpdateCompanionBuilder = AnnouncementsCompanion
   Value<bool> isDeleted,
   Value<String> targetSemesters,
   Value<String> targetSections,
+  Value<String> targetGroups,
   Value<bool> isGlobal,
   Value<DateTime> createdAt,
   Value<int> rowid,
@@ -4351,6 +4404,7 @@ class $$AnnouncementsTableTableManager extends RootTableManager<
             Value<bool> isDeleted = const Value.absent(),
             Value<String> targetSemesters = const Value.absent(),
             Value<String> targetSections = const Value.absent(),
+            Value<String> targetGroups = const Value.absent(),
             Value<bool> isGlobal = const Value.absent(),
             Value<DateTime> createdAt = const Value.absent(),
             Value<int> rowid = const Value.absent(),
@@ -4364,6 +4418,7 @@ class $$AnnouncementsTableTableManager extends RootTableManager<
             isDeleted: isDeleted,
             targetSemesters: targetSemesters,
             targetSections: targetSections,
+            targetGroups: targetGroups,
             isGlobal: isGlobal,
             createdAt: createdAt,
             rowid: rowid,
@@ -4377,6 +4432,7 @@ class $$AnnouncementsTableTableManager extends RootTableManager<
             Value<bool> isDeleted = const Value.absent(),
             required String targetSemesters,
             required String targetSections,
+            Value<String> targetGroups = const Value.absent(),
             Value<bool> isGlobal = const Value.absent(),
             required DateTime createdAt,
             Value<int> rowid = const Value.absent(),
@@ -4390,6 +4446,7 @@ class $$AnnouncementsTableTableManager extends RootTableManager<
             isDeleted: isDeleted,
             targetSemesters: targetSemesters,
             targetSections: targetSections,
+            targetGroups: targetGroups,
             isGlobal: isGlobal,
             createdAt: createdAt,
             rowid: rowid,
@@ -4437,6 +4494,11 @@ class $$AnnouncementsTableFilterComposer
 
   ColumnFilters<String> get targetSections => $state.composableBuilder(
       column: $state.table.targetSections,
+      builder: (column, joinBuilders) =>
+          ColumnFilters(column, joinBuilders: joinBuilders));
+
+  ColumnFilters<String> get targetGroups => $state.composableBuilder(
+      column: $state.table.targetGroups,
       builder: (column, joinBuilders) =>
           ColumnFilters(column, joinBuilders: joinBuilders));
 
@@ -4491,6 +4553,11 @@ class $$AnnouncementsTableOrderingComposer
 
   ColumnOrderings<String> get targetSections => $state.composableBuilder(
       column: $state.table.targetSections,
+      builder: (column, joinBuilders) =>
+          ColumnOrderings(column, joinBuilders: joinBuilders));
+
+  ColumnOrderings<String> get targetGroups => $state.composableBuilder(
+      column: $state.table.targetGroups,
       builder: (column, joinBuilders) =>
           ColumnOrderings(column, joinBuilders: joinBuilders));
 

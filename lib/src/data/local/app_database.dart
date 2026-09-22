@@ -1,4 +1,5 @@
 import 'dart:io';
+
 import 'package:drift/drift.dart';
 import 'package:drift/native.dart';
 import 'package:path_provider/path_provider.dart';
@@ -29,8 +30,20 @@ class Announcements extends Table {
   TextColumn get authorName => text()();
   TextColumn get authorUid => text().withDefault(const Constant(''))();
   BoolColumn get isDeleted => boolean().withDefault(const Constant(false))();
+
+  // Legacy fields kept for backwards compatibility with existing Firestore data.
   TextColumn get targetSemesters => text()();
   TextColumn get targetSections => text()();
+
+  // Canonical exact audience representation.
+  //
+  // JSON:
+  // [
+  //   {"semester":7,"section":"C"},
+  //   {"semester":8,"section":"A"}
+  // ]
+  TextColumn get targetGroups => text().withDefault(const Constant('[]'))();
+
   BoolColumn get isGlobal => boolean().withDefault(const Constant(false))();
   DateTimeColumn get createdAt => dateTime()();
 
@@ -123,66 +136,128 @@ class Notes extends Table {
   Set<Column> get primaryKey => {id};
 }
 
-// ADDED: Generic polymorphic table for live event schedules (World Cup, Cricket, Festivals)
 class LiveEvents extends Table {
   TextColumn get id => text()();
-  TextColumn get groupLabel => text().withDefault(const Constant(''))(); // e.g., "Group A"
-  TextColumn get heading => text()(); // e.g., "Group Stage" or "Day 1"
-  TextColumn get titlePrimary => text()(); // e.g., "Mexico" or "Opening Ceremony"
-  TextColumn get titleSecondary => text().withDefault(const Constant(''))(); // e.g., "USA"
-  TextColumn get subtitle => text().withDefault(const Constant(''))(); // e.g., "Estadio Azteca" or "Main Hall"
-  TextColumn get utcTime => text()(); // Stored in UTC to parse locally to user's timezone
+  TextColumn get groupLabel => text().withDefault(const Constant(''))();
+  TextColumn get heading => text()();
+  TextColumn get titlePrimary => text()();
+  TextColumn get titleSecondary => text().withDefault(const Constant(''))();
+  TextColumn get subtitle => text().withDefault(const Constant(''))();
+  TextColumn get utcTime => text()();
 
   @override
   Set<Column> get primaryKey => {id};
 }
 
-// MODIFICATION: Added LiveEvents to the tables list
-@DriftDatabase(tables: [Users, Announcements, Routines, ExamRoutines, CachedStudents, AttendanceRecords, Books, Notes, LiveEvents])
+@DriftDatabase(
+  tables: [
+    Users,
+    Announcements,
+    Routines,
+    ExamRoutines,
+    CachedStudents,
+    AttendanceRecords,
+    Books,
+    Notes,
+    LiveEvents,
+  ],
+)
 class AppDatabase extends _$AppDatabase {
   AppDatabase() : super(_openConnection());
 
-  // MODIFICATION: Bumped schema version to 9
   @override
-  int get schemaVersion => 9;
+  int get schemaVersion => 10;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
-    onCreate: (Migrator m) {
-      return m.createAll();
+    onCreate: (Migrator m) async {
+      await m.createAll();
     },
     onUpgrade: (Migrator m, int from, int to) async {
-      // MODIFICATION: Wrapped all schema additions in try-catch blocks to safely
-      // ignore duplicate column/table errors caused by inconsistent dev states.
       if (from < 2) {
-        try { await m.addColumn(announcements, announcements.authorUid); } catch (_) {}
-        try { await m.addColumn(announcements, announcements.isDeleted); } catch (_) {}
-        try { await m.createTable(routines); } catch (_) {}
+        try {
+          await m.addColumn(
+            announcements,
+            announcements.authorUid,
+          );
+        } catch (_) {}
+
+        try {
+          await m.addColumn(
+            announcements,
+            announcements.isDeleted,
+          );
+        } catch (_) {}
+
+        try {
+          await m.createTable(routines);
+        } catch (_) {}
       }
+
       if (from < 3) {
-        try { await m.addColumn(users, users.isDev); } catch (_) {}
-        try { await m.addColumn(users, users.isCR); } catch (_) {}
+        try {
+          await m.addColumn(users, users.isDev);
+        } catch (_) {}
+
+        try {
+          await m.addColumn(users, users.isCR);
+        } catch (_) {}
       }
+
       if (from < 4) {
-        try { await m.addColumn(routines, routines.teacherId); } catch (_) {}
+        try {
+          await m.addColumn(routines, routines.teacherId);
+        } catch (_) {}
       }
+
       if (from < 5) {
-        try { await m.createTable(cachedStudents); } catch (_) {}
-        try { await m.createTable(attendanceRecords); } catch (_) {}
+        try {
+          await m.createTable(cachedStudents);
+        } catch (_) {}
+
+        try {
+          await m.createTable(attendanceRecords);
+        } catch (_) {}
       }
+
       if (from < 6) {
-        try { await m.addColumn(attendanceRecords, attendanceRecords.isSynced); } catch (_) {}
+        try {
+          await m.addColumn(
+            attendanceRecords,
+            attendanceRecords.isSynced,
+          );
+        } catch (_) {}
       }
+
       if (from < 7) {
-        try { await m.createTable(examRoutines); } catch (_) {}
+        try {
+          await m.createTable(examRoutines);
+        } catch (_) {}
       }
+
       if (from < 8) {
-        try { await m.createTable(books); } catch (_) {}
-        try { await m.createTable(notes); } catch (_) {}
+        try {
+          await m.createTable(books);
+        } catch (_) {}
+
+        try {
+          await m.createTable(notes);
+        } catch (_) {}
       }
-      // MODIFICATION: Migration for schema 9 to create LiveEvents table
+
       if (from < 9) {
-        try { await m.createTable(liveEvents); } catch (_) {}
+        try {
+          await m.createTable(liveEvents);
+        } catch (_) {}
+      }
+
+      if (from < 10) {
+        try {
+          await m.addColumn(
+            announcements,
+            announcements.targetGroups,
+          );
+        } catch (_) {}
       }
     },
   );
@@ -197,7 +272,7 @@ class AppDatabase extends _$AppDatabase {
       await delete(attendanceRecords).go();
       await delete(books).go();
       await delete(notes).go();
-      await delete(liveEvents).go(); // MODIFICATION: Clear live events on logout
+      await delete(liveEvents).go();
     });
   }
 }
@@ -205,7 +280,13 @@ class AppDatabase extends _$AppDatabase {
 LazyDatabase _openConnection() {
   return LazyDatabase(() async {
     final dbFolder = await getApplicationDocumentsDirectory();
-    final file = File(p.join(dbFolder.path, 'app_db.sqlite'));
+    final file = File(
+      p.join(
+        dbFolder.path,
+        'app_db.sqlite',
+      ),
+    );
+
     return NativeDatabase.createInBackground(file);
   });
 }
