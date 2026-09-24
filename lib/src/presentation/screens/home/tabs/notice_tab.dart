@@ -1,14 +1,15 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:firebase_auth/firebase_auth.dart';
-import 'package:intl/intl.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+
+import '../../../../data/local/app_database.dart';
 import '../../../../data/repositories/announcement_repository.dart';
 import '../../../../data/repositories/user_repository.dart';
-import '../../../../providers/sync_controller.dart';
 import '../../../routes/app_router.dart';
+import '../../../theme/app_theme.dart';
+import '../widgets/announcement_card.dart';
 
 class NoticeTab extends ConsumerStatefulWidget {
   const NoticeTab({super.key});
@@ -18,344 +19,678 @@ class NoticeTab extends ConsumerStatefulWidget {
 }
 
 class _NoticeTabState extends ConsumerState<NoticeTab> {
+  Stream<dynamic>? _userStream;
+
+  bool _isSyncing = false;
+  String? _syncError;
+
   @override
   void initState() {
     super.initState();
+
+    final uid = FirebaseAuth.instance.currentUser?.uid;
+
+    if (uid != null) {
+      _userStream = ref.read(userRepositoryProvider).watchUser(uid);
+    }
+
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      ref.read(announcementRepositoryProvider).syncAnnouncements();
+      _syncAnnouncements(silent: true);
     });
   }
 
-  @override
-  Widget build(BuildContext context) {
-    final uid = FirebaseAuth.instance.currentUser?.uid;
-    if (uid == null) {
-      return Scaffold(
-        backgroundColor: Colors.black,
-        body: Center(
-          child: Text("Please login", style: TextStyle(color: Colors.white, fontSize: 16.sp)),
-        ),
-      );
+  Future<void> _syncAnnouncements({
+    bool silent = false,
+  }) async {
+    if (_isSyncing) {
+      return;
     }
-    return StreamBuilder(
-      stream: ref.watch(userRepositoryProvider).watchUser(uid),
-      builder: (context, userSnapshot) {
-        if (userSnapshot.connectionState == ConnectionState.waiting) {
-          return const Scaffold(
-            backgroundColor: Colors.black,
-            body: Center(
-              child: CircularProgressIndicator(color: Color(0xFF1877F2)),
-            ),
-          );
-        }
-        final user = userSnapshot.data;
-        if (user == null) {
-          return Scaffold(
-            backgroundColor: Colors.black,
-            body: Center(
-              child: ElevatedButton(
-                onPressed: () => ref.read(userRepositoryProvider).syncUser(uid),
-                style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF1877F2)),
-                child: Text("User data not synced. Tap to Sync", style: TextStyle(fontSize: 14.sp)),
-              ),
-            ),
-          );
-        }
-        final syncState = ref.watch(syncControllerProvider);
-        return Scaffold(
-          backgroundColor: Colors.black,
-          appBar: AppBar(
-            backgroundColor: Colors.black,
-            centerTitle: true,
-            title: Text(
-              "Announcements",
-              style: TextStyle(color: Colors.white, fontSize: 22.sp, fontWeight: FontWeight.w600),
-            ),
-            actions: [
-              Padding(
-                padding: EdgeInsets.only(right: 16.w),
-                child: syncState.isLoading
-                    ? Center(
-                  child: SizedBox(
-                    width: 20.w,
-                    height: 20.w,
-                    child: const CircularProgressIndicator(color: Color(0xFF1877F2), strokeWidth: 2),
-                  ),
-                )
-                    : IconButton(
-                  icon: Icon(Icons.sync, color: const Color(0xFF1877F2), size: 24.sp),
-                  tooltip: "Sync Announcements",
-                  onPressed: () async {
-                    HapticFeedback.lightImpact();
-                    try {
-                      await ref.read(syncControllerProvider.notifier).syncAllData();
-                      if (context.mounted) {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(content: Text("Announcements synced successfully!"), backgroundColor: Colors.green),
-                        );
-                      }
-                    } catch (e) {
-                      if (context.mounted) {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(content: Text(e.toString().replaceAll("Exception: ", "")), backgroundColor: Colors.redAccent),
-                        );
-                      }
-                    }
-                  },
-                ),
-              ),
-            ],
+
+    if (mounted) {
+      setState(() {
+        _isSyncing = true;
+        _syncError = null;
+      });
+    }
+
+    try {
+      await ref
+          .read(announcementRepositoryProvider)
+          .syncAnnouncements();
+
+      if (!mounted) {
+        return;
+      }
+
+      setState(() {
+        _syncError = null;
+      });
+
+      if (!silent) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Announcements synced successfully.'),
           ),
-          floatingActionButton:
-          (user.role == "teacher" || user.isDev || user.isCR)
-              ? FloatingActionButton(
-            backgroundColor: const Color(0xFF1877F2),
-            tooltip: "Create Announcement",
-            elevation: 4,
-            child: Icon(Icons.add, color: Colors.white, size: 28.sp),
-            onPressed: () {
-              HapticFeedback.lightImpact();
-              Navigator.pushNamed(context, AppRoutes.createAnnouncement);
-            },
-          )
-              : null,
-          body: StreamBuilder(
-            stream: ref
-                .watch(announcementRepositoryProvider)
-                .watchMyAnnouncements(user.semester, user.section, user.role, user.id),
-            builder: (context, announcementSnapshot) {
-              if (announcementSnapshot.connectionState == ConnectionState.waiting) {
-                return const Center(
-                  child: CircularProgressIndicator(color: Color(0xFF1877F2)),
-                );
-              }
-              final notices = announcementSnapshot.data ?? [];
-              if (notices.isEmpty) {
-                return Center(
-                  child: Text(
-                    "No notices for your section.",
-                    style: TextStyle(color: Colors.white70, fontSize: 16.sp),
-                  ),
-                );
-              }
-              return RefreshIndicator(
-                color: const Color(0xFF1877F2),
-                onRefresh: () async {
-                  HapticFeedback.lightImpact();
-                  try {
-                    await ref.read(syncControllerProvider.notifier).syncAllData();
-                  } catch (e) {
-                    if (context.mounted) {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(content: Text(e.toString().replaceAll("Exception: ", "")), backgroundColor: Colors.redAccent),
-                      );
-                    }
+        );
+      }
+    } catch (error, stackTrace) {
+      debugPrint(
+        'Failed to sync announcements: $error',
+      );
+      debugPrintStack(
+        stackTrace: stackTrace,
+      );
+
+      if (!mounted) {
+        return;
+      }
+
+      setState(() {
+        _syncError = 'Could not refresh announcements.';
+      });
+
+      if (!silent) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              error
+                  .toString()
+                  .replaceFirst('Exception: ', '')
+                  .trim()
+                  .isEmpty
+                  ? 'Could not refresh announcements.'
+                  : error
+                  .toString()
+                  .replaceFirst('Exception: ', '')
+                  .trim(),
+            ),
+          ),
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isSyncing = false;
+        });
+      }
+    }
+  }
+
+  void _showDeleteConfirmation(
+      BuildContext context,
+      String announcementId,
+      ) {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+
+    showDialog<void>(
+      context: context,
+      builder: (dialogContext) {
+        return AlertDialog(
+          title: const Text('Delete announcement?'),
+          content: const Text(
+            'This announcement will be removed from the feed.',
+          ),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.of(dialogContext).pop();
+              },
+              child: const Text('Cancel'),
+            ),
+            FilledButton(
+              style: FilledButton.styleFrom(
+                backgroundColor: colorScheme.error,
+              ),
+              onPressed: () async {
+                Navigator.of(dialogContext).pop();
+
+                try {
+                  await ref
+                      .read(announcementRepositoryProvider)
+                      .softDeleteAnnouncement(
+                    announcementId,
+                  );
+
+                  if (!mounted) {
+                    return;
                   }
-                },
-                child: ListView.builder(
-                  padding: EdgeInsets.all(16.w),
-                  itemCount: notices.length,
-                  itemBuilder: (context, index) =>
-                      _buildNoticeCard(context, notices[index], user.id),
-                ),
-              );
-            },
-          ),
+
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text(
+                        'Announcement deleted successfully.',
+                      ),
+                    ),
+                  );
+                } catch (error, stackTrace) {
+                  debugPrint(
+                    'Failed to delete announcement: $error',
+                  );
+                  debugPrintStack(
+                    stackTrace: stackTrace,
+                  );
+
+                  if (!mounted) {
+                    return;
+                  }
+
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text(
+                        'Could not delete the announcement.',
+                      ),
+                    ),
+                  );
+                }
+              },
+              child: const Text('Delete'),
+            ),
+          ],
         );
       },
     );
   }
 
-  Widget _buildNoticeCard(BuildContext context, dynamic notice, String currentUserId) {
-    bool isAuthor = notice.authorUid == currentUserId;
-    return Padding(
-      padding: EdgeInsets.only(bottom: 16.h),
-      child: Material(
-        color: const Color(0xFF1E1E1E),
-        borderRadius: BorderRadius.circular(16.r),
-        child: InkWell(
-          borderRadius: BorderRadius.circular(16.r),
-          onTap: () {
-            Navigator.pushNamed(context, AppRoutes.detailAnnouncement, arguments: notice);
+  void _openCreateAnnouncement() {
+    HapticFeedback.lightImpact();
+
+    Navigator.pushNamed(
+      context,
+      AppRoutes.createAnnouncement,
+    );
+  }
+
+  void _openEditAnnouncement(Announcement notice) {
+    HapticFeedback.lightImpact();
+
+    Navigator.pushNamed(
+      context,
+      AppRoutes.editAnnouncement,
+      arguments: notice,
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final uid = FirebaseAuth.instance.currentUser?.uid;
+
+    if (uid == null || _userStream == null) {
+      return _buildScaffold(
+        context,
+        body: _buildCenteredState(
+          context,
+          icon: Icons.lock_outline_rounded,
+          title: 'Please log in',
+          subtitle: 'Sign in to view campus announcements.',
+        ),
+      );
+    }
+
+    return StreamBuilder<dynamic>(
+      stream: _userStream,
+      builder: (context, userSnapshot) {
+        if (userSnapshot.connectionState ==
+            ConnectionState.waiting) {
+          return _buildScaffold(
+            context,
+            body: _buildLoadingState(context),
+          );
+        }
+
+        if (userSnapshot.hasError) {
+          return _buildScaffold(
+            context,
+            body: _buildCenteredState(
+              context,
+              icon: Icons.error_outline_rounded,
+              title: 'Could not load your profile',
+              subtitle: 'Please try again.',
+              actionLabel: 'Retry',
+              onAction: () => _syncAnnouncements(),
+            ),
+          );
+        }
+
+        final user = userSnapshot.data;
+
+        if (user == null) {
+          return _buildScaffold(
+            context,
+            body: _buildCenteredState(
+              context,
+              icon: Icons.person_outline_rounded,
+              title: 'Profile unavailable',
+              subtitle: 'Sync your profile to continue.',
+              actionLabel: 'Sync',
+              onAction: () async {
+                try {
+                  await ref
+                      .read(userRepositoryProvider)
+                      .syncUser(uid);
+                } catch (error) {
+                  if (!mounted) {
+                    return;
+                  }
+
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text(
+                        'Could not sync your profile.',
+                      ),
+                    ),
+                  );
+                }
+              },
+            ),
+          );
+        }
+
+        final canCreateAnnouncement =
+            user.role == 'teacher' ||
+                user.isDev == true ||
+                user.isCR == true;
+
+        return StreamBuilder<List<Announcement>>(
+          stream: ref
+              .read(announcementRepositoryProvider)
+              .watchMyAnnouncements(
+            user.semester,
+            user.section,
+            user.role,
+            user.id,
+          ),
+          builder: (context, announcementSnapshot) {
+            if (announcementSnapshot.connectionState ==
+                ConnectionState.waiting) {
+              return _buildScaffold(
+                context,
+                showCreateButton: canCreateAnnouncement,
+                body: _buildLoadingState(context),
+              );
+            }
+
+            if (announcementSnapshot.hasError) {
+              return _buildScaffold(
+                context,
+                showCreateButton: canCreateAnnouncement,
+                body: _buildCenteredState(
+                  context,
+                  icon: Icons.cloud_off_outlined,
+                  title: 'Could not load announcements',
+                  subtitle:
+                  'Your cached announcements may still be unavailable.',
+                  actionLabel: 'Refresh',
+                  onAction: () => _syncAnnouncements(),
+                ),
+              );
+            }
+
+            final notices =
+                announcementSnapshot.data ??
+                    const <Announcement>[];
+
+            return _buildScaffold(
+              context,
+              showCreateButton: canCreateAnnouncement,
+              body: RefreshIndicator(
+                color: Theme.of(context).colorScheme.primary,
+                backgroundColor: AppColors.surface,
+                onRefresh: () async {
+                  HapticFeedback.lightImpact();
+                  await _syncAnnouncements();
+                },
+                child: notices.isEmpty
+                    ? _buildEmptyList(context)
+                    : ListView.separated(
+                  padding: EdgeInsets.fromLTRB(
+                    16.w,
+                    8.h,
+                    16.w,
+                    110.h,
+                  ),
+                  physics:
+                  const AlwaysScrollableScrollPhysics(
+                    parent: BouncingScrollPhysics(),
+                  ),
+                  itemCount: notices.length + 1,
+                  separatorBuilder: (_, __) {
+                    return SizedBox(height: 12.h);
+                  },
+                  itemBuilder: (context, index) {
+                    if (index == 0) {
+                      return _buildFeedHeader(
+                        context,
+                        notices.length,
+                      );
+                    }
+
+                    final notice = notices[index - 1];
+
+                    return AnnouncementCard(
+                      announcement: notice,
+                      currentUserId: user.id,
+                      onEdit: notice.authorUid == user.id
+                          ? () {
+                        _openEditAnnouncement(
+                          notice,
+                        );
+                      }
+                          : null,
+                      onDelete: notice.authorUid == user.id
+                          ? () {
+                        _showDeleteConfirmation(
+                          context,
+                          notice.id,
+                        );
+                      }
+                          : null,
+                    );
+                  },
+                ),
+              ),
+            );
           },
-          child: Padding(
-            padding: EdgeInsets.all(16.w),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+        );
+      },
+    );
+  }
+
+  Widget _buildScaffold(
+      BuildContext context, {
+        required Widget body,
+        bool showCreateButton = false,
+      }) {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+
+    return Scaffold(
+      backgroundColor: AppColors.background,
+      appBar: AppBar(
+        backgroundColor: AppColors.background,
+        surfaceTintColor: Colors.transparent,
+        elevation: 0,
+        scrolledUnderElevation: 0,
+        automaticallyImplyLeading: false,
+        titleSpacing: 20.w,
+        title: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Announcements',
+              style: theme.textTheme.titleLarge?.copyWith(
+                color: AppColors.textPrimary,
+                fontWeight: FontWeight.w800,
+              ),
+            ),
+            SizedBox(height: 2.h),
+            Text(
+              'Stay up to date with campus news',
+              style: theme.textTheme.labelMedium?.copyWith(
+                color: AppColors.textTertiary,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+          ],
+        ),
+        actions: [
+          Padding(
+            padding: EdgeInsets.only(
+              right: 12.w,
+            ),
+            child: Material(
+              color: Colors.transparent,
+              borderRadius: BorderRadius.circular(13.r),
+              child: Ink(
+                decoration: BoxDecoration(
+                  color: AppColors.surface,
+                  borderRadius: BorderRadius.circular(13.r),
+                  border: Border.all(
+                    color: Colors.white.withValues(alpha: 0.06),
+                  ),
+                ),
+                child: InkWell(
+                  borderRadius:
+                  BorderRadius.circular(13.r),
+                  onTap: _isSyncing
+                      ? null
+                      : () {
+                    HapticFeedback.lightImpact();
+                    _syncAnnouncements();
+                  },
+                  child: SizedBox(
+                    width: 42.r,
+                    height: 42.r,
+                    child: _isSyncing
+                        ? Padding(
+                      padding: EdgeInsets.all(12.r),
+                      child:
+                      CircularProgressIndicator(
+                        strokeWidth: 2,
+                        color: colorScheme.primary,
+                      ),
+                    )
+                        : Icon(
+                      Icons.sync_rounded,
+                      color: colorScheme.primary,
+                      size: 21.r,
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+      floatingActionButton: showCreateButton
+          ? FloatingActionButton(
+        onPressed: _openCreateAnnouncement,
+        tooltip: 'Create announcement',
+        backgroundColor: colorScheme.primary,
+        foregroundColor: Colors.white,
+        elevation: 3,
+        child: Icon(
+          Icons.add_rounded,
+          size: 27.r,
+        ),
+      )
+          : null,
+      body: body,
+    );
+  }
+
+  Widget _buildFeedHeader(
+      BuildContext context,
+      int count,
+      ) {
+    final theme = Theme.of(context);
+
+    return Padding(
+      padding: EdgeInsets.fromLTRB(
+        4.w,
+        3.h,
+        4.w,
+        2.h,
+      ),
+      child: Row(
+        children: [
+          Expanded(
+            child: Text(
+              count == 1
+                  ? '1 announcement'
+                  : '$count announcements',
+              style: theme.textTheme.bodySmall?.copyWith(
+                color: AppColors.textTertiary,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ),
+          if (_syncError != null)
+            Row(
+              mainAxisSize: MainAxisSize.min,
               children: [
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Row(
-                      children: [
-                        CircleAvatar(
-                          radius: 14.r,
-                          backgroundColor: const Color(0xFF1877F2).withValues(alpha: 0.2),
-                          child: Icon(
-                            Icons.person_outline,
-                            color: const Color(0xFF1877F2),
-                            size: 16.sp,
-                          ),
-                        ),
-                        SizedBox(width: 8.w),
-                        if (!isAuthor)
-                          Text(
-                            notice.authorName,
-                            style: TextStyle(
-                              color: Colors.white70,
-                              fontSize: 14.sp,
-                            ),
-                          ),
-                      ],
-                    ),
-                    if (isAuthor)
-                      Text(
-                        "You",
-                        style: TextStyle(
-                          color: const Color(0xFF1877F2),
-                          fontSize: 14.sp,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                  ],
+                Icon(
+                  Icons.cloud_off_outlined,
+                  size: 15.r,
+                  color: theme.colorScheme.error,
                 ),
-                SizedBox(height: 16.h),
+                SizedBox(width: 4.w),
                 Text(
-                  notice.title,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontSize: 18.sp,
-                    fontWeight: FontWeight.bold,
+                  'Offline copy',
+                  style: theme.textTheme.labelSmall?.copyWith(
+                    color: theme.colorScheme.error,
+                    fontWeight: FontWeight.w600,
                   ),
-                ),
-                SizedBox(height: 8.h),
-                Text(
-                  notice.body,
-                  maxLines: 3,
-                  overflow: TextOverflow.ellipsis,
-                  style: TextStyle(
-                    color: Colors.white54,
-                    fontSize: 14.sp,
-                    height: 1.4,
-                  ),
-                ),
-                SizedBox(height: 16.h),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  crossAxisAlignment: CrossAxisAlignment.end,
-                  children: [
-                    Text(
-                      DateFormat('MM/dd/yyyy').format(notice.createdAt),
-                      style: TextStyle(
-                        color: Colors.white38,
-                        fontSize: 12.sp,
-                      ),
-                    ),
-                    if (isAuthor)
-                      Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Material(
-                            color: Colors.transparent,
-                            child: InkWell(
-                              borderRadius: BorderRadius.circular(6.r),
-                              splashColor: Colors.blueAccent.withValues(alpha: 0.1),
-                              onTap: () {
-                                HapticFeedback.lightImpact();
-                                Navigator.pushNamed(context, AppRoutes.editAnnouncement, arguments: notice);
-                              },
-                              child: Padding(
-                                padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 4.h),
-                                child: Row(
-                                  mainAxisSize: MainAxisSize.min,
-                                  children: [
-                                    Icon(Icons.edit_outlined, color: Colors.blueAccent, size: 20.sp),
-                                    SizedBox(width: 4.w),
-                                    Text("Edit", style: TextStyle(color: Colors.blueAccent, fontSize: 14.sp)),
-                                  ],
-                                ),
-                              ),
-                            ),
-                          ),
-                          SizedBox(width: 12.w),
-                          Material(
-                            color: Colors.transparent,
-                            child: InkWell(
-                              borderRadius: BorderRadius.circular(6.r),
-                              splashColor: Colors.redAccent.withValues(alpha: 0.1),
-                              onTap: () {
-                                HapticFeedback.mediumImpact();
-                                _showDeleteConfirmation(context, notice.id);
-                              },
-                              child: Padding(
-                                padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 4.h),
-                                child: Row(
-                                  mainAxisSize: MainAxisSize.min,
-                                  children: [
-                                    Icon(Icons.delete_outline, color: Colors.redAccent, size: 20.sp),
-                                    SizedBox(width: 4.w),
-                                    Text("Delete", style: TextStyle(color: Colors.redAccent, fontSize: 14.sp)),
-                                  ],
-                                ),
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                  ],
                 ),
               ],
             ),
-          ),
-        ),
+        ],
       ),
     );
   }
 
-  void _showDeleteConfirmation(BuildContext context, String noticeId) {
-    showCupertinoModalPopup(
-      context: context,
-      builder: (BuildContext context) => CupertinoActionSheet(
-        title: Text(
-          "Delete Announcement?",
-          style: TextStyle(fontSize: 16.sp, fontWeight: FontWeight.w600),
+  Widget _buildEmptyList(BuildContext context) {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+
+    return ListView(
+      padding: EdgeInsets.fromLTRB(
+        24.w,
+        24.h,
+        24.w,
+        110.h,
+      ),
+      physics: const AlwaysScrollableScrollPhysics(
+        parent: BouncingScrollPhysics(),
+      ),
+      children: [
+        SizedBox(
+          height: MediaQuery.sizeOf(context).height * 0.16,
         ),
-        message: Text(
-          "This will remove the announcement from the feed permanently.",
-          style: TextStyle(fontSize: 14.sp),
-        ),
-        actions: [
-          CupertinoActionSheetAction(
-            isDestructiveAction: true,
-            onPressed: () async {
-              HapticFeedback.heavyImpact();
-              Navigator.pop(context);
-              try {
-                await ref.read(announcementRepositoryProvider).softDeleteAnnouncement(noticeId);
-                if (context.mounted) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text("Announcement deleted successfully"), backgroundColor: Colors.green),
-                  );
-                }
-              } catch (e) {
-                if (context.mounted) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text("Failed to delete announcement"), backgroundColor: Colors.redAccent),
-                  );
-                }
-              }
-            },
-            child: Text("Delete", style: TextStyle(fontSize: 18.sp)),
+        Container(
+          width: 76.r,
+          height: 76.r,
+          margin: EdgeInsets.symmetric(
+            horizontal: 110.w,
           ),
-        ],
-        cancelButton: CupertinoActionSheetAction(
-          isDefaultAction: true,
-          onPressed: () {
-            Navigator.pop(context);
-          },
-          child: Text("Cancel", style: TextStyle(fontSize: 18.sp, color: const Color(0xFF1877F2))),
+          decoration: BoxDecoration(
+            color: colorScheme.primary.withValues(
+              alpha: 0.09,
+            ),
+            shape: BoxShape.circle,
+          ),
+          child: Icon(
+            Icons.campaign_outlined,
+            size: 38.r,
+            color: colorScheme.primary,
+          ),
+        ),
+        SizedBox(height: 20.h),
+        Text(
+          'No announcements yet',
+          textAlign: TextAlign.center,
+          style: theme.textTheme.titleLarge?.copyWith(
+            color: AppColors.textPrimary,
+            fontWeight: FontWeight.w800,
+          ),
+        ),
+        SizedBox(height: 7.h),
+        Text(
+          'There are no announcements available for you right now.',
+          textAlign: TextAlign.center,
+          style: theme.textTheme.bodyMedium?.copyWith(
+            color: AppColors.textSecondary,
+            height: 1.4,
+          ),
+        ),
+        SizedBox(height: 20.h),
+        Center(
+          child: OutlinedButton.icon(
+            onPressed: _isSyncing
+                ? null
+                : () => _syncAnnouncements(),
+            icon: const Icon(
+              Icons.refresh_rounded,
+            ),
+            label: const Text('Refresh'),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildLoadingState(
+      BuildContext context,
+      ) {
+    final colorScheme = Theme.of(context).colorScheme;
+
+    return Center(
+      child: CircularProgressIndicator(
+        color: colorScheme.primary,
+      ),
+    );
+  }
+
+  Widget _buildCenteredState(
+      BuildContext context, {
+        required IconData icon,
+        required String title,
+        required String subtitle,
+        String? actionLabel,
+        VoidCallback? onAction,
+      }) {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+
+    return Center(
+      child: Padding(
+        padding: EdgeInsets.symmetric(
+          horizontal: 30.w,
+        ),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Container(
+              width: 70.r,
+              height: 70.r,
+              decoration: BoxDecoration(
+                color: colorScheme.primary.withValues(
+                  alpha: 0.09,
+                ),
+                shape: BoxShape.circle,
+              ),
+              child: Icon(
+                icon,
+                size: 34.r,
+                color: colorScheme.primary,
+              ),
+            ),
+            SizedBox(height: 17.h),
+            Text(
+              title,
+              textAlign: TextAlign.center,
+              style: theme.textTheme.titleMedium?.copyWith(
+                color: AppColors.textPrimary,
+                fontWeight: FontWeight.w800,
+              ),
+            ),
+            SizedBox(height: 6.h),
+            Text(
+              subtitle,
+              textAlign: TextAlign.center,
+              style: theme.textTheme.bodyMedium?.copyWith(
+                color: AppColors.textSecondary,
+                height: 1.4,
+              ),
+            ),
+            if (actionLabel != null && onAction != null) ...[
+              SizedBox(height: 18.h),
+              FilledButton(
+                onPressed: onAction,
+                child: Text(actionLabel),
+              ),
+            ],
+          ],
         ),
       ),
     );

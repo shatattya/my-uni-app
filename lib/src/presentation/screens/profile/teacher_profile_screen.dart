@@ -31,6 +31,44 @@ class _TeacherProfileScreenState extends ConsumerState<TeacherProfileScreen> {
     }
   }
 
+  void _showLogoutDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: const Color(0xFF1E1E1E),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16.r)),
+        title: Row(
+          children: [
+            Icon(Icons.logout_rounded, color: Colors.white, size: 28.sp),
+            SizedBox(width: 10.w),
+            Text("Log Out", style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 18.sp)),
+          ],
+        ),
+        content: Text("Are you sure you want to log out?", style: TextStyle(color: Colors.white70, fontSize: 15.sp)),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: const Text("Cancel", style: TextStyle(color: Colors.white54)),
+          ),
+          ElevatedButton(
+            onPressed: () async {
+              HapticFeedback.mediumImpact();
+              Navigator.pop(ctx);
+              await ref.read(authServiceProvider).signOut();
+              if (!context.mounted) return;
+              Navigator.of(context).pushNamedAndRemoveUntil(AppRoutes.auth, (route) => false);
+            },
+            style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.redAccent,
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8.r))
+            ),
+            child: const Text("Log Out", style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+          ),
+        ],
+      ),
+    );
+  }
+
   void _showDeleteAccountDialog(BuildContext context, User user) {
     final passwordController = TextEditingController();
     bool isDeleting = false;
@@ -142,6 +180,7 @@ class _TeacherProfileScreenState extends ConsumerState<TeacherProfileScreen> {
             if (snapshot.connectionState == ConnectionState.waiting) {
               return const Center(child: CircularProgressIndicator(color: Color(0xFF1877F2)));
             }
+
             if (!snapshot.hasData || snapshot.data == null) return const SizedBox();
 
             final user = snapshot.data!;
@@ -240,11 +279,9 @@ class _TeacherProfileScreenState extends ConsumerState<TeacherProfileScreen> {
                         iconColor: Colors.redAccent,
                         showDivider: true,
                         hideChevron: true,
-                        onTap: () async {
+                        onTap: () {
                           HapticFeedback.mediumImpact();
-                          await ref.read(authServiceProvider).signOut();
-                          if (!context.mounted) return;
-                          Navigator.of(context).pushNamedAndRemoveUntil(AppRoutes.auth, (route) => false);
+                          _showLogoutDialog(context);
                         },
                       ),
                       _buildActionRow(
