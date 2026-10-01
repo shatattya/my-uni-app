@@ -4,7 +4,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 
-import '../../../../data/local/app_database.dart';
+import '../../../../data/local/app_database.dart' as local_db;
 import '../../../../data/repositories/announcement_repository.dart';
 import '../../../../data/repositories/user_repository.dart';
 import '../../../routes/app_router.dart';
@@ -19,7 +19,9 @@ class NoticeTab extends ConsumerStatefulWidget {
 }
 
 class _NoticeTabState extends ConsumerState<NoticeTab> {
-  Stream<dynamic>? _userStream;
+  Stream<local_db.User?>? _userStream;
+  Stream<List<local_db.Announcement>>? _announcementStream;
+  String? _announcementStreamKey;
 
   bool _isSyncing = false;
   String? _syncError;
@@ -31,12 +33,44 @@ class _NoticeTabState extends ConsumerState<NoticeTab> {
     final uid = FirebaseAuth.instance.currentUser?.uid;
 
     if (uid != null) {
-      _userStream = ref.read(userRepositoryProvider).watchUser(uid);
+      _userStream = ref
+          .read(userRepositoryProvider)
+          .watchUser(uid);
     }
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      _syncAnnouncements(silent: true);
+      _ensureAnnouncementsLoaded();
     });
+  }
+
+  Future<void> _ensureAnnouncementsLoaded() async {
+    try {
+      final repository =
+      ref.read(announcementRepositoryProvider);
+
+      final cacheInitialized =
+      await repository.hasLoadedAnnouncementsCache();
+
+      if (!cacheInitialized) {
+        await _syncAnnouncements(silent: true);
+      }
+    } catch (error, stackTrace) {
+      debugPrint(
+        'Failed to initialize announcements: $error',
+      );
+      debugPrintStack(
+        stackTrace: stackTrace,
+      );
+
+      if (!mounted) {
+        return;
+      }
+
+      setState(() {
+        _syncError =
+        'Could not refresh announcements.';
+      });
+    }
   }
 
   Future<void> _syncAnnouncements({
@@ -69,7 +103,9 @@ class _NoticeTabState extends ConsumerState<NoticeTab> {
       if (!silent) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
-            content: Text('Announcements synced successfully.'),
+            content: Text(
+              'Announcements refreshed successfully.',
+            ),
           ),
         );
       }
@@ -86,7 +122,8 @@ class _NoticeTabState extends ConsumerState<NoticeTab> {
       }
 
       setState(() {
-        _syncError = 'Could not refresh announcements.';
+        _syncError =
+        'Could not refresh announcements.';
       });
 
       if (!silent) {
@@ -95,13 +132,19 @@ class _NoticeTabState extends ConsumerState<NoticeTab> {
             content: Text(
               error
                   .toString()
-                  .replaceFirst('Exception: ', '')
+                  .replaceFirst(
+                'Exception: ',
+                '',
+              )
                   .trim()
                   .isEmpty
                   ? 'Could not refresh announcements.'
                   : error
                   .toString()
-                  .replaceFirst('Exception: ', '')
+                  .replaceFirst(
+                'Exception: ',
+                '',
+              )
                   .trim(),
             ),
           ),
@@ -114,6 +157,30 @@ class _NoticeTabState extends ConsumerState<NoticeTab> {
         });
       }
     }
+  }
+
+  Stream<List<local_db.Announcement>> _announcementStreamFor(
+      local_db.User user,
+      ) {
+    final streamKey =
+        '${user.id}|${user.semester}|'
+        '${user.section}|${user.role}';
+
+    if (_announcementStream == null ||
+        _announcementStreamKey != streamKey) {
+      _announcementStreamKey = streamKey;
+
+      _announcementStream = ref
+          .read(announcementRepositoryProvider)
+          .watchMyAnnouncements(
+        user.semester,
+        user.section,
+        user.role,
+        user.id,
+      );
+    }
+
+    return _announcementStream!;
   }
 
   void _showDeleteConfirmation(
@@ -201,7 +268,9 @@ class _NoticeTabState extends ConsumerState<NoticeTab> {
     );
   }
 
-  void _openEditAnnouncement(Announcement notice) {
+  void _openEditAnnouncement(
+      local_db.Announcement notice,
+      ) {
     HapticFeedback.lightImpact();
 
     Navigator.pushNamed(
@@ -222,12 +291,13 @@ class _NoticeTabState extends ConsumerState<NoticeTab> {
           context,
           icon: Icons.lock_outline_rounded,
           title: 'Please log in',
-          subtitle: 'Sign in to view campus announcements.',
+          subtitle:
+          'Sign in to view campus announcements.',
         ),
       );
     }
 
-    return StreamBuilder<dynamic>(
+    return StreamBuilder<local_db.User?>(
       stream: _userStream,
       builder: (context, userSnapshot) {
         if (userSnapshot.connectionState ==
@@ -261,14 +331,30 @@ class _NoticeTabState extends ConsumerState<NoticeTab> {
               context,
               icon: Icons.person_outline_rounded,
               title: 'Profile unavailable',
-              subtitle: 'Sync your profile to continue.',
+              subtitle:
+              'Sync your profile to continue.',
               actionLabel: 'Sync',
               onAction: () async {
                 try {
                   await ref
                       .read(userRepositoryProvider)
                       .syncUser(uid);
-                } catch (error) {
+
+                  if (!mounted) {
+                    return;
+                  }
+
+                  setState(() {
+                    _syncError = null;
+                  });
+                } catch (error, stackTrace) {
+                  debugPrint(
+                    'Failed to sync profile: $error',
+                  );
+                  debugPrintStack(
+                    stackTrace: stackTrace,
+                  );
+
                   if (!mounted) {
                     return;
                   }
@@ -291,21 +377,18 @@ class _NoticeTabState extends ConsumerState<NoticeTab> {
                 user.isDev == true ||
                 user.isCR == true;
 
-        return StreamBuilder<List<Announcement>>(
-          stream: ref
-              .read(announcementRepositoryProvider)
-              .watchMyAnnouncements(
-            user.semester,
-            user.section,
-            user.role,
-            user.id,
-          ),
+        final announcementStream =
+        _announcementStreamFor(user);
+
+        return StreamBuilder<List<local_db.Announcement>>(
+          stream: announcementStream,
           builder: (context, announcementSnapshot) {
             if (announcementSnapshot.connectionState ==
                 ConnectionState.waiting) {
               return _buildScaffold(
                 context,
-                showCreateButton: canCreateAnnouncement,
+                showCreateButton:
+                canCreateAnnouncement,
                 body: _buildLoadingState(context),
               );
             }
@@ -313,28 +396,47 @@ class _NoticeTabState extends ConsumerState<NoticeTab> {
             if (announcementSnapshot.hasError) {
               return _buildScaffold(
                 context,
-                showCreateButton: canCreateAnnouncement,
+                showCreateButton:
+                canCreateAnnouncement,
                 body: _buildCenteredState(
                   context,
                   icon: Icons.cloud_off_outlined,
-                  title: 'Could not load announcements',
+                  title:
+                  'Could not load announcements',
                   subtitle:
                   'Your cached announcements may still be unavailable.',
                   actionLabel: 'Refresh',
-                  onAction: () => _syncAnnouncements(),
+                  onAction:
+                      () => _syncAnnouncements(),
                 ),
               );
             }
 
             final notices =
                 announcementSnapshot.data ??
-                    const <Announcement>[];
+                    const <local_db.Announcement>[];
+
+            // During the genuinely required initial synchronization, avoid
+            // briefly presenting the empty state from the local database
+            // before the remote fetch finishes.
+            if (_isSyncing &&
+                notices.isEmpty &&
+                _syncError == null) {
+              return _buildScaffold(
+                context,
+                showCreateButton:
+                canCreateAnnouncement,
+                body: _buildLoadingState(context),
+              );
+            }
 
             return _buildScaffold(
               context,
-              showCreateButton: canCreateAnnouncement,
+              showCreateButton:
+              canCreateAnnouncement,
               body: RefreshIndicator(
-                color: Theme.of(context).colorScheme.primary,
+                color:
+                Theme.of(context).colorScheme.primary,
                 backgroundColor: AppColors.surface,
                 onRefresh: () async {
                   HapticFeedback.lightImpact();
@@ -351,13 +453,19 @@ class _NoticeTabState extends ConsumerState<NoticeTab> {
                   ),
                   physics:
                   const AlwaysScrollableScrollPhysics(
-                    parent: BouncingScrollPhysics(),
+                    parent:
+                    BouncingScrollPhysics(),
                   ),
-                  itemCount: notices.length + 1,
-                  separatorBuilder: (_, __) {
-                    return SizedBox(height: 12.h);
+                  itemCount:
+                  notices.length + 1,
+                  separatorBuilder:
+                      (_, __) {
+                    return SizedBox(
+                      height: 12.h,
+                    );
                   },
-                  itemBuilder: (context, index) {
+                  itemBuilder:
+                      (context, index) {
                     if (index == 0) {
                       return _buildFeedHeader(
                         context,
@@ -365,19 +473,24 @@ class _NoticeTabState extends ConsumerState<NoticeTab> {
                       );
                     }
 
-                    final notice = notices[index - 1];
+                    final notice =
+                    notices[index - 1];
 
                     return AnnouncementCard(
                       announcement: notice,
                       currentUserId: user.id,
-                      onEdit: notice.authorUid == user.id
+                      onEdit:
+                      notice.authorUid ==
+                          user.id
                           ? () {
                         _openEditAnnouncement(
                           notice,
                         );
                       }
                           : null,
-                      onDelete: notice.authorUid == user.id
+                      onDelete:
+                      notice.authorUid ==
+                          user.id
                           ? () {
                         _showDeleteConfirmation(
                           context,
@@ -414,7 +527,8 @@ class _NoticeTabState extends ConsumerState<NoticeTab> {
         automaticallyImplyLeading: false,
         titleSpacing: 20.w,
         title: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
+          crossAxisAlignment:
+          CrossAxisAlignment.start,
           children: [
             Text(
               'Announcements',
@@ -426,7 +540,8 @@ class _NoticeTabState extends ConsumerState<NoticeTab> {
             SizedBox(height: 2.h),
             Text(
               'Stay up to date with campus news',
-              style: theme.textTheme.labelMedium?.copyWith(
+              style:
+              theme.textTheme.labelMedium?.copyWith(
                 color: AppColors.textTertiary,
                 fontWeight: FontWeight.w500,
               ),
@@ -440,13 +555,18 @@ class _NoticeTabState extends ConsumerState<NoticeTab> {
             ),
             child: Material(
               color: Colors.transparent,
-              borderRadius: BorderRadius.circular(13.r),
+              borderRadius:
+              BorderRadius.circular(13.r),
               child: Ink(
                 decoration: BoxDecoration(
                   color: AppColors.surface,
-                  borderRadius: BorderRadius.circular(13.r),
+                  borderRadius:
+                  BorderRadius.circular(13.r),
                   border: Border.all(
-                    color: Colors.white.withValues(alpha: 0.06),
+                    color:
+                    Colors.white.withValues(
+                      alpha: 0.06,
+                    ),
                   ),
                 ),
                 child: InkWell(
@@ -463,16 +583,19 @@ class _NoticeTabState extends ConsumerState<NoticeTab> {
                     height: 42.r,
                     child: _isSyncing
                         ? Padding(
-                      padding: EdgeInsets.all(12.r),
+                      padding:
+                      EdgeInsets.all(12.r),
                       child:
                       CircularProgressIndicator(
                         strokeWidth: 2,
-                        color: colorScheme.primary,
+                        color:
+                        colorScheme.primary,
                       ),
                     )
                         : Icon(
-                      Icons.sync_rounded,
-                      color: colorScheme.primary,
+                      Icons.refresh_rounded,
+                      color:
+                      colorScheme.primary,
                       size: 21.r,
                     ),
                   ),
@@ -486,7 +609,8 @@ class _NoticeTabState extends ConsumerState<NoticeTab> {
           ? FloatingActionButton(
         onPressed: _openCreateAnnouncement,
         tooltip: 'Create announcement',
-        backgroundColor: colorScheme.primary,
+        backgroundColor:
+        colorScheme.primary,
         foregroundColor: Colors.white,
         elevation: 3,
         child: Icon(
@@ -519,7 +643,8 @@ class _NoticeTabState extends ConsumerState<NoticeTab> {
               count == 1
                   ? '1 announcement'
                   : '$count announcements',
-              style: theme.textTheme.bodySmall?.copyWith(
+              style:
+              theme.textTheme.bodySmall?.copyWith(
                 color: AppColors.textTertiary,
                 fontWeight: FontWeight.w600,
               ),
@@ -532,13 +657,16 @@ class _NoticeTabState extends ConsumerState<NoticeTab> {
                 Icon(
                   Icons.cloud_off_outlined,
                   size: 15.r,
-                  color: theme.colorScheme.error,
+                  color:
+                  theme.colorScheme.error,
                 ),
                 SizedBox(width: 4.w),
                 Text(
                   'Offline copy',
-                  style: theme.textTheme.labelSmall?.copyWith(
-                    color: theme.colorScheme.error,
+                  style:
+                  theme.textTheme.labelSmall?.copyWith(
+                    color:
+                    theme.colorScheme.error,
                     fontWeight: FontWeight.w600,
                   ),
                 ),
@@ -549,9 +677,12 @@ class _NoticeTabState extends ConsumerState<NoticeTab> {
     );
   }
 
-  Widget _buildEmptyList(BuildContext context) {
+  Widget _buildEmptyList(
+      BuildContext context,
+      ) {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
+    final hasSyncError = _syncError != null;
 
     return ListView(
       padding: EdgeInsets.fromLTRB(
@@ -565,40 +696,52 @@ class _NoticeTabState extends ConsumerState<NoticeTab> {
       ),
       children: [
         SizedBox(
-          height: MediaQuery.sizeOf(context).height * 0.16,
+          height:
+          MediaQuery.sizeOf(context).height *
+              0.16,
         ),
         Container(
           width: 76.r,
           height: 76.r,
-          margin: EdgeInsets.symmetric(
+          margin:
+          EdgeInsets.symmetric(
             horizontal: 110.w,
           ),
           decoration: BoxDecoration(
-            color: colorScheme.primary.withValues(
+            color:
+            colorScheme.primary.withValues(
               alpha: 0.09,
             ),
             shape: BoxShape.circle,
           ),
           child: Icon(
-            Icons.campaign_outlined,
+            hasSyncError
+                ? Icons.cloud_off_outlined
+                : Icons.campaign_outlined,
             size: 38.r,
             color: colorScheme.primary,
           ),
         ),
         SizedBox(height: 20.h),
         Text(
-          'No announcements yet',
+          hasSyncError
+              ? 'Could not refresh announcements'
+              : 'No announcements yet',
           textAlign: TextAlign.center,
-          style: theme.textTheme.titleLarge?.copyWith(
+          style:
+          theme.textTheme.titleLarge?.copyWith(
             color: AppColors.textPrimary,
             fontWeight: FontWeight.w800,
           ),
         ),
         SizedBox(height: 7.h),
         Text(
-          'There are no announcements available for you right now.',
+          hasSyncError
+              ? 'We could not update the announcements right now. Your local copy may be empty or unavailable.'
+              : 'There are no announcements available for you right now.',
           textAlign: TextAlign.center,
-          style: theme.textTheme.bodyMedium?.copyWith(
+          style:
+          theme.textTheme.bodyMedium?.copyWith(
             color: AppColors.textSecondary,
             height: 1.4,
           ),
@@ -622,7 +765,8 @@ class _NoticeTabState extends ConsumerState<NoticeTab> {
   Widget _buildLoadingState(
       BuildContext context,
       ) {
-    final colorScheme = Theme.of(context).colorScheme;
+    final colorScheme =
+        Theme.of(context).colorScheme;
 
     return Center(
       child: CircularProgressIndicator(
@@ -648,13 +792,15 @@ class _NoticeTabState extends ConsumerState<NoticeTab> {
           horizontal: 30.w,
         ),
         child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
+          mainAxisAlignment:
+          MainAxisAlignment.center,
           children: [
             Container(
               width: 70.r,
               height: 70.r,
               decoration: BoxDecoration(
-                color: colorScheme.primary.withValues(
+                color:
+                colorScheme.primary.withValues(
                   alpha: 0.09,
                 ),
                 shape: BoxShape.circle,
@@ -669,7 +815,8 @@ class _NoticeTabState extends ConsumerState<NoticeTab> {
             Text(
               title,
               textAlign: TextAlign.center,
-              style: theme.textTheme.titleMedium?.copyWith(
+              style:
+              theme.textTheme.titleMedium?.copyWith(
                 color: AppColors.textPrimary,
                 fontWeight: FontWeight.w800,
               ),
@@ -678,12 +825,14 @@ class _NoticeTabState extends ConsumerState<NoticeTab> {
             Text(
               subtitle,
               textAlign: TextAlign.center,
-              style: theme.textTheme.bodyMedium?.copyWith(
+              style:
+              theme.textTheme.bodyMedium?.copyWith(
                 color: AppColors.textSecondary,
                 height: 1.4,
               ),
             ),
-            if (actionLabel != null && onAction != null) ...[
+            if (actionLabel != null &&
+                onAction != null) ...[
               SizedBox(height: 18.h),
               FilledButton(
                 onPressed: onAction,

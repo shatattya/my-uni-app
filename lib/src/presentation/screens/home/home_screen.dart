@@ -28,13 +28,16 @@ class HomeScreen extends ConsumerStatefulWidget {
 
 class _HomeScreenState extends ConsumerState<HomeScreen> {
   int _currentIndex = 0;
+
   late final PageController _pageController;
+
   Timer? _updateCheckTimer;
+
   StreamSubscription<RemoteMessage>? _foregroundMessageSubscription;
   StreamSubscription<RemoteMessage>? _openedAppMessageSubscription;
+
   bool _isOpeningNotice = false;
 
-  // Tracks the timestamp of the last back press for the double-tap exit
   DateTime? _lastPressedAt;
 
   final List<Widget> _screens = const [
@@ -47,6 +50,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   @override
   void initState() {
     super.initState();
+
     _pageController = PageController(
       initialPage: _currentIndex,
     );
@@ -71,12 +75,16 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     _foregroundMessageSubscription?.cancel();
     _openedAppMessageSubscription?.cancel();
     _pageController.dispose();
+
     super.dispose();
   }
 
   Future<void> _checkForUpdatesSilently() async {
     try {
-      final updateService = ref.read(updateServiceProvider);
+      final updateService = ref.read(
+        updateServiceProvider,
+      );
+
       final info = await updateService.checkForUpdates();
 
       if (!mounted || !info.hasUpdate) {
@@ -89,7 +97,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
       );
     } catch (error, stackTrace) {
       debugPrint(
-        'Silent update check failed: $error\n$stackTrace',
+        'Silent update check failed: '
+            '$error\n$stackTrace',
       );
     }
   }
@@ -97,7 +106,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   Future<void> _setupInteractedMessage() async {
     _foregroundMessageSubscription =
         FirebaseMessaging.onMessage.listen(
-              (message) {
+              (RemoteMessage message) {
             unawaited(
               _syncAnnouncementsFromMessage(),
             );
@@ -106,7 +115,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
 
     _openedAppMessageSubscription =
         FirebaseMessaging.onMessageOpenedApp.listen(
-              (message) {
+              (RemoteMessage message) {
             unawaited(
               _navigateToNotices(message),
             );
@@ -121,7 +130,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         return;
       }
 
-      await _navigateToNotices(initialMessage);
+      await _navigateToNotices(
+        initialMessage,
+      );
     } catch (error, stackTrace) {
       debugPrint(
         'Failed to resolve initial Firebase Messaging message: '
@@ -155,10 +166,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     try {
       _selectTab(2);
 
-      final noticeId =
-          message.data['id'] ??
-              message.data['noticeId'] ??
-              message.data['announcementId'];
+      final noticeId = message.data['id'] ??
+          message.data['noticeId'] ??
+          message.data['announcementId'];
 
       if (noticeId == null ||
           noticeId.toString().trim().isEmpty) {
@@ -237,6 +247,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         index >= _screens.length) {
       return;
     }
+
     if (_currentIndex == index) {
       return;
     }
@@ -249,57 +260,65 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
       return;
     }
 
-    // Jumping prevents viewing intermediate tabs during a bar tap
     _pageController.jumpToPage(index);
   }
 
   @override
   Widget build(BuildContext context) {
-    return PopScope(
+    return PopScope<dynamic>(
       canPop: false,
-      onPopInvoked: (didPop) {
-        if (didPop) return;
+      onPopInvokedWithResult: (
+          bool didPop,
+          dynamic result,
+          ) {
+        if (didPop) {
+          return;
+        }
 
-        // Route back to home tab from any other tab
         if (_currentIndex != 0) {
           _selectTab(0);
           return;
         }
 
-        // Handle double-tap to exit on the home tab
         final now = DateTime.now();
+
         final canExit = _lastPressedAt != null &&
-            now.difference(_lastPressedAt!) <= const Duration(seconds: 2);
+            now.difference(_lastPressedAt!) <=
+                const Duration(seconds: 2);
 
         if (canExit) {
           SystemNavigator.pop();
-        } else {
-          _lastPressedAt = now;
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: const Text(
-                'Press back again to exit',
-                style: TextStyle(color: Colors.white),
-              ),
-              backgroundColor: AppColors.elevatedSurface,
-              behavior: SnackBarBehavior.floating,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(10.r),
-              ),
-              duration: const Duration(seconds: 2),
-            ),
-          );
+          return;
         }
+
+        _lastPressedAt = now;
+
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: const Text(
+              'Press back again to exit',
+              style: TextStyle(
+                color: Colors.white,
+              ),
+            ),
+            backgroundColor: AppColors.elevatedSurface,
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(10.r),
+            ),
+            duration: const Duration(seconds: 2),
+          ),
+        );
       },
       child: Scaffold(
         backgroundColor: Colors.black,
         body: PageView(
           controller: _pageController,
-          // Allowed swiping for adjacent tabs. Bar taps will still jump instantly.
           onPageChanged: (index) {
             if (!mounted || _currentIndex == index) {
               return;
             }
+
             setState(() {
               _currentIndex = index;
             });
@@ -317,7 +336,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
           child: SizedBox(
             height: 72.h,
             child: Row(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
+              crossAxisAlignment:
+              CrossAxisAlignment.stretch,
               children: [
                 _navItem(
                   activeIcon: Icons.home,
@@ -327,7 +347,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                 ),
                 _navItem(
                   activeIcon: Icons.calendar_today,
-                  inactiveIcon: Icons.calendar_today_outlined,
+                  inactiveIcon:
+                  Icons.calendar_today_outlined,
                   label: 'Routine',
                   index: 1,
                 ),
@@ -371,13 +392,16 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
           minHeight: 48.h,
           borderRadius: BorderRadius.circular(16.r),
           padding: EdgeInsets.zero,
-          backgroundColor:
-          isActive ? AppColors.primary : Colors.transparent,
+          backgroundColor: isActive
+              ? AppColors.primary
+              : Colors.transparent,
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               Icon(
-                isActive ? activeIcon : inactiveIcon,
+                isActive
+                    ? activeIcon
+                    : inactiveIcon,
                 size: 28.r,
                 color: isActive
                     ? AppColors.textPrimary
@@ -388,9 +412,13 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                 label,
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
-                style: Theme.of(context).textTheme.labelMedium?.copyWith(
-                  fontWeight:
-                  isActive ? FontWeight.w700 : FontWeight.w500,
+                style: Theme.of(context)
+                    .textTheme
+                    .labelMedium
+                    ?.copyWith(
+                  fontWeight: isActive
+                      ? FontWeight.w700
+                      : FontWeight.w500,
                   color: isActive
                       ? AppColors.textPrimary
                       : AppColors.textSecondary,

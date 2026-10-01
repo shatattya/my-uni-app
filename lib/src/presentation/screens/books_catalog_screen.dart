@@ -715,6 +715,11 @@ class _BookRequestFormState
       return;
     }
 
+    final semester = _parseSemester();
+    if (semester == null) {
+      return;
+    }
+
     HapticFeedback.lightImpact();
 
     setState(() {
@@ -722,31 +727,46 @@ class _BookRequestFormState
     });
 
     try {
+      // The Firebase write is the source of truth for submission success.
+      // Local cooldown persistence is best-effort and must not turn a
+      // confirmed backend success into a visible failure.
       await ref
           .read(bookRepositoryProvider)
           .submitBookRequest(
         name: _bookNameController.text.trim(),
         author: _authorController.text.trim(),
-        semester: _parseSemester()!,
+        semester: semester,
         isbn: _isbnController.text.trim(),
       );
 
-      final prefs =
-      await SharedPreferences.getInstance();
+      try {
+        final prefs =
+        await SharedPreferences.getInstance();
 
-      final today =
-      DateFormat('yyyy-MM-dd').format(
-        DateTime.now(),
-      );
+        final today =
+        DateFormat('yyyy-MM-dd').format(
+          DateTime.now(),
+        );
 
-      await prefs.setString(
-        'last_book_request_date',
-        today,
-      );
-
-      if (mounted) {
-        Navigator.of(context).pop(true);
+        await prefs.setString(
+          'last_book_request_date',
+          today,
+        );
+      } catch (error, stackTrace) {
+        debugPrint(
+          'Book request succeeded, but local cooldown could not be saved: '
+              '$error',
+        );
+        debugPrintStack(
+          stackTrace: stackTrace,
+        );
       }
+
+      if (!mounted) {
+        return;
+      }
+
+      Navigator.of(context).pop(true);
     } catch (error, stackTrace) {
       debugPrint(
         'Book request failed: $error',
@@ -759,10 +779,6 @@ class _BookRequestFormState
         return;
       }
 
-      setState(() {
-        _isSubmitting = false;
-      });
-
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
@@ -771,7 +787,7 @@ class _BookRequestFormState
                 .replaceFirst('Exception: ', '')
                 .trim()
                 .isEmpty
-                ? 'Could not submit the request.'
+                ? 'We couldn\'t submit your request. Please try again.'
                 : error
                 .toString()
                 .replaceFirst('Exception: ', '')
@@ -779,6 +795,12 @@ class _BookRequestFormState
           ),
         ),
       );
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isSubmitting = false;
+        });
+      }
     }
   }
 

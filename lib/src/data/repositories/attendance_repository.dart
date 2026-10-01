@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'dart:io';
 
+import '../models/attendance_conflict.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:drift/drift.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -122,8 +123,8 @@ class AttendanceRepository {
         .get();
 
     if (localStudents.isNotEmpty) {
-      // Refresh in the background. The current local roster remains available
-      // immediately, which preserves the existing offline-first behavior.
+      // Keep the current offline-first behavior: return the cached roster
+      // immediately and refresh it in the background.
       _syncStudentsFromCloud(
         semester,
         normalizedSection,
@@ -228,12 +229,10 @@ class AttendanceRepository {
   //
   // Developer/admin:
   //   admins/{uid} OR roles/{uid}.isDev == true
-  //
-  // This matches the application's original simple teacher model.
   // ---------------------------------------------------------------------------
 
   String _requireUid() {
-    final uid = _auth.currentUser?.uid?.trim();
+    final uid = _auth.currentUser?.uid.trim();
 
     if (uid == null || uid.isEmpty) {
       throw const AttendanceAuthorizationException(
@@ -321,11 +320,11 @@ class AttendanceRepository {
   // SAVE ATTENDANCE
   //
   // Online:
-  //   validate → authorize → transaction → local synced record
+  //   validate -> authorize -> transaction -> local synced record
   //
   // Offline:
-  //   if the user was already identified locally as teacher/developer,
-  //   preserve the attendance locally and let normal sync retry later.
+  //   if the account is already known locally as teacher/developer,
+  //   preserve the attendance locally and let synchronization retry later.
   // ---------------------------------------------------------------------------
 
   Future<AttendanceSaveResult> saveAttendance({
@@ -344,7 +343,6 @@ class AttendanceRepository {
     );
 
     final uid = _requireUid();
-
     final attendanceId = _attendanceIdFor(draft);
 
     final localExisting = await (_db.select(
@@ -371,8 +369,8 @@ class AttendanceRepository {
       }
     }
 
-    // When Firebase is temporarily unavailable, allow an account that is
-    // already known locally as a teacher/developer to retain offline support.
+    // Firebase is temporarily unavailable. Preserve the edit locally when
+    // the account itself is already known locally.
     if (authorization == null) {
       final locallyAuthorized = await _isLocallyAuthorizedUser(uid);
 
@@ -407,8 +405,8 @@ class AttendanceRepository {
 
       return AttendanceSaveResult.cloudSynced;
     } on AttendanceConflictException {
-      // Refresh the local copy with the current cloud version so the next
-      // screen load starts from the correct revision.
+      // Always refresh the local copy after a real conflict so a subsequent
+      // open of the editor starts from the current cloud state.
       await _refreshLocalRecordFromCloud(
         attendanceId,
       );
@@ -450,8 +448,7 @@ class AttendanceRepository {
       return false;
     }
 
-    return localUser.role.trim().toLowerCase() ==
-        'teacher' ||
+    return localUser.role.trim().toLowerCase() == 'teacher' ||
         localUser.isDev;
   }
 
@@ -486,6 +483,8 @@ class AttendanceRepository {
         .toSet();
 
     final invalidIds = presentStudentIds
+        .map((id) => id.trim())
+        .where((id) => id.isNotEmpty)
         .where((id) => !validIds.contains(id))
         .toList();
 
@@ -503,6 +502,19 @@ class AttendanceRepository {
 
   // ---------------------------------------------------------------------------
   // CLOUD WRITE
+  //
+  // Important:
+  //
+  // We intentionally do NOT use updatedAt as the client-side conflict token.
+  // Firestore timestamps can have finer precision than the local Drift cache,
+  // and client/local timestamps are also not suitable as a concurrency token.
+  //
+  // Instead, an existing local record is compared with the actual cloud
+  // attendance contents. Firestore's security rules still enforce:
+  //
+  //     new revision == old revision + 1
+  //
+  // so the server remains authoritative for concurrent writes.
   // ---------------------------------------------------------------------------
 
   Future<void> _writeAttendanceToCloud({
@@ -523,9 +535,9 @@ class AttendanceRepository {
             documentReference,
           );
 
-          // ---------------------------------------------------------------
+          // -----------------------------------------------------------------
           // CREATE
-          // ---------------------------------------------------------------
+          // -----------------------------------------------------------------
 
           if (!snapshot.exists) {
             transaction.set(
@@ -549,9 +561,9 @@ class AttendanceRepository {
             return;
           }
 
-          // ---------------------------------------------------------------
+          // -----------------------------------------------------------------
           // UPDATE
-          // ---------------------------------------------------------------
+          // -----------------------------------------------------------------
 
           final data = snapshot.data();
 
@@ -562,17 +574,12 @@ class AttendanceRepository {
             );
           }
 
-          final cloudUpdatedAt = _readCloudDateTime(
-            data['updatedAt'],
-            fallback: DateTime.fromMillisecondsSinceEpoch(0),
-          );
-
-          // A local record exists and cloud is newer.
-          // This means another device/client changed the record after our
-          // local copy was obtained.
+          // Only reject an edit when the actual attendance state has changed
+          // since the version the editor loaded.
           if (localExisting != null &&
-              cloudUpdatedAt.isAfter(
-                localExisting.updatedAt,
+              !_attendanceContentMatchesLocal(
+                cloudData: data,
+                localRecord: localExisting,
               )) {
             throw const AttendanceConflictException(
               'This attendance record was changed on another device. '
@@ -639,6 +646,36 @@ class AttendanceRepository {
   }
 
   // ---------------------------------------------------------------------------
+  // ATTENDANCE CONTENT COMPARISON
+  //
+  // This is the replacement for the old updatedAt-based conflict check.
+  //
+  // A conflict means the attendance data the editor loaded is no longer the
+  // same as the cloud version. Timestamp-only changes do not constitute a
+  // meaningful attendance conflict.
+  // ---------------------------------------------------------------------------
+
+  bool _attendanceContentMatchesLocal({
+    required Map<String, dynamic> cloudData,
+    required AttendanceRecord localRecord,
+  }) {
+    final localPresentIds =
+    _decodePresentStudentIdsFromJson(
+      localRecord.presentStudentIds,
+      localRecord.attendanceId,
+    );
+
+    return AttendanceConflictChecker.cloudMatchesLocal(
+      cloudData: cloudData,
+      localSubjectId: localRecord.subjectId,
+      localSemester: localRecord.semester,
+      localSection: localRecord.section,
+      localDate: localRecord.date,
+      localPresentStudentIds: localPresentIds,
+    );
+  }
+
+  // ---------------------------------------------------------------------------
   // LOCAL SAVE
   // ---------------------------------------------------------------------------
 
@@ -694,7 +731,7 @@ class AttendanceRepository {
   }
 
   // ---------------------------------------------------------------------------
-  // CLOUD → LOCAL CACHE
+  // CLOUD -> LOCAL CACHE
   // ---------------------------------------------------------------------------
 
   Future<void> _refreshLocalRecordFromCloud(
@@ -844,13 +881,11 @@ class AttendanceRepository {
     );
 
     final studentCount = <String, int>{
-      for (final student in students)
-        student.studentId: 0,
+      for (final student in students) student.studentId: 0,
     };
 
     for (final record in records) {
-      final presentIds =
-      _decodePresentStudentIdsFromJson(
+      final presentIds = _decodePresentStudentIdsFromJson(
         record.presentStudentIds,
         record.attendanceId,
       );
@@ -908,8 +943,7 @@ class AttendanceRepository {
 
     final directory = await getTemporaryDirectory();
 
-    final safeSubject = normalizedSubject
-        .replaceAll(
+    final safeSubject = normalizedSubject.replaceAll(
       RegExp(r'[^A-Za-z0-9_-]+'),
       '_',
     );
@@ -1021,9 +1055,9 @@ class AttendanceRepository {
     ))
         .get();
 
-    // -----------------------------------------------------------------------
+    // -------------------------------------------------------------------------
     // PART 1: UPLOAD PENDING LOCAL RECORDS
-    // -----------------------------------------------------------------------
+    // -------------------------------------------------------------------------
 
     for (final record in pendingRecords) {
       try {
@@ -1032,15 +1066,13 @@ class AttendanceRepository {
           semester: record.semester,
           section: record.section,
           date: record.date,
-          presentStudentIds:
-          _decodePresentStudentIdsFromJson(
+          presentStudentIds: _decodePresentStudentIdsFromJson(
             record.presentStudentIds,
             record.attendanceId,
           ),
         );
 
-        final authorization =
-        await _resolveAuthorization();
+        final authorization = await _resolveAuthorization();
 
         await _writeAttendanceToCloud(
           draft: draft,
@@ -1048,15 +1080,14 @@ class AttendanceRepository {
           localExisting: record,
         );
 
-        await (_db.update(
-          _db.attendanceRecords,
-        )
-          ..where(
-                (a) => a.attendanceId.equals(
-              record.attendanceId,
-            ),
-          ))
-            .write(
+        await (
+            _db.update(_db.attendanceRecords)
+              ..where(
+                    (a) => a.attendanceId.equals(
+                  record.attendanceId,
+                ),
+              )
+        ).write(
           const AttendanceRecordsCompanion(
             isSynced: Value(true),
           ),
@@ -1064,8 +1095,7 @@ class AttendanceRepository {
 
         hasUpdates = true;
       } on AttendanceConflictException {
-        // Do not overwrite a newer cloud revision.
-        // Refresh the local record and leave it synced against the cloud copy.
+        // Never overwrite a newer cloud attendance version.
         await _refreshLocalRecordFromCloud(
           record.attendanceId,
         );
@@ -1088,9 +1118,9 @@ class AttendanceRepository {
       }
     }
 
-    // -----------------------------------------------------------------------
+    // -------------------------------------------------------------------------
     // PART 2: DOWNLOAD CLOUD RECORDS
-    // -----------------------------------------------------------------------
+    // -------------------------------------------------------------------------
 
     final classes = await getTeacherClasses(
       teacherId,
@@ -1100,19 +1130,18 @@ class AttendanceRepository {
       return hasUpdates;
     }
 
-    final existingLocalRecords =
-    await _db.select(
+    final existingLocalRecords = await _db
+        .select(
       _db.attendanceRecords,
-    ).get();
+    )
+        .get();
 
-    final localRecordMap =
-    <String, AttendanceRecord>{
+    final localRecordMap = <String, AttendanceRecord>{
       for (final record in existingLocalRecords)
         record.attendanceId: record,
     };
 
-    final cloudCompanions =
-    <AttendanceRecordsCompanion>[];
+    final cloudCompanions = <AttendanceRecordsCompanion>[];
 
     for (final classInfo in classes) {
       final subjectName =
@@ -1162,8 +1191,7 @@ class AttendanceRepository {
             continue;
           }
 
-          final cloudUpdatedAt =
-          _readCloudDateTime(
+          final cloudUpdatedAt = _readCloudDateTime(
             data['updatedAt'],
             fallback:
             DateTime.fromMillisecondsSinceEpoch(0),
@@ -1174,25 +1202,46 @@ class AttendanceRepository {
 
           if (localRecord != null) {
             // Never replace an unsynced local edit merely because the cloud
-            // copy is newer.
+            // copy exists.
             if (!localRecord.isSynced) {
               continue;
             }
 
-            if (!cloudUpdatedAt.isAfter(
-              localRecord.updatedAt,
-            )) {
+            final sameContent =
+            _attendanceContentMatchesLocal(
+              cloudData: data,
+              localRecord: localRecord,
+            );
+
+            final cloudUpdatedAtMs =
+                cloudUpdatedAt.millisecondsSinceEpoch;
+
+            final localUpdatedAtMs =
+                localRecord.updatedAt.millisecondsSinceEpoch;
+
+            // Skip the cloud copy when both the logical attendance contents
+            // and the millisecond-level timestamp are unchanged.
+            //
+            // Comparing milliseconds avoids false "newer" detections caused
+            // by Firestore timestamps carrying finer precision than the local
+            // Drift DateTime value.
+            if (sameContent &&
+                cloudUpdatedAtMs <= localUpdatedAtMs) {
+              continue;
+            }
+
+            // A timestamp-only difference with identical attendance data
+            // does not need to be written back into the local database.
+            if (sameContent) {
               continue;
             }
           }
 
-          final presentIds =
-          _decodePresentStudentIds(
+          final presentIds = _decodePresentStudentIds(
             data['presentStudentIds'],
           );
 
-          final createdAt =
-          _readCloudDateTime(
+          final createdAt = _readCloudDateTime(
             data['createdAt'],
             fallback: cloudUpdatedAt,
           );
@@ -1223,8 +1272,7 @@ class AttendanceRepository {
               cloudDate.isEmpty ||
               cloudSemester < 1 ||
               cloudSemester > 8 ||
-              !{'A', 'B', 'C'}
-                  .contains(cloudSection)) {
+              !{'A', 'B', 'C'}.contains(cloudSection)) {
             continue;
           }
 
@@ -1281,16 +1329,9 @@ class AttendanceRepository {
       dynamic value,
       ) {
     if (value is List) {
-      final ids = value
-          .whereType<String>()
-          .map((id) => id.trim())
-          .where((id) => id.isNotEmpty)
-          .toSet()
-          .toList();
-
-      ids.sort();
-
-      return ids;
+      return AttendanceConflictChecker.decodePresentStudentIds(
+        value,
+      );
     }
 
     if (value is String) {

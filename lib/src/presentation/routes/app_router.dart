@@ -1,31 +1,29 @@
 import 'package:flutter/material.dart';
+
 import '../../data/local/app_database.dart';
-// Screens
-import '../screens/auth/auth_wrapper.dart';
-import '../screens/welcome/welcome_screen.dart';
-import '../screens/login/login_sceen.dart';
-import '../screens/signup/signup_screen.dart';
-import '../screens/signup/teacher_signup_screen.dart';
-import '../screens/signup/privacy_policy_screen.dart';
-import '../screens/home/home_screen.dart';
-import '../screens/home/exam_routine_screen.dart';
-import '../screens/notes_catalog_screen.dart';
-import '../screens/books_catalog_screen.dart';
-import '../screens/home/live_events_screen.dart';
-import '../screens/attendance/attendance_setup_screen.dart';
 import '../screens/attendance/attendance_export_screen.dart';
 import '../screens/attendance/attendance_marking_screen.dart';
-import '../screens/home/developer_triage_screen.dart';
+import '../screens/attendance/attendance_setup_screen.dart';
+import '../screens/auth/auth_wrapper.dart';
+import '../screens/books_catalog_screen.dart';
+import '../screens/home/announcement_detail_screen.dart';
 import '../screens/home/contact_us_screen.dart';
+import '../screens/home/create_announcement_screen.dart';
+import '../screens/home/developer_triage_screen.dart';
+import '../screens/home/edit_announcement_screen.dart';
+import '../screens/home/exam_routine_screen.dart';
+import '../screens/home/home_screen.dart';
+import '../screens/home/live_events_screen.dart';
+import '../screens/home/manage_users_screen.dart';
+import '../screens/home/system_insights_screen.dart';
+import '../screens/login/login_sceen.dart';
+import '../screens/notes_catalog_screen.dart';
 import '../screens/profile/edit_student_profile_screen.dart';
 import '../screens/profile/edit_teacher_profile_screen.dart';
-import '../screens/home/create_announcement_screen.dart';
-import '../screens/home/announcement_detail_screen.dart';
-import '../screens/home/edit_announcement_screen.dart';
-
-// MODIFICATION: Imported the new developer panel screens
-import '../screens/home/system_insights_screen.dart';
-import '../screens/home/manage_users_screen.dart';
+import '../screens/signup/privacy_policy_screen.dart';
+import '../screens/signup/signup_screen.dart';
+import '../screens/signup/teacher_signup_screen.dart';
+import '../screens/welcome/welcome_screen.dart';
 
 class AppRoutes {
   static const String auth = '/';
@@ -50,7 +48,6 @@ class AppRoutes {
   static const String detailAnnouncement = '/announcement/detail';
   static const String editAnnouncement = '/announcement/edit';
 
-  // MODIFICATION: Added routing constants for dev panel modules
   static const String systemInsights = '/dev/insights';
   static const String manageUsers = '/dev/users';
 }
@@ -59,34 +56,87 @@ class AppRouter {
   static Route<dynamic> generateRoute(RouteSettings settings) {
     switch (settings.name) {
       case AppRoutes.auth:
-        return _buildFadeRoute(const AuthWrapper(), settings);
+        return _buildFadeRoute(
+          const AuthWrapper(),
+          settings,
+        );
+
       case AppRoutes.welcome:
-        return _buildFadeRoute(const WelcomeScreen(), settings);
+        return _buildFadeRoute(
+          const WelcomeScreen(),
+          settings,
+        );
+
       case AppRoutes.home:
-        return _buildFadeRoute(const HomeScreen(), settings);
+        return _buildFadeRoute(
+          const HomeScreen(),
+          settings,
+        );
+
       case AppRoutes.login:
-        return _buildSlideRoute(const LoginScreen(), settings);
+        return _buildSlideRoute(
+          const LoginScreen(),
+          settings,
+        );
+
       case AppRoutes.studentSignup:
-        return _buildSlideRoute(const SignupScreen(), settings);
+        return _buildSlideRoute(
+          const SignupScreen(),
+          settings,
+        );
+
       case AppRoutes.teacherSignup:
-        return _buildSlideRoute(const TeacherSignupScreen(), settings);
+        return _buildSlideRoute(
+          const TeacherSignupScreen(),
+          settings,
+        );
+
       case AppRoutes.privacyPolicy:
-        return _buildSlideRoute(const PrivacyPolicyScreen(), settings);
+        return _buildSlideRoute(
+          const PrivacyPolicyScreen(),
+          settings,
+        );
+
       case AppRoutes.examRoutine:
-        return _buildSlideRoute(const ExamRoutineScreen(), settings);
+        return _buildSlideRoute(
+          const ExamRoutineScreen(),
+          settings,
+        );
+
       case AppRoutes.notes:
-        return _buildSlideRoute(const NotesCatalogScreen(), settings);
+        return _buildSlideRoute(
+          const NotesCatalogScreen(),
+          settings,
+        );
+
       case AppRoutes.books:
-        return _buildSlideRoute(const BooksCatalogScreen(), settings);
+        return _buildSlideRoute(
+          const BooksCatalogScreen(),
+          settings,
+        );
+
       case AppRoutes.liveEvents:
-        return _buildSlideRoute(const LiveEventsScreen(), settings);
+        return _buildSlideRoute(
+          const LiveEventsScreen(),
+          settings,
+        );
+
       case AppRoutes.attendanceSetup:
-        return _buildSlideRoute(const AttendanceSetupScreen(), settings);
+        return _buildSlideRoute(
+          const AttendanceSetupScreen(),
+          settings,
+        );
+
       case AppRoutes.attendanceExport:
-        return _buildSlideRoute(const AttendanceExportScreen(), settings);
+        return _buildSlideRoute(
+          const AttendanceExportScreen(),
+          settings,
+        );
+
       case AppRoutes.attendanceMarking:
-        final args = settings.arguments as Map<String, dynamic>?;
-        if (args != null) {
+        final args = settings.arguments;
+
+        if (args is Map<String, dynamic>) {
           return _buildSlideRoute(
             AttendanceMarkingScreen(
               subjectName: args['subjectName'],
@@ -97,89 +147,175 @@ class AppRouter {
             settings,
           );
         }
+
         return _errorRoute(settings);
+
       case AppRoutes.devTriage:
-        return _buildSlideRoute(const DeveloperTriageScreen(), settings);
+        return _buildSlideRoute(
+          const DeveloperTriageScreen(),
+          settings,
+        );
+
       case AppRoutes.contact:
-        return _buildSlideRoute(const ContactUsScreen(), settings);
+        return _buildSlideRoute(
+          const ContactUsScreen(),
+          settings,
+        );
+
       case AppRoutes.editStudentProfile:
-        return _buildSlideRoute(const EditStudentProfileScreen(), settings);
+        return _buildSlideRoute(
+          const EditStudentProfileScreen(),
+          settings,
+        );
+
       case AppRoutes.editTeacherProfile:
-        return _buildSlideRoute(const EditTeacherProfileScreen(), settings);
+        return _buildSlideRoute(
+          const EditTeacherProfileScreen(),
+          settings,
+        );
+
       case AppRoutes.createAnnouncement:
-        return _buildSlideRoute(const CreateAnnouncementScreen(), settings);
+        return _buildSlideRoute(
+          const CreateAnnouncementScreen(),
+          settings,
+        );
+
       case AppRoutes.detailAnnouncement:
         final notice = settings.arguments;
-        if (notice != null) {
-          return _buildSlideRoute(AnnouncementDetailScreen(notice: notice), settings);
-        }
-        return _errorRoute(settings);
-      case AppRoutes.editAnnouncement:
-        final args = settings.arguments;
 
-        if (args is Announcement) {
+        if (notice != null) {
           return _buildSlideRoute(
-            EditAnnouncementScreen(notice: args),
+            AnnouncementDetailScreen(
+              notice: notice,
+            ),
             settings,
           );
         }
 
         return _errorRoute(settings);
 
-    // MODIFICATION: Wired new Dev panel routes
+      case AppRoutes.editAnnouncement:
+        final args = settings.arguments;
+
+        if (args is Announcement) {
+          return _buildSlideRoute(
+            EditAnnouncementScreen(
+              notice: args,
+            ),
+            settings,
+          );
+        }
+
+        return _errorRoute(settings);
+
       case AppRoutes.systemInsights:
-        return _buildSlideRoute(const SystemInsightsScreen(), settings);
+        return _buildSlideRoute(
+          const SystemInsightsScreen(),
+          settings,
+        );
+
       case AppRoutes.manageUsers:
-        return _buildSlideRoute(const ManageUsersScreen(), settings);
+        return _buildSlideRoute(
+          const ManageUsersScreen(),
+          settings,
+        );
 
       default:
         return _errorRoute(settings);
     }
   }
 
-  // iOS-style slide transition
-  static PageRouteBuilder _buildSlideRoute(Widget page, RouteSettings settings) {
-    return PageRouteBuilder(
+  static PageRouteBuilder<dynamic> _buildSlideRoute(
+      Widget page,
+      RouteSettings settings,
+      ) {
+    return PageRouteBuilder<dynamic>(
       settings: settings,
-      pageBuilder: (_, __, ___) => page,
-      transitionsBuilder: (_, animation, secondaryAnimation, child) {
+      pageBuilder: (
+          BuildContext context,
+          Animation<double> animation,
+          Animation<double> secondaryAnimation,
+          ) {
+        return page;
+      },
+      transitionsBuilder: (
+          BuildContext context,
+          Animation<double> animation,
+          Animation<double> secondaryAnimation,
+          Widget child,
+          ) {
         const begin = Offset(1.0, 0.0);
         const end = Offset.zero;
-        const curve = Curves.easeOutCubic; // Smooth deceleration
+        const curve = Curves.easeOutCubic;
 
-        var tween = Tween(begin: begin, end: end).chain(CurveTween(curve: curve));
-        var offsetAnimation = animation.drive(tween);
+        final tween = Tween<Offset>(
+          begin: begin,
+          end: end,
+        ).chain(
+          CurveTween(curve: curve),
+        );
 
-        return SlideTransition(position: offsetAnimation, child: child);
+        final offsetAnimation = animation.drive(tween);
+
+        return SlideTransition(
+          position: offsetAnimation,
+          child: child,
+        );
       },
     );
   }
 
-  // Subtle fade transition for root-level switches (like Auth -> Home)
-  static PageRouteBuilder _buildFadeRoute(Widget page, RouteSettings settings) {
-    return PageRouteBuilder(
+  static PageRouteBuilder<dynamic> _buildFadeRoute(
+      Widget page,
+      RouteSettings settings,
+      ) {
+    return PageRouteBuilder<dynamic>(
       settings: settings,
-      pageBuilder: (_, __, ___) => page,
-      transitionsBuilder: (_, animation, __, child) {
-        return FadeTransition(opacity: animation, child: child);
+      pageBuilder: (
+          BuildContext context,
+          Animation<double> animation,
+          Animation<double> secondaryAnimation,
+          ) {
+        return page;
+      },
+      transitionsBuilder: (
+          BuildContext context,
+          Animation<double> animation,
+          Animation<double> secondaryAnimation,
+          Widget child,
+          ) {
+        return FadeTransition(
+          opacity: animation,
+          child: child,
+        );
       },
     );
   }
 
-  // Fallback error route for missing arguments or undefined routes
-  static Route<dynamic> _errorRoute(RouteSettings settings) {
-    return MaterialPageRoute(
-      builder: (_) => Scaffold(
-        backgroundColor: Colors.black,
-        appBar: AppBar(title: const Text('Routing Error'), backgroundColor: Colors.black),
-        body: Center(
-          child: Text(
-            'No route defined for ${settings.name}\nor missing arguments.',
-            style: const TextStyle(color: Colors.redAccent, fontSize: 16),
-            textAlign: TextAlign.center,
+  static Route<dynamic> _errorRoute(
+      RouteSettings settings,
+      ) {
+    return MaterialPageRoute<dynamic>(
+      builder: (BuildContext context) {
+        return Scaffold(
+          backgroundColor: Colors.black,
+          appBar: AppBar(
+            title: const Text('Routing Error'),
+            backgroundColor: Colors.black,
           ),
-        ),
-      ),
+          body: Center(
+            child: Text(
+              'No route defined for ${settings.name}\n'
+                  'or missing arguments.',
+              style: const TextStyle(
+                color: Colors.redAccent,
+                fontSize: 16,
+              ),
+              textAlign: TextAlign.center,
+            ),
+          ),
+        );
+      },
     );
   }
 }

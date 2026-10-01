@@ -24,10 +24,14 @@ class _HomeTabState extends ConsumerState<HomeTab> {
   @override
   void initState() {
     super.initState();
-    final firebaseUser = firebase_auth.FirebaseAuth.instance.currentUser;
+    final firebaseUser =
+        firebase_auth.FirebaseAuth.instance.currentUser;
+
     _userStream = firebaseUser == null
         ? const Stream<local_db.User?>.empty()
-        : ref.read(userRepositoryProvider).watchUser(firebaseUser.uid);
+        : ref.read(userRepositoryProvider).watchUser(
+      firebaseUser.uid,
+    );
   }
 
   Future<void> _manualUpdateCheck() async {
@@ -60,12 +64,18 @@ class _HomeTabState extends ConsumerState<HomeTab> {
       if (!mounted) {
         return;
       }
+
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text('Could not check for updates. Please try again.'),
+          content: Text(
+            'Could not check for updates. Please try again.',
+          ),
         ),
       );
-      debugPrint('Manual update check failed: $e');
+
+      debugPrint(
+        'Manual update check failed: $e',
+      );
     } finally {
       if (mounted) {
         setState(() {
@@ -77,7 +87,8 @@ class _HomeTabState extends ConsumerState<HomeTab> {
 
   String _greetingForCurrentTime() {
     final hour = DateTime.now().hour;
-    // Culturally accurate timeframes for Bangladesh
+
+    // Culturally accurate timeframes for Bangladesh.
     if (hour >= 5 && hour < 12) {
       return 'Good morning';
     } else if (hour >= 12 && hour < 16) {
@@ -89,13 +100,8 @@ class _HomeTabState extends ConsumerState<HomeTab> {
     }
   }
 
-  String _formatAvatarId(int avatarId) {
-    return avatarId.toString().padLeft(2, '0');
-  }
-
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
     final userStream = _userStream;
 
     return Scaffold(
@@ -113,35 +119,34 @@ class _HomeTabState extends ConsumerState<HomeTab> {
               physics: const BouncingScrollPhysics(),
               slivers: [
                 SliverPadding(
-                  padding: EdgeInsets.fromLTRB(20.w, 14.h, 20.w, 24.h),
+                  padding: EdgeInsets.fromLTRB(
+                    20.w,
+                    14.h,
+                    20.w,
+                    24.h,
+                  ),
                   sliver: SliverToBoxAdapter(
-                    child: _buildHeader(context, user),
+                    child: _buildHeader(
+                      context,
+                      user,
+                    ),
                   ),
                 ),
                 SliverPadding(
-                  padding: EdgeInsets.symmetric(horizontal: 20.w),
+                  padding: EdgeInsets.symmetric(
+                    horizontal: 20.w,
+                  ),
                   sliver: SliverToBoxAdapter(
                     child: _buildBanner(context),
                   ),
                 ),
                 SliverPadding(
-                  padding: EdgeInsets.fromLTRB(20.w, 28.h, 20.w, 12.h),
-                  sliver: SliverToBoxAdapter(
-                    child: Row(
-                      children: [
-                        Text(
-                          'Quick access',
-                          style: theme.textTheme.titleLarge?.copyWith(
-                            color: AppColors.textPrimary,
-                            fontWeight: FontWeight.w700,
-                          ),
-                        ),
-                      ],
-                    ),
+                  padding: EdgeInsets.fromLTRB(
+                    20.w,
+                    28.h,
+                    20.w,
+                    12.h,
                   ),
-                ),
-                SliverPadding(
-                  padding: EdgeInsets.fromLTRB(20.w, 0, 20.w, 28.h),
                   sliver: SliverGrid(
                     delegate: SliverChildListDelegate(
                       _buildFeatureTiles(
@@ -150,7 +155,8 @@ class _HomeTabState extends ConsumerState<HomeTab> {
                         isDeveloper: isDeveloper,
                       ),
                     ),
-                    gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                    gridDelegate:
+                    SliverGridDelegateWithFixedCrossAxisCount(
                       crossAxisCount: 2,
                       crossAxisSpacing: 12.w,
                       mainAxisSpacing: 12.h,
@@ -166,14 +172,20 @@ class _HomeTabState extends ConsumerState<HomeTab> {
     );
   }
 
-  Widget _buildHeader(BuildContext context, local_db.User? user) {
+  Widget _buildHeader(
+      BuildContext context,
+      local_db.User? user,
+      ) {
     final theme = Theme.of(context);
+
     final displayName = user?.name.trim().isNotEmpty == true
         ? user!.name.trim()
         : 'Welcome back';
+
     final subtitle = user == null
         ? _greetingForCurrentTime()
-        : '${_greetingForCurrentTime()}${user.role == 'teacher' ? ', Teacher' : ''}';
+        : '${_greetingForCurrentTime()}'
+        '${user.role == 'teacher' ? ', Teacher' : ''}';
 
     return Row(
       children: [
@@ -181,9 +193,13 @@ class _HomeTabState extends ConsumerState<HomeTab> {
           builder: (drawerContext) {
             return Material(
               color: AppColors.surface,
-              borderRadius: BorderRadius.circular(AppRadii.medium.r),
+              borderRadius: BorderRadius.circular(
+                AppRadii.medium.r,
+              ),
               child: InkWell(
-                borderRadius: BorderRadius.circular(AppRadii.medium.r),
+                borderRadius: BorderRadius.circular(
+                  AppRadii.medium.r,
+                ),
                 onTap: () {
                   Scaffold.of(drawerContext).openDrawer();
                 },
@@ -201,7 +217,6 @@ class _HomeTabState extends ConsumerState<HomeTab> {
           },
         ),
         SizedBox(width: 12.w),
-
         Expanded(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.end,
@@ -227,26 +242,6 @@ class _HomeTabState extends ConsumerState<HomeTab> {
             ],
           ),
         ),
-        SizedBox(width: 12.w),
-
-        if (user != null)
-          CircleAvatar(
-            radius: 23.r,
-            backgroundColor: AppColors.surface,
-            backgroundImage: AssetImage(
-              'assets/avatars/${_formatAvatarId(user.avatarId)}.png',
-            ),
-          )
-        else
-          CircleAvatar(
-            radius: 23.r,
-            backgroundColor: AppColors.surface,
-            child: Icon(
-              Icons.person_outline_rounded,
-              color: AppColors.textSecondary,
-              size: 24.r,
-            ),
-          ),
       ],
     );
   }
@@ -258,7 +253,9 @@ class _HomeTabState extends ConsumerState<HomeTab> {
     return AspectRatio(
       aspectRatio: 16 / 9,
       child: ClipRRect(
-        borderRadius: BorderRadius.circular(AppRadii.large.r),
+        borderRadius: BorderRadius.circular(
+          AppRadii.large.r,
+        ),
         child: Stack(
           fit: StackFit.expand,
           children: [
@@ -273,19 +270,31 @@ class _HomeTabState extends ConsumerState<HomeTab> {
                   begin: Alignment.topCenter,
                   end: Alignment.bottomCenter,
                   colors: [
-                    Colors.black.withValues(alpha: 0.12),
-                    Colors.black.withValues(alpha: 0.38),
-                    Colors.black.withValues(alpha: 0.78),
+                    Colors.black.withValues(
+                      alpha: 0.12,
+                    ),
+                    Colors.black.withValues(
+                      alpha: 0.38,
+                    ),
+                    Colors.black.withValues(
+                      alpha: 0.78,
+                    ),
                   ],
-                  stops: const [0.0, 0.48, 1.0],
+                  stops: const [
+                    0.0,
+                    0.48,
+                    1.0,
+                  ],
                 ),
               ),
             ),
             Padding(
               padding: EdgeInsets.all(20.r),
               child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                mainAxisAlignment: MainAxisAlignment.end,
+                crossAxisAlignment:
+                CrossAxisAlignment.start,
+                mainAxisAlignment:
+                MainAxisAlignment.end,
                 children: [
                   Container(
                     padding: EdgeInsets.symmetric(
@@ -293,12 +302,16 @@ class _HomeTabState extends ConsumerState<HomeTab> {
                       vertical: 5.h,
                     ),
                     decoration: BoxDecoration(
-                      color: primary.withValues(alpha: 0.92),
-                      borderRadius: BorderRadius.circular(999.r),
+                      color: primary.withValues(
+                        alpha: 0.92,
+                      ),
+                      borderRadius:
+                      BorderRadius.circular(999.r),
                     ),
                     child: Text(
                       'BGCTUB',
-                      style: theme.textTheme.labelSmall?.copyWith(
+                      style: theme.textTheme.labelSmall
+                          ?.copyWith(
                         color: Colors.white,
                         fontWeight: FontWeight.w700,
                         letterSpacing: 0.6,
@@ -309,8 +322,10 @@ class _HomeTabState extends ConsumerState<HomeTab> {
                   Text(
                     'All in one academics',
                     maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
-                    style: theme.textTheme.headlineSmall?.copyWith(
+                    overflow:
+                    TextOverflow.ellipsis,
+                    style: theme.textTheme.headlineSmall
+                        ?.copyWith(
                       color: Colors.white,
                       fontWeight: FontWeight.w800,
                       height: 1.05,
@@ -319,7 +334,8 @@ class _HomeTabState extends ConsumerState<HomeTab> {
                   SizedBox(height: 6.h),
                   Text(
                     'Your digital campus companion',
-                    style: theme.textTheme.bodyMedium?.copyWith(
+                    style: theme.textTheme.bodyMedium
+                        ?.copyWith(
                       color: Colors.white70,
                     ),
                   ),
@@ -340,25 +356,41 @@ class _HomeTabState extends ConsumerState<HomeTab> {
     required VoidCallback onTap,
   }) {
     final theme = Theme.of(context);
+
     return Material(
       color: AppColors.surface,
-      borderRadius: BorderRadius.circular(AppRadii.large.r),
+      borderRadius: BorderRadius.circular(
+        AppRadii.large.r,
+      ),
       child: InkWell(
-        borderRadius: BorderRadius.circular(AppRadii.large.r),
+        borderRadius: BorderRadius.circular(
+          AppRadii.large.r,
+        ),
         onTap: onTap,
-        splashColor: color.withValues(alpha: 0.1),
-        highlightColor: color.withValues(alpha: 0.05),
+        splashColor: color.withValues(
+          alpha: 0.1,
+        ),
+        highlightColor: color.withValues(
+          alpha: 0.05,
+        ),
         child: Padding(
           padding: EdgeInsets.all(14.r),
           child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisAlignment:
+            MainAxisAlignment.center,
+            crossAxisAlignment:
+            CrossAxisAlignment.start,
             children: [
               Container(
                 padding: EdgeInsets.all(8.r),
                 decoration: BoxDecoration(
-                  color: color.withValues(alpha: 0.15),
-                  borderRadius: BorderRadius.circular(10.r),
+                  color: color.withValues(
+                    alpha: 0.15,
+                  ),
+                  borderRadius:
+                  BorderRadius.circular(
+                    10.r,
+                  ),
                 ),
                 child: Icon(
                   icon,
@@ -370,10 +402,14 @@ class _HomeTabState extends ConsumerState<HomeTab> {
               Text(
                 label,
                 maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: theme.textTheme.titleSmall?.copyWith(
-                  color: AppColors.textPrimary,
-                  fontWeight: FontWeight.w700,
+                overflow:
+                TextOverflow.ellipsis,
+                style: theme.textTheme.titleSmall
+                    ?.copyWith(
+                  color:
+                  AppColors.textPrimary,
+                  fontWeight:
+                  FontWeight.w700,
                   height: 1.2,
                 ),
               ),
@@ -384,12 +420,23 @@ class _HomeTabState extends ConsumerState<HomeTab> {
     );
   }
 
-  void _safeRoute(BuildContext context, String routeName) {
+  void _safeRoute(
+      BuildContext context,
+      String routeName,
+      ) {
     try {
-      Navigator.pushNamed(context, routeName);
+      Navigator.pushNamed(
+        context,
+        routeName,
+      );
     } catch (_) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Module under construction.')),
+      ScaffoldMessenger.of(context)
+          .showSnackBar(
+        const SnackBar(
+          content: Text(
+            'Module under construction.',
+          ),
+        ),
       );
     }
   }
@@ -405,14 +452,20 @@ class _HomeTabState extends ConsumerState<HomeTab> {
         label: 'Academic Calendar',
         icon: Icons.calendar_month_outlined,
         color: const Color(0xFF1877F2),
-        onTap: () => _safeRoute(context, '/calendar'),
+        onTap: () => _safeRoute(
+          context,
+          '/calendar',
+        ),
       ),
       _buildFeatureTile(
         context: context,
         label: 'Clubs',
         icon: Icons.groups_outlined,
         color: const Color(0xFF9C27B0),
-        onTap: () => _safeRoute(context, '/clubs'),
+        onTap: () => _safeRoute(
+          context,
+          '/clubs',
+        ),
       ),
       if (!isTeacher)
         _buildFeatureTile(
@@ -420,28 +473,40 @@ class _HomeTabState extends ConsumerState<HomeTab> {
           label: 'Exam Routine',
           icon: Icons.assignment_outlined,
           color: const Color(0xFFE91E63),
-          onTap: () => Navigator.pushNamed(context, AppRoutes.examRoutine),
+          onTap: () => Navigator.pushNamed(
+            context,
+            AppRoutes.examRoutine,
+          ),
         ),
       _buildFeatureTile(
         context: context,
         label: 'Books Library',
         icon: Icons.menu_book_rounded,
         color: const Color(0xFF4CAF50),
-        onTap: () => Navigator.pushNamed(context, AppRoutes.books),
+        onTap: () => Navigator.pushNamed(
+          context,
+          AppRoutes.books,
+        ),
       ),
       _buildFeatureTile(
         context: context,
         label: 'Notes Catalog',
         icon: Icons.description_outlined,
         color: const Color(0xFFFF9800),
-        onTap: () => Navigator.pushNamed(context, AppRoutes.notes),
+        onTap: () => Navigator.pushNamed(
+          context,
+          AppRoutes.notes,
+        ),
       ),
       _buildFeatureTile(
         context: context,
         label: 'Live Events',
         icon: Icons.sports_soccer_rounded,
         color: const Color(0xFF00BCD4),
-        onTap: () => Navigator.pushNamed(context, AppRoutes.liveEvents),
+        onTap: () => Navigator.pushNamed(
+          context,
+          AppRoutes.liveEvents,
+        ),
       ),
       if (isTeacher) ...[
         _buildFeatureTile(
@@ -449,14 +514,20 @@ class _HomeTabState extends ConsumerState<HomeTab> {
           label: 'Attendance',
           icon: Icons.fact_check_outlined,
           color: const Color(0xFF607D8B),
-          onTap: () => Navigator.pushNamed(context, AppRoutes.attendanceSetup),
+          onTap: () => Navigator.pushNamed(
+            context,
+            AppRoutes.attendanceSetup,
+          ),
         ),
         _buildFeatureTile(
           context: context,
           label: 'Attendance Dashboard',
           icon: Icons.dashboard_outlined,
           color: const Color(0xFF795548),
-          onTap: () => Navigator.pushNamed(context, AppRoutes.attendanceExport),
+          onTap: () => Navigator.pushNamed(
+            context,
+            AppRoutes.attendanceExport,
+          ),
         ),
       ],
       if (isDeveloper && !isTeacher)
@@ -465,51 +536,75 @@ class _HomeTabState extends ConsumerState<HomeTab> {
           label: 'Pending',
           icon: Icons.pending_actions_outlined,
           color: Colors.redAccent,
-          onTap: () => Navigator.pushNamed(context, AppRoutes.devTriage),
+          onTap: () => Navigator.pushNamed(
+            context,
+            AppRoutes.devTriage,
+          ),
         ),
     ];
   }
 
   Widget _buildDrawer(BuildContext context) {
     final theme = Theme.of(context);
+
     return Drawer(
       backgroundColor: AppColors.background,
       child: SafeArea(
         child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
+          crossAxisAlignment:
+          CrossAxisAlignment.stretch,
           children: [
             Padding(
-              padding: EdgeInsets.symmetric(horizontal: 24.w, vertical: 32.h),
+              padding: EdgeInsets.symmetric(
+                horizontal: 24.w,
+                vertical: 32.h,
+              ),
               child: Row(
                 children: [
                   Container(
                     padding: EdgeInsets.all(12.r),
                     decoration: BoxDecoration(
-                      color: theme.colorScheme.primary.withValues(alpha: 0.1),
-                      borderRadius: BorderRadius.circular(16.r),
+                      color: theme.colorScheme.primary
+                          .withValues(
+                        alpha: 0.1,
+                      ),
+                      borderRadius:
+                      BorderRadius.circular(
+                        16.r,
+                      ),
                     ),
                     child: Icon(
                       Icons.school_rounded,
-                      color: theme.colorScheme.primary,
+                      color:
+                      theme.colorScheme.primary,
                       size: 32.r,
                     ),
                   ),
                   SizedBox(width: 16.w),
                   Text(
                     'BGCTUB\nCompanion',
-                    style: theme.textTheme.titleMedium?.copyWith(
-                      color: AppColors.textPrimary,
-                      fontWeight: FontWeight.w800,
+                    style: theme.textTheme.titleMedium
+                        ?.copyWith(
+                      color:
+                      AppColors.textPrimary,
+                      fontWeight:
+                      FontWeight.w800,
                       height: 1.2,
                     ),
                   ),
                 ],
               ),
             ),
-            const Divider(color: AppColors.divider, height: 1),
+            const Divider(
+              color: AppColors.divider,
+              height: 1,
+            ),
             SizedBox(height: 16.h),
             ListTile(
-              contentPadding: EdgeInsets.symmetric(horizontal: 24.w),
+              contentPadding:
+              EdgeInsets.symmetric(
+                horizontal: 24.w,
+              ),
               leading: Icon(
                 Icons.update_rounded,
                 color: AppColors.textSecondary,
@@ -517,9 +612,12 @@ class _HomeTabState extends ConsumerState<HomeTab> {
               ),
               title: Text(
                 'Check for Updates',
-                style: theme.textTheme.bodyLarge?.copyWith(
-                  color: AppColors.textPrimary,
-                  fontWeight: FontWeight.w600,
+                style: theme.textTheme.bodyLarge
+                    ?.copyWith(
+                  color:
+                  AppColors.textPrimary,
+                  fontWeight:
+                  FontWeight.w600,
                 ),
               ),
               onTap: () {
@@ -528,7 +626,10 @@ class _HomeTabState extends ConsumerState<HomeTab> {
               },
             ),
             ListTile(
-              contentPadding: EdgeInsets.symmetric(horizontal: 24.w),
+              contentPadding:
+              EdgeInsets.symmetric(
+                horizontal: 24.w,
+              ),
               leading: Icon(
                 Icons.support_agent_rounded,
                 color: AppColors.textSecondary,
@@ -536,14 +637,20 @@ class _HomeTabState extends ConsumerState<HomeTab> {
               ),
               title: Text(
                 'Contact Us',
-                style: theme.textTheme.bodyLarge?.copyWith(
-                  color: AppColors.textPrimary,
-                  fontWeight: FontWeight.w600,
+                style: theme.textTheme.bodyLarge
+                    ?.copyWith(
+                  color:
+                  AppColors.textPrimary,
+                  fontWeight:
+                  FontWeight.w600,
                 ),
               ),
               onTap: () {
                 Navigator.pop(context);
-                Navigator.pushNamed(context, AppRoutes.contact);
+                Navigator.pushNamed(
+                  context,
+                  AppRoutes.contact,
+                );
               },
             ),
           ],

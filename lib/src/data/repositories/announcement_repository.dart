@@ -6,6 +6,7 @@ import 'package:drift/drift.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import '../local/app_database.dart';
 import '../models/announcement_target.dart';
@@ -26,6 +27,9 @@ class AnnouncementRepository {
 
   static const String _notificationUrl =
       'https://stagecall-api.vercel.app/api/notify';
+
+  static const String _cacheInitializedKey =
+      'announcements_cache_initialized_v1';
 
   AnnouncementRepository(
       this._db,
@@ -80,6 +84,48 @@ class AnnouncementRepository {
 
       return visible;
     });
+  }
+
+  /// Returns whether the announcement cache has completed at least one
+  /// successful remote synchronization.
+  ///
+  /// This is deliberately separate from the number of locally stored
+  /// announcements because an empty remote collection is still a successful
+  /// synchronization and must not cause another Firestore read on every
+  /// navigation.
+  Future<bool> hasLoadedAnnouncementsCache() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+
+      return prefs.getBool(_cacheInitializedKey) ?? false;
+    } catch (error, stackTrace) {
+      debugPrint(
+        'Failed to read announcement cache state: $error',
+      );
+      debugPrintStack(
+        stackTrace: stackTrace,
+      );
+
+      // Treat an unreadable cache marker as uninitialized so the application
+      // can recover by performing a fresh synchronization.
+      return false;
+    }
+  }
+
+  /// Clears the persistent cache marker used to determine whether an
+  /// announcement synchronization has ever completed successfully.
+  Future<void> clearAnnouncementsCacheState() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.remove(_cacheInitializedKey);
+    } catch (error, stackTrace) {
+      debugPrint(
+        'Failed to clear announcement cache state: $error',
+      );
+      debugPrintStack(
+        stackTrace: stackTrace,
+      );
+    }
   }
 
   Future<void> syncAnnouncements() async {
@@ -145,6 +191,26 @@ class AnnouncementRepository {
         );
       },
     );
+
+    // The local database now reflects a successfully fetched remote state.
+    // Persisting this marker is best-effort; failure here must not convert a
+    // successful Firebase synchronization into a failed synchronization.
+    try {
+      final prefs = await SharedPreferences.getInstance();
+
+      await prefs.setBool(
+        _cacheInitializedKey,
+        true,
+      );
+    } catch (error, stackTrace) {
+      debugPrint(
+        'Announcements synced, but cache state could not be persisted: '
+            '$error',
+      );
+      debugPrintStack(
+        stackTrace: stackTrace,
+      );
+    }
   }
 
   Future<void> createAnnouncement({

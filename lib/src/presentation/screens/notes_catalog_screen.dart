@@ -752,6 +752,11 @@ class _NoteRequestFormState
       return;
     }
 
+    final semester = _parseSemester();
+    if (semester == null) {
+      return;
+    }
+
     HapticFeedback.lightImpact();
 
     setState(() {
@@ -759,30 +764,45 @@ class _NoteRequestFormState
     });
 
     try {
+      // The Firebase write is the source of truth for submission success.
+      // Local cooldown persistence is best-effort and must not turn a
+      // confirmed backend success into a visible failure.
       await ref
           .read(noteRepositoryProvider)
           .submitNoteRequest(
         subjectName:
         _subjectNameController.text.trim(),
-        semester: _parseSemester()!,
+        semester: semester,
       );
 
-      final prefs =
-      await SharedPreferences.getInstance();
+      try {
+        final prefs =
+        await SharedPreferences.getInstance();
 
-      final today =
-      DateFormat('yyyy-MM-dd').format(
-        DateTime.now(),
-      );
+        final today =
+        DateFormat('yyyy-MM-dd').format(
+          DateTime.now(),
+        );
 
-      await prefs.setString(
-        'last_note_request_date',
-        today,
-      );
-
-      if (mounted) {
-        Navigator.of(context).pop(true);
+        await prefs.setString(
+          'last_note_request_date',
+          today,
+        );
+      } catch (error, stackTrace) {
+        debugPrint(
+          'Note request succeeded, but local cooldown could not be saved: '
+              '$error',
+        );
+        debugPrintStack(
+          stackTrace: stackTrace,
+        );
       }
+
+      if (!mounted) {
+        return;
+      }
+
+      Navigator.of(context).pop(true);
     } catch (error, stackTrace) {
       debugPrint(
         'Note request failed: $error',
@@ -793,10 +813,6 @@ class _NoteRequestFormState
         return;
       }
 
-      setState(() {
-        _isSubmitting = false;
-      });
-
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
@@ -805,7 +821,7 @@ class _NoteRequestFormState
                 .replaceFirst('Exception: ', '')
                 .trim()
                 .isEmpty
-                ? 'Could not submit the request.'
+                ? 'We couldn\'t submit your request. Please try again.'
                 : error
                 .toString()
                 .replaceFirst('Exception: ', '')
@@ -813,6 +829,12 @@ class _NoteRequestFormState
           ),
         ),
       );
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isSubmitting = false;
+        });
+      }
     }
   }
 

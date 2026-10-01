@@ -1,10 +1,12 @@
-import 'package:firebase_auth/firebase_auth.dart' as firebase_auth;
+import 'package:firebase_auth/firebase_auth.dart'
+as firebase_auth;
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 
 import '../data/repositories/user_repository.dart';
 import '../data/repositories/routine_repository.dart';
+import '../data/repositories/announcement_repository.dart';
 import '../data/local/app_database.dart';
 import '../providers/db_provider.dart';
 
@@ -12,17 +14,25 @@ final authServiceProvider = Provider<AuthService>((ref) {
   return AuthService(
     ref.watch(userRepositoryProvider),
     ref.watch(routineRepositoryProvider),
+    ref.watch(announcementRepositoryProvider),
     ref.watch(dbProvider),
   );
 });
 
 class AuthService {
-  final firebase_auth.FirebaseAuth _auth = firebase_auth.FirebaseAuth.instance;
+  final firebase_auth.FirebaseAuth _auth =
+      firebase_auth.FirebaseAuth.instance;
   final UserRepository _userRepo;
   final RoutineRepository _routineRepo;
+  final AnnouncementRepository _announcementRepo;
   final AppDatabase _db;
 
-  AuthService(this._userRepo, this._routineRepo, this._db);
+  AuthService(
+      this._userRepo,
+      this._routineRepo,
+      this._announcementRepo,
+      this._db,
+      );
 
   // Existing Student Sign Up
   Future<firebase_auth.UserCredential> signUp({
@@ -35,11 +45,18 @@ class AuthService {
     final normalizedSection = section.toUpperCase().trim();
     final email = "$internalId@bgctub.local";
 
-    firebase_auth.UserCredential credential = await _auth
-        .createUserWithEmailAndPassword(email: email, password: password);
+    firebase_auth.UserCredential credential =
+    await _auth.createUserWithEmailAndPassword(
+      email: email,
+      password: password,
+    );
+
     final uid = credential.user!.uid;
 
-    await FirebaseFirestore.instance.collection("students").doc(internalId).set({
+    await FirebaseFirestore.instance
+        .collection("students")
+        .doc(internalId)
+        .set({
       "uid": uid,
       "name": name,
       "internalId": internalId,
@@ -47,11 +64,13 @@ class AuthService {
       "section": normalizedSection,
       "role": "student",
       "avatarId": 1,
-      "createdAt": FieldValue.serverTimestamp(),
+      "createdAt":
+      FieldValue.serverTimestamp(),
     });
 
     await _userRepo.syncUser(uid);
     await _auth.signOut();
+
     return credential;
   }
 
@@ -65,27 +84,38 @@ class AuthService {
     if (!email.endsWith("@bgctub.ac.bd")) {
       throw firebase_auth.FirebaseAuthException(
         code: "invalid-teacher-email",
-        message: "Teachers must use a @bgctub.ac.bd email",
+        message:
+        "Teachers must use a @bgctub.ac.bd email",
       );
     }
 
-    firebase_auth.UserCredential credential = await _auth
-        .createUserWithEmailAndPassword(email: email, password: password);
+    firebase_auth.UserCredential credential =
+    await _auth.createUserWithEmailAndPassword(
+      email: email,
+      password: password,
+    );
+
     final uid = credential.user!.uid;
 
-    // Save to 'teachers' collection using the email as the Document ID
-    await FirebaseFirestore.instance.collection("teachers").doc(email).set({
+    // Save to 'teachers' collection using the email
+    // as the Document ID.
+    await FirebaseFirestore.instance
+        .collection("teachers")
+        .doc(email)
+        .set({
       "uid": uid,
       "name": name,
-      "internalId": email, // For teachers, their email is their internal identifier
+      "internalId": email,
       "role": "teacher",
-      "avatarId": 10, // Default teacher avatar
-      "createdAt": FieldValue.serverTimestamp(),
+      "avatarId": 10,
+      "createdAt":
+      FieldValue.serverTimestamp(),
     });
 
     // Sync to Local SQLite immediately
     await _userRepo.syncUser(uid);
     await _auth.signOut();
+
     return credential;
   }
 
@@ -95,24 +125,31 @@ class AuthService {
     required String password,
   }) async {
     String email;
+
     if (idOrEmail.contains("@")) {
       if (!idOrEmail.endsWith("@bgctub.ac.bd")) {
         throw firebase_auth.FirebaseAuthException(
           code: "invalid-teacher-email",
-          message: "Teachers must use a @bgctub.ac.bd email",
+          message:
+          "Teachers must use a @bgctub.ac.bd email",
         );
       }
+
       email = idOrEmail;
     } else {
       email = "$idOrEmail@bgctub.local";
     }
 
-    final credential = await _auth.signInWithEmailAndPassword(
+    final credential =
+    await _auth.signInWithEmailAndPassword(
       email: email,
       password: password,
     );
 
-    await _userRepo.syncUser(credential.user!.uid);
+    await _userRepo.syncUser(
+      credential.user!.uid,
+    );
+
     return credential;
   }
 
@@ -122,16 +159,26 @@ class AuthService {
       // 1. Delete the FCM token.
       await FirebaseMessaging.instance.deleteToken();
     } catch (e) {
-      print("DEBUG: Failed to delete FCM token during sign out: $e");
+      print(
+        "DEBUG: Failed to delete FCM token during sign out: $e",
+      );
     }
 
-    // 2. Reset routine sync metadata to allow the next user to sync immediately
+    // 2. Reset routine sync metadata to allow the next
+    // user to sync immediately.
     _routineRepo.resetSyncMetadata();
 
-    // 3. Annihilate the local SQLite database to prevent offline data ghosting
+    // 3. Reset the persistent announcement cache marker
+    // so the next authenticated user/device session does not
+    // assume another user's cache has already been initialized.
+    await _announcementRepo
+        .clearAnnouncementsCacheState();
+
+    // 4. Annihilate the local SQLite database to prevent
+    // offline data ghosting.
     await _db.clearAllData();
 
-    // 4. Actually sign out of Firebase
+    // 5. Actually sign out of Firebase.
     await _auth.signOut();
   }
 
@@ -142,30 +189,51 @@ class AuthService {
     required String docId,
   }) async {
     final user = _auth.currentUser;
+
     if (user == null || user.email == null) {
-      throw Exception("Authentication session invalid.");
+      throw Exception(
+        "Authentication session invalid.",
+      );
     }
 
-    // 1. Re-authenticate to satisfy Firebase's sensitive action requirements
-    final cred = firebase_auth.EmailAuthProvider.credential(
+    // 1. Re-authenticate to satisfy Firebase's
+    // sensitive action requirements.
+    final cred =
+    firebase_auth.EmailAuthProvider.credential(
       email: user.email!,
       password: password,
     );
-    await user.reauthenticateWithCredential(cred);
+
+    await user.reauthenticateWithCredential(
+      cred,
+    );
 
     // 2. Delete Firestore Profile Document
-    final collection = role == 'teacher' ? 'teachers' : 'students';
-    await FirebaseFirestore.instance.collection(collection).doc(docId).delete();
+    final collection =
+    role == 'teacher'
+        ? 'teachers'
+        : 'students';
+
+    await FirebaseFirestore.instance
+        .collection(collection)
+        .doc(docId)
+        .delete();
 
     // 3. Delete FCM token to stop future notifications
     try {
       await FirebaseMessaging.instance.deleteToken();
     } catch (e) {
-      print("DEBUG: Failed to delete FCM token during account deletion: $e");
+      print(
+        "DEBUG: Failed to delete FCM token during account deletion: $e",
+      );
     }
 
     // 4. Wipe Local Database & Reset Sync State
     _routineRepo.resetSyncMetadata();
+
+    await _announcementRepo
+        .clearAnnouncementsCacheState();
+
     await _db.clearAllData();
 
     // 5. Delete the Firebase Auth User

@@ -1,12 +1,17 @@
 import 'dart:convert';
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:drift/drift.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../local/app_database.dart';
+
 import '../../providers/db_provider.dart';
+import '../local/app_database.dart';
 
 final routineRepositoryProvider = Provider<RoutineRepository>((ref) {
-  return RoutineRepository(ref.watch(dbProvider), FirebaseFirestore.instance);
+  return RoutineRepository(
+    ref.watch(dbProvider),
+    FirebaseFirestore.instance,
+  );
 });
 
 class RoutineRepository {
@@ -17,216 +22,496 @@ class RoutineRepository {
   DateTime? _lastSync;
 
   static const Map<String, Map<String, String>> _timeSlots = {
-    "class1": {"start": "09:30", "end": "10:20"},
-    "class2": {"start": "10:25", "end": "11:15"},
-    "class3": {"start": "11:20", "end": "12:10"},
-    "class4": {"start": "12:15", "end": "13:05"},
-    "class5": {"start": "13:10", "end": "14:00"},
-    "class6": {"start": "14:05", "end": "14:55"},
+    'class1': {
+      'start': '09:30',
+      'end': '10:20',
+    },
+    'class2': {
+      'start': '10:25',
+      'end': '11:15',
+    },
+    'class3': {
+      'start': '11:20',
+      'end': '12:10',
+    },
+    'class4': {
+      'start': '12:15',
+      'end': '13:05',
+    },
+    'class5': {
+      'start': '13:10',
+      'end': '14:00',
+    },
+    'class6': {
+      'start': '14:05',
+      'end': '14:55',
+    },
   };
 
   static const Map<String, int> _dayMap = {
-    "Monday": 1, "Tuesday": 2, "Wednesday": 3,
-    "Thursday": 4, "Friday": 5, "Saturday": 6, "Sunday": 7,
+    'Monday': 1,
+    'Tuesday': 2,
+    'Wednesday': 3,
+    'Thursday': 4,
+    'Friday': 5,
+    'Saturday': 6,
+    'Sunday': 7,
   };
 
-  RoutineRepository(this._db, this._firestore);
+  RoutineRepository(
+      this._db,
+      this._firestore,
+      );
 
-  /// Clears sync metadata on logout to allow the next user to sync immediately
+  /// Clears in-memory sync metadata when the authenticated user changes.
   void resetSyncMetadata() {
     _lastSync = null;
     _isSyncing = false;
   }
 
-  /// OFFLINE FIRST: Watch the local SQLite routine table for students
-  Stream<List<Routine>> watchDailyRoutines(int semester, String section, int weekday) {
+  /// Watches one student's routine for one weekday.
+  ///
+  /// This remains a stream because the routine UI needs to react immediately
+  /// when the local Drift cache changes.
+  Stream<List<Routine>> watchDailyRoutines(
+      int semester,
+      String section,
+      int weekday,
+      ) {
     return (_db.select(_db.routines)
-      ..where((r) => r.dayOfWeek.equals(weekday))
-      ..where((r) => r.semester.equals(semester))
-      ..where((r) => r.section.equals(section))
-      ..orderBy([(t) => OrderingTerm(expression: t.startTime)])
-    ).watch();
+      ..where(
+            (r) => r.dayOfWeek.equals(weekday),
+      )
+      ..where(
+            (r) => r.semester.equals(semester),
+      )
+      ..where(
+            (r) => r.section.equals(section),
+      )
+      ..orderBy([
+            (t) => OrderingTerm(
+          expression: t.startTime,
+        ),
+      ]))
+        .watch();
   }
 
-  /// OFFLINE FIRST: Indestructible Hybrid Query for Teachers
-  Stream<List<Routine>> watchTeacherDailyRoutines(String teacherId, String teacherName, int weekday) {
+  /// Watches one teacher's routine for one weekday.
+  ///
+  /// Teacher matching prefers teacherId but retains teacher-name fallback for
+  /// compatibility with older routine data.
+  Stream<List<Routine>> watchTeacherDailyRoutines(
+      String teacherId,
+      String teacherName,
+      int weekday,
+      ) {
     final cleanId = teacherId.trim().toLowerCase();
     final cleanName = teacherName.trim().toLowerCase();
 
     return (_db.select(_db.routines)
-      ..where((r) => r.dayOfWeek.equals(weekday))
-      ..where((r) {
-        Expression<bool> matchId = cleanId.isNotEmpty
-            ? r.teacherId.equals(cleanId)
-            : const Constant(false);
+      ..where(
+            (r) => r.dayOfWeek.equals(weekday),
+      )
+      ..where(
+            (r) {
+          final Expression<bool> matchId = cleanId.isNotEmpty
+              ? r.teacherId.equals(cleanId)
+              : const Constant(false);
 
-        Expression<bool> matchName = cleanName.isNotEmpty
-            ? r.teacherName.lower().equals(cleanName)
-            : const Constant(false);
+          final Expression<bool> matchName = cleanName.isNotEmpty
+              ? r.teacherName.lower().equals(cleanName)
+              : const Constant(false);
 
-        return matchId | matchName;
-      })
-      ..orderBy([(t) => OrderingTerm(expression: t.startTime)])
-    ).watch();
+          return matchId | matchName;
+        },
+      )
+      ..orderBy([
+            (t) => OrderingTerm(
+          expression: t.startTime,
+        ),
+      ]))
+        .watch();
   }
 
-  /// SYNC: Fetch the master data from Firestore and safely wipe/replace SQLite
+  /// Performs one local SQLite query for all routines belonging to a student.
+  ///
+  /// This is intentionally a Future rather than a Stream because callers such
+  /// as notification scheduling only need a point-in-time snapshot.
+  Future<List<Routine>> getStudentRoutines(
+      int semester,
+      String section,
+      ) {
+    return (_db.select(_db.routines)
+      ..where(
+            (r) => r.semester.equals(semester),
+      )
+      ..where(
+            (r) => r.section.equals(section),
+      )
+      ..orderBy([
+            (t) => OrderingTerm(
+          expression: t.dayOfWeek,
+        ),
+            (t) => OrderingTerm(
+          expression: t.startTime,
+        ),
+      ]))
+        .get();
+  }
+
+  /// Performs one local SQLite query for all routines belonging to a teacher.
+  ///
+  /// teacherId is preferred, while teacherName remains a compatibility
+  /// fallback for legacy rows that may not contain a teacherId.
+  Future<List<Routine>> getTeacherRoutines(
+      String teacherId,
+      String teacherName,
+      ) {
+    final cleanId = teacherId.trim().toLowerCase();
+    final cleanName = teacherName.trim().toLowerCase();
+
+    return (_db.select(_db.routines)
+      ..where(
+            (r) {
+          final Expression<bool> matchId = cleanId.isNotEmpty
+              ? r.teacherId.equals(cleanId)
+              : const Constant(false);
+
+          final Expression<bool> matchName = cleanName.isNotEmpty
+              ? r.teacherName.lower().equals(cleanName)
+              : const Constant(false);
+
+          return matchId | matchName;
+        },
+      )
+      ..orderBy([
+            (t) => OrderingTerm(
+          expression: t.dayOfWeek,
+        ),
+            (t) => OrderingTerm(
+          expression: t.startTime,
+        ),
+      ]))
+        .get();
+  }
+
+  /// Fetches master routine data from Firestore and replaces the local routine
+  /// cache atomically after successful parsing.
   Future<void> syncRoutines() async {
-    if (_isSyncing) return;
+    if (_isSyncing) {
+      return;
+    }
 
-    // Check local database count to bypass cooldown if empty
-    final countQuery = _db.selectOnly(_db.routines)..addColumns([_db.routines.id.count()]);
-    final count = await countQuery.map((row) => row.read<int>(_db.routines.id.count())).getSingle();
+    // Keep the existing "don't repeatedly download a populated cache"
+    // behavior. An empty cache is always allowed to bootstrap.
+    final countQuery = _db.selectOnly(_db.routines)
+      ..addColumns([
+        _db.routines.id.count(),
+      ]);
 
-    // BUG FIX: Handle nullable count to avoid 'null' receiver error on operator '>'
-    if ((count ?? 0) > 0 && _lastSync != null && DateTime.now().difference(_lastSync!) < const Duration(minutes: 5)) {
-      print("DEBUG: Sync skipped due to active cooldown and existing data.");
+    final count = await countQuery
+        .map(
+          (row) => row.read<int>(
+        _db.routines.id.count(),
+      ),
+    )
+        .getSingle();
+
+    if ((count ?? 0) > 0 &&
+        _lastSync != null &&
+        DateTime.now().difference(_lastSync!) <
+            const Duration(minutes: 5)) {
+      print(
+        'DEBUG: Sync skipped due to active cooldown and existing data.',
+      );
       return;
     }
 
     _isSyncing = true;
 
     try {
-      final docSnapshot = await _firestore.collection("routines").doc("master").get();
+      final docSnapshot = await _firestore
+          .collection('routines')
+          .doc('master')
+          .get();
 
       if (!docSnapshot.exists) {
-        print("DEBUG: Master routine document not found.");
+        print(
+          'DEBUG: Master routine document not found.',
+        );
         return;
       }
 
       final data = docSnapshot.data();
-      if (data == null || !data.containsKey("data")) return;
 
-      final String jsonString = data["data"];
-      final dynamic decodedData = jsonDecode(jsonString);
+      if (data == null || !data.containsKey('data')) {
+        return;
+      }
 
-      List<RoutinesCompanion> companions = [];
+      final rawJson = data['data'];
 
-      // MODIFICATION: Handle the new top-level slots mapping & Semester -> Section -> Weekday JSON structure
+      if (rawJson is! String || rawJson.trim().isEmpty) {
+        throw const FormatException(
+          'Routine master document contains invalid JSON data.',
+        );
+      }
+
+      final dynamic decodedData = jsonDecode(rawJson);
+
+      final List<RoutinesCompanion> companions = [];
+
       if (decodedData is Map<String, dynamic>) {
-        // Extract dynamic time slots from the root "slots" object
-        Map<String, Map<String, String>> dynamicSlots = {};
-        if (decodedData["slots"] is Map<String, dynamic>) {
-          (decodedData["slots"] as Map<String, dynamic>).forEach((slotKey, timeData) {
-            if (timeData is Map<String, dynamic>) {
-              dynamicSlots[slotKey] = {
-                "start": timeData["startTime"]?.toString() ?? "00:00",
-                "end": timeData["endTime"]?.toString() ?? "00:00",
-              };
-            }
-          });
+        final Map<String, Map<String, String>> dynamicSlots = {};
+
+        final rawSlots = decodedData['slots'];
+
+        if (rawSlots is Map<String, dynamic>) {
+          rawSlots.forEach(
+                (slotKey, timeData) {
+              if (timeData is Map<String, dynamic>) {
+                dynamicSlots[slotKey] = {
+                  'start': timeData['startTime']?.toString() ?? '00:00',
+                  'end': timeData['endTime']?.toString() ?? '00:00',
+                };
+              }
+            },
+          );
         }
 
-        final Map<String, dynamic> semesters = decodedData["semesters"] is Map<String, dynamic>
-            ? decodedData["semesters"]
+        final Map<String, dynamic> semesters =
+        decodedData['semesters'] is Map<String, dynamic>
+            ? decodedData['semesters'] as Map<String, dynamic>
             : {};
 
-        semesters.forEach((semKey, sectionsMap) {
-          final int parsedSem = int.tryParse(semKey) ?? 1;
+        semesters.forEach(
+              (semKey, sectionsMap) {
+            final int parsedSem = int.tryParse(
+              semKey,
+            ) ??
+                1;
 
-          if (sectionsMap is Map<String, dynamic>) {
-            sectionsMap.forEach((secKey, daysMap) {
-              final String parsedSec = secKey.trim().toUpperCase();
+            if (sectionsMap is! Map<String, dynamic>) {
+              return;
+            }
 
-              if (daysMap is Map<String, dynamic>) {
-                daysMap.forEach((dayName, classesList) {
-                  final int dayOfWeek = _dayMap[dayName] ?? 1;
+            sectionsMap.forEach(
+                  (secKey, daysMap) {
+                final String parsedSec =
+                secKey.trim().toUpperCase();
 
-                  if (classesList is List) {
-                    for (var classBlock in classesList) {
-                      if (classBlock is Map<String, dynamic>) {
-                        final String slotKey = classBlock["slot"]?.toString() ?? "class1";
+                if (daysMap is! Map<String, dynamic>) {
+                  return;
+                }
 
-                        // Look up time in dynamic slots first, fallback to static _timeSlots
-                        final startTime = dynamicSlots[slotKey]?["start"] ?? _timeSlots[slotKey]?["start"] ?? "00:00";
-                        final endTime = dynamicSlots[slotKey]?["end"] ?? _timeSlots[slotKey]?["end"] ?? "00:00";
+                daysMap.forEach(
+                      (dayName, classesList) {
+                    final int dayOfWeek =
+                        _dayMap[dayName] ?? 1;
 
-                        final String subjectName = classBlock["subjectName"]?.toString() ?? "Unknown Subject";
-                        final String roomNum = classBlock["roomNumber"]?.toString() ?? "TBA";
-                        final String teacherId = (classBlock["teacherId"]?.toString() ?? "").trim().toLowerCase();
-                        final String teacherName = (classBlock["teacherName"]?.toString() ?? "TBA").trim();
-
-                        final uniqueId = "${parsedSem}_${parsedSec}_${dayOfWeek}_${slotKey}_${startTime.replaceAll(':', '')}_${teacherId.isNotEmpty ? teacherId : teacherName}_$roomNum";
-
-                        companions.add(
-                            RoutinesCompanion(
-                              id: Value(uniqueId),
-                              subjectName: Value(subjectName),
-                              teacherName: Value(teacherName),
-                              teacherId: Value(teacherId),
-                              roomNumber: Value(roomNum),
-                              dayOfWeek: Value(dayOfWeek),
-                              startTime: Value(startTime),
-                              endTime: Value(endTime),
-                              semester: Value(parsedSem),
-                              section: Value(parsedSec),
-                            )
-                        );
-                      }
+                    if (classesList is! List) {
+                      return;
                     }
-                  }
-                });
-              }
-            });
-          }
-        });
+
+                    for (final classBlock in classesList) {
+                      if (classBlock is! Map<String, dynamic>) {
+                        continue;
+                      }
+
+                      final String slotKey =
+                          classBlock['slot']?.toString() ??
+                              'class1';
+
+                      final String startTime =
+                          dynamicSlots[slotKey]?['start'] ??
+                              _timeSlots[slotKey]?['start'] ??
+                              '00:00';
+
+                      final String endTime =
+                          dynamicSlots[slotKey]?['end'] ??
+                              _timeSlots[slotKey]?['end'] ??
+                              '00:00';
+
+                      final String subjectName =
+                          classBlock['subjectName']?.toString() ??
+                              'Unknown Subject';
+
+                      final String roomNum =
+                          classBlock['roomNumber']?.toString() ??
+                              'TBA';
+
+                      final String teacherId =
+                      (classBlock['teacherId']?.toString() ?? '')
+                          .trim()
+                          .toLowerCase();
+
+                      final String teacherName =
+                      (classBlock['teacherName']?.toString() ??
+                          'TBA')
+                          .trim();
+
+                      final String uniqueId =
+                          '${parsedSem}_'
+                          '${parsedSec}_'
+                          '${dayOfWeek}_'
+                          '${slotKey}_'
+                          '${startTime.replaceAll(':', '')}_'
+                          '${teacherId.isNotEmpty ? teacherId : teacherName}_'
+                          '$roomNum';
+
+                      companions.add(
+                        RoutinesCompanion(
+                          id: Value(uniqueId),
+                          subjectName: Value(subjectName),
+                          teacherName: Value(teacherName),
+                          teacherId: Value(teacherId),
+                          roomNumber: Value(roomNum),
+                          dayOfWeek: Value(dayOfWeek),
+                          startTime: Value(startTime),
+                          endTime: Value(endTime),
+                          semester: Value(parsedSem),
+                          section: Value(parsedSec),
+                        ),
+                      );
+                    }
+                  },
+                );
+              },
+            );
+          },
+        );
       } else if (decodedData is List) {
-        // Legacy fallback for old teacher-wise JSON structure
-        for (var teacher in decodedData) {
-          final String teacherName = (teacher["teacherName"]?.toString() ?? "TBA").trim();
-          final String teacherId = (teacher["teacherId"]?.toString() ?? "").trim().toLowerCase();
-          final Map<String, dynamic> days = teacher["days"] ?? {};
+        // Legacy support for the previous teacher-wise routine format.
+        for (final teacher in decodedData) {
+          if (teacher is! Map<String, dynamic>) {
+            continue;
+          }
 
-          for (var dayEntry in days.entries) {
-            final int dayOfWeek = _dayMap[dayEntry.key] ?? 1;
-            final Map<String, dynamic> classes = dayEntry.value;
+          final String teacherName =
+          (teacher['teacherName']?.toString() ?? 'TBA')
+              .trim();
 
-            for (var classEntry in classes.entries) {
+          final String teacherId =
+          (teacher['teacherId']?.toString() ?? '')
+              .trim()
+              .toLowerCase();
+
+          final dynamic rawDays = teacher['days'];
+
+          if (rawDays is! Map<String, dynamic>) {
+            continue;
+          }
+
+          for (final dayEntry in rawDays.entries) {
+            final int dayOfWeek =
+                _dayMap[dayEntry.key] ?? 1;
+
+            final dynamic rawClasses = dayEntry.value;
+
+            if (rawClasses is! Map<String, dynamic>) {
+              continue;
+            }
+
+            for (final classEntry in rawClasses.entries) {
               final String slotKey = classEntry.key;
-              final Map<String, dynamic> details = classEntry.value;
 
-              final startTime = _timeSlots[slotKey]?["start"] ?? "00:00";
-              final endTime = _timeSlots[slotKey]?["end"] ?? "00:00";
+              final dynamic rawDetails = classEntry.value;
 
-              final int parsedSem = int.tryParse(details["sem"]?.toString() ?? "1") ?? 1;
-              final String parsedSec = (details["sec"]?.toString() ?? "A").trim().toUpperCase();
-              final String roomNum = (details["room"]?.toString() ?? "TBA").trim();
+              if (rawDetails is! Map<String, dynamic>) {
+                continue;
+              }
 
-              final uniqueId = "${teacherName}_${dayOfWeek}_${slotKey}_${parsedSem}_${parsedSec}_$roomNum";
+              final String startTime =
+                  _timeSlots[slotKey]?['start'] ??
+                      '00:00';
+
+              final String endTime =
+                  _timeSlots[slotKey]?['end'] ??
+                      '00:00';
+
+              final int parsedSem =
+                  int.tryParse(
+                    rawDetails['sem']?.toString() ??
+                        '1',
+                  ) ??
+                      1;
+
+              final String parsedSec =
+              (rawDetails['sec']?.toString() ?? 'A')
+                  .trim()
+                  .toUpperCase();
+
+              final String roomNum =
+              (rawDetails['room']?.toString() ?? 'TBA')
+                  .trim();
+
+              final String uniqueId =
+                  '${teacherName}_'
+                  '${dayOfWeek}_'
+                  '${slotKey}_'
+                  '${parsedSem}_'
+                  '${parsedSec}_'
+                  '$roomNum';
 
               companions.add(
-                  RoutinesCompanion(
-                    id: Value(uniqueId),
-                    subjectName: Value(details["sub"] ?? "Unknown Subject"),
-                    teacherName: Value(teacherName),
-                    teacherId: Value(teacherId),
-                    roomNumber: Value(roomNum),
-                    dayOfWeek: Value(dayOfWeek),
-                    startTime: Value(startTime),
-                    endTime: Value(endTime),
-                    semester: Value(parsedSem),
-                    section: Value(parsedSec),
-                  )
+                RoutinesCompanion(
+                  id: Value(uniqueId),
+                  subjectName: Value(
+                    rawDetails['sub']?.toString() ??
+                        'Unknown Subject',
+                  ),
+                  teacherName: Value(teacherName),
+                  teacherId: Value(teacherId),
+                  roomNumber: Value(roomNum),
+                  dayOfWeek: Value(dayOfWeek),
+                  startTime: Value(startTime),
+                  endTime: Value(endTime),
+                  semester: Value(parsedSem),
+                  section: Value(parsedSec),
+                ),
               );
             }
           }
         }
+      } else {
+        throw const FormatException(
+          'Unsupported routine master data format.',
+        );
       }
 
-      await _db.transaction(() async {
-        await _db.delete(_db.routines).go();
+      await _db.transaction(
+            () async {
+          await _db.delete(_db.routines).go();
 
-        await _db.batch((batch) {
-          batch.insertAll(_db.routines, companions, mode: InsertMode.insertOrReplace);
-        });
-      });
+          if (companions.isEmpty) {
+            return;
+          }
+
+          await _db.batch(
+                (batch) {
+              batch.insertAll(
+                _db.routines,
+                companions,
+                mode: InsertMode.insertOrReplace,
+              );
+            },
+          );
+        },
+      );
 
       _lastSync = DateTime.now();
-      print("DEBUG: Routines synced. Total classes processed: ${companions.length}");
 
+      print(
+        'DEBUG: Routines synced. '
+            'Total classes processed: ${companions.length}',
+      );
     } catch (e) {
-      print("DEBUG: Routine Sync Error: $e");
-      throw Exception("Failed to sync routines: $e");
+      print(
+        'DEBUG: Routine Sync Error: $e',
+      );
+
+      throw Exception(
+        'Failed to sync routines: $e',
+      );
     } finally {
       _isSyncing = false;
     }

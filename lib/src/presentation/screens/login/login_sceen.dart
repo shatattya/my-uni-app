@@ -94,7 +94,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                   controller: idController,
                   style: TextStyle(color: Colors.black, fontSize: 16.sp),
                   decoration: InputDecoration(
-                    hintText: "ex : 2*02*****",
+                    hintText: "ex : *********",
                     hintStyle: TextStyle(color: Colors.black54, fontSize: 16.sp),
                     filled: true,
                     fillColor: const Color(0xFFE0E0E0),
