@@ -6,6 +6,7 @@ import '../screens/attendance/attendance_marking_screen.dart';
 import '../screens/attendance/attendance_setup_screen.dart';
 import '../screens/auth/auth_wrapper.dart';
 import '../screens/books_catalog_screen.dart';
+import '../screens/home/academic_calendar_screen.dart';
 import '../screens/home/announcement_detail_screen.dart';
 import '../screens/home/contact_us_screen.dart';
 import '../screens/home/create_announcement_screen.dart';
@@ -33,27 +34,46 @@ class AppRoutes {
   static const String studentSignup = '/signup/student';
   static const String teacherSignup = '/signup/teacher';
   static const String privacyPolicy = '/signup/privacy';
+
   static const String examRoutine = '/routine/exam';
+  static const String calendar = '/calendar';
+
   static const String notes = '/notes';
   static const String books = '/books';
   static const String liveEvents = '/events/live';
-  static const String attendanceSetup = '/attendance/setup';
-  static const String attendanceExport = '/attendance/export';
-  static const String attendanceMarking = '/attendance/marking';
+
+  static const String attendanceSetup =
+      '/attendance/setup';
+  static const String attendanceExport =
+      '/attendance/export';
+  static const String attendanceMarking =
+      '/attendance/marking';
+
   static const String devTriage = '/dev/triage';
   static const String contact = '/contact';
-  static const String editStudentProfile = '/profile/student/edit';
-  static const String editTeacherProfile = '/profile/teacher/edit';
-  static const String createAnnouncement = '/announcement/create';
-  static const String detailAnnouncement = '/announcement/detail';
-  static const String editAnnouncement = '/announcement/edit';
 
-  static const String systemInsights = '/dev/insights';
-  static const String manageUsers = '/dev/users';
+  static const String editStudentProfile =
+      '/profile/student/edit';
+  static const String editTeacherProfile =
+      '/profile/teacher/edit';
+
+  static const String createAnnouncement =
+      '/announcement/create';
+  static const String detailAnnouncement =
+      '/announcement/detail';
+  static const String editAnnouncement =
+      '/announcement/edit';
+
+  static const String systemInsights =
+      '/dev/insights';
+  static const String manageUsers =
+      '/dev/users';
 }
 
 class AppRouter {
-  static Route<dynamic> generateRoute(RouteSettings settings) {
+  static Route<dynamic> generateRoute(
+      RouteSettings settings,
+      ) {
     switch (settings.name) {
       case AppRoutes.auth:
         return _buildFadeRoute(
@@ -100,6 +120,12 @@ class AppRouter {
       case AppRoutes.examRoutine:
         return _buildSlideRoute(
           const ExamRoutineScreen(),
+          settings,
+        );
+
+      case AppRoutes.calendar:
+        return _buildSlideRoute(
+          const AcademicCalendarScreen(),
           settings,
         );
 
@@ -225,7 +251,8 @@ class AppRouter {
     }
   }
 
-  static PageRouteBuilder<dynamic> _buildSlideRoute(
+  static PageRouteBuilder<dynamic>
+  _buildSlideRoute(
       Widget page,
       RouteSettings settings,
       ) {
@@ -244,18 +271,25 @@ class AppRouter {
           Animation<double> secondaryAnimation,
           Widget child,
           ) {
-        const begin = Offset(1.0, 0.0);
+        const begin = Offset(
+          1.0,
+          0.0,
+        );
         const end = Offset.zero;
-        const curve = Curves.easeOutCubic;
+        const curve =
+            Curves.easeOutCubic;
 
         final tween = Tween<Offset>(
           begin: begin,
           end: end,
         ).chain(
-          CurveTween(curve: curve),
+          CurveTween(
+            curve: curve,
+          ),
         );
 
-        final offsetAnimation = animation.drive(tween);
+        final offsetAnimation =
+        animation.drive(tween);
 
         return SlideTransition(
           position: offsetAnimation,
@@ -265,7 +299,8 @@ class AppRouter {
     );
   }
 
-  static PageRouteBuilder<dynamic> _buildFadeRoute(
+  static PageRouteBuilder<dynamic>
+  _buildFadeRoute(
       Widget page,
       RouteSettings settings,
       ) {
@@ -298,10 +333,14 @@ class AppRouter {
     return MaterialPageRoute<dynamic>(
       builder: (BuildContext context) {
         return Scaffold(
-          backgroundColor: Colors.black,
+          backgroundColor:
+          Colors.black,
           appBar: AppBar(
-            title: const Text('Routing Error'),
-            backgroundColor: Colors.black,
+            title: const Text(
+              'Routing Error',
+            ),
+            backgroundColor:
+            Colors.black,
           ),
           body: Center(
             child: Text(
@@ -311,7 +350,8 @@ class AppRouter {
                 color: Colors.redAccent,
                 fontSize: 16,
               ),
-              textAlign: TextAlign.center,
+              textAlign:
+              TextAlign.center,
             ),
           ),
         );

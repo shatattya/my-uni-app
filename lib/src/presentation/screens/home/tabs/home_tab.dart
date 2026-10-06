@@ -1,9 +1,11 @@
-import 'package:firebase_auth/firebase_auth.dart' as firebase_auth;
+import 'package:firebase_auth/firebase_auth.dart'
+as firebase_auth;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 
-import '../../../../data/local/app_database.dart' as local_db;
+import '../../../../data/local/app_database.dart'
+as local_db;
 import '../../../../data/repositories/user_repository.dart';
 import '../../../../services/update_service.dart';
 import '../../../routes/app_router.dart';
@@ -11,25 +13,38 @@ import '../../../theme/app_theme.dart';
 import '../../../widgets/update_notice_sheet.dart';
 
 class HomeTab extends ConsumerStatefulWidget {
-  const HomeTab({super.key});
+  const HomeTab({
+    super.key,
+  });
 
   @override
-  ConsumerState<HomeTab> createState() => _HomeTabState();
+  ConsumerState<HomeTab> createState() =>
+      _HomeTabState();
 }
 
-class _HomeTabState extends ConsumerState<HomeTab> {
-  late final Stream<local_db.User?> _userStream;
+class _HomeTabState
+    extends ConsumerState<HomeTab> {
+  late final Stream<local_db.User?>
+  _userStream;
+
   bool _isCheckingUpdate = false;
 
   @override
   void initState() {
     super.initState();
+
     final firebaseUser =
-        firebase_auth.FirebaseAuth.instance.currentUser;
+        firebase_auth
+            .FirebaseAuth
+            .instance
+            .currentUser;
 
     _userStream = firebaseUser == null
-        ? const Stream<local_db.User?>.empty()
-        : ref.read(userRepositoryProvider).watchUser(
+        ? const Stream<
+        local_db.User?>.empty()
+        : ref
+        .read(userRepositoryProvider)
+        .watchUser(
       firebaseUser.uid,
     );
   }
@@ -44,19 +59,27 @@ class _HomeTabState extends ConsumerState<HomeTab> {
     });
 
     try {
-      final updateService = ref.read(updateServiceProvider);
-      final info = await updateService.checkForUpdates();
+      final updateService =
+      ref.read(updateServiceProvider);
+
+      final info =
+      await updateService.checkForUpdates();
 
       if (!mounted) {
         return;
       }
 
       if (info.hasUpdate) {
-        UpdateNoticeSheet.show(context, info);
+        UpdateNoticeSheet.show(
+          context,
+          info,
+        );
       } else {
-        ScaffoldMessenger.of(context).showSnackBar(
+        ScaffoldMessenger.of(context)
+            .showSnackBar(
           const SnackBar(
-            content: Text('App is up to date!'),
+            content:
+            Text('App is up to date!'),
           ),
         );
       }
@@ -65,10 +88,12 @@ class _HomeTabState extends ConsumerState<HomeTab> {
         return;
       }
 
-      ScaffoldMessenger.of(context).showSnackBar(
+      ScaffoldMessenger.of(context)
+          .showSnackBar(
         const SnackBar(
           content: Text(
-            'Could not check for updates. Please try again.',
+            'Could not check for updates. '
+                'Please try again.',
           ),
         ),
       );
@@ -88,12 +113,13 @@ class _HomeTabState extends ConsumerState<HomeTab> {
   String _greetingForCurrentTime() {
     final hour = DateTime.now().hour;
 
-    // Culturally accurate timeframes for Bangladesh.
     if (hour >= 5 && hour < 12) {
       return 'Good morning';
-    } else if (hour >= 12 && hour < 16) {
+    } else if (hour >= 12 &&
+        hour < 16) {
       return 'Good afternoon';
-    } else if (hour >= 16 && hour < 20) {
+    } else if (hour >= 16 &&
+        hour < 20) {
       return 'Good evening';
     } else {
       return 'Good night';
@@ -105,27 +131,37 @@ class _HomeTabState extends ConsumerState<HomeTab> {
     final userStream = _userStream;
 
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor:
+      AppColors.background,
       drawer: _buildDrawer(context),
       body: SafeArea(
-        child: StreamBuilder<local_db.User?>(
+        child: StreamBuilder<
+            local_db.User?>(
           stream: userStream,
-          builder: (context, snapshot) {
+          builder: (
+              context,
+              snapshot,
+              ) {
             final user = snapshot.data;
-            final isTeacher = user?.role == 'teacher';
-            final isDeveloper = user?.isDev == true;
+            final isTeacher =
+                user?.role == 'teacher';
+            final isDeveloper =
+                user?.isDev == true;
 
             return CustomScrollView(
-              physics: const BouncingScrollPhysics(),
+              physics:
+              const BouncingScrollPhysics(),
               slivers: [
                 SliverPadding(
-                  padding: EdgeInsets.fromLTRB(
+                  padding:
+                  EdgeInsets.fromLTRB(
                     20.w,
                     14.h,
                     20.w,
                     24.h,
                   ),
-                  sliver: SliverToBoxAdapter(
+                  sliver:
+                  SliverToBoxAdapter(
                     child: _buildHeader(
                       context,
                       user,
@@ -133,26 +169,32 @@ class _HomeTabState extends ConsumerState<HomeTab> {
                   ),
                 ),
                 SliverPadding(
-                  padding: EdgeInsets.symmetric(
+                  padding:
+                  EdgeInsets.symmetric(
                     horizontal: 20.w,
                   ),
-                  sliver: SliverToBoxAdapter(
-                    child: _buildBanner(context),
+                  sliver:
+                  SliverToBoxAdapter(
+                    child:
+                    _buildBanner(context),
                   ),
                 ),
                 SliverPadding(
-                  padding: EdgeInsets.fromLTRB(
+                  padding:
+                  EdgeInsets.fromLTRB(
                     20.w,
                     28.h,
                     20.w,
                     12.h,
                   ),
                   sliver: SliverGrid(
-                    delegate: SliverChildListDelegate(
+                    delegate:
+                    SliverChildListDelegate(
                       _buildFeatureTiles(
                         context,
                         isTeacher: isTeacher,
-                        isDeveloper: isDeveloper,
+                        isDeveloper:
+                        isDeveloper,
                       ),
                     ),
                     gridDelegate:
@@ -176,9 +218,12 @@ class _HomeTabState extends ConsumerState<HomeTab> {
       BuildContext context,
       local_db.User? user,
       ) {
-    final theme = Theme.of(context);
+    final theme =
+    Theme.of(context);
 
-    final displayName = user?.name.trim().isNotEmpty == true
+    final displayName =
+    user?.name.trim().isNotEmpty ==
+        true
         ? user!.name.trim()
         : 'Welcome back';
 
@@ -190,25 +235,32 @@ class _HomeTabState extends ConsumerState<HomeTab> {
     return Row(
       children: [
         Builder(
-          builder: (drawerContext) {
+          builder: (
+              drawerContext,
+              ) {
             return Material(
               color: AppColors.surface,
-              borderRadius: BorderRadius.circular(
+              borderRadius:
+              BorderRadius.circular(
                 AppRadii.medium.r,
               ),
               child: InkWell(
-                borderRadius: BorderRadius.circular(
+                borderRadius:
+                BorderRadius.circular(
                   AppRadii.medium.r,
                 ),
                 onTap: () {
-                  Scaffold.of(drawerContext).openDrawer();
+                  Scaffold.of(
+                    drawerContext,
+                  ).openDrawer();
                 },
                 child: SizedBox(
                   width: 46.r,
                   height: 46.r,
                   child: Icon(
                     Icons.menu_rounded,
-                    color: AppColors.textPrimary,
+                    color:
+                    AppColors.textPrimary,
                     size: 24.r,
                   ),
                 ),
@@ -219,24 +271,34 @@ class _HomeTabState extends ConsumerState<HomeTab> {
         SizedBox(width: 12.w),
         Expanded(
           child: Column(
-            crossAxisAlignment: CrossAxisAlignment.end,
+            crossAxisAlignment:
+            CrossAxisAlignment.end,
             children: [
               Text(
                 subtitle,
                 maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: theme.textTheme.bodyMedium?.copyWith(
-                  color: AppColors.textTertiary,
+                overflow:
+                TextOverflow.ellipsis,
+                style: theme.textTheme
+                    .bodyMedium
+                    ?.copyWith(
+                  color:
+                  AppColors.textTertiary,
                 ),
               ),
               SizedBox(height: 2.h),
               Text(
                 displayName,
                 maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: theme.textTheme.titleMedium?.copyWith(
-                  color: AppColors.textPrimary,
-                  fontWeight: FontWeight.w700,
+                overflow:
+                TextOverflow.ellipsis,
+                style: theme.textTheme
+                    .titleMedium
+                    ?.copyWith(
+                  color:
+                  AppColors.textPrimary,
+                  fontWeight:
+                  FontWeight.w700,
                 ),
               ),
             ],
@@ -246,14 +308,20 @@ class _HomeTabState extends ConsumerState<HomeTab> {
     );
   }
 
-  Widget _buildBanner(BuildContext context) {
-    final theme = Theme.of(context);
-    final primary = theme.colorScheme.primary;
+  Widget _buildBanner(
+      BuildContext context,
+      ) {
+    final theme =
+    Theme.of(context);
+
+    final primary =
+        theme.colorScheme.primary;
 
     return AspectRatio(
       aspectRatio: 16 / 9,
       child: ClipRRect(
-        borderRadius: BorderRadius.circular(
+        borderRadius:
+        BorderRadius.circular(
           AppRadii.large.r,
         ),
         child: Stack(
@@ -262,21 +330,29 @@ class _HomeTabState extends ConsumerState<HomeTab> {
             Image.asset(
               'assets/images/home_banner.png',
               fit: BoxFit.cover,
-              filterQuality: FilterQuality.high,
+              filterQuality:
+              FilterQuality.high,
             ),
             DecoratedBox(
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  begin: Alignment.topCenter,
-                  end: Alignment.bottomCenter,
+              decoration:
+              BoxDecoration(
+                gradient:
+                LinearGradient(
+                  begin:
+                  Alignment.topCenter,
+                  end: Alignment
+                      .bottomCenter,
                   colors: [
-                    Colors.black.withValues(
+                    Colors.black
+                        .withValues(
                       alpha: 0.12,
                     ),
-                    Colors.black.withValues(
+                    Colors.black
+                        .withValues(
                       alpha: 0.38,
                     ),
-                    Colors.black.withValues(
+                    Colors.black
+                        .withValues(
                       alpha: 0.78,
                     ),
                   ],
@@ -289,7 +365,8 @@ class _HomeTabState extends ConsumerState<HomeTab> {
               ),
             ),
             Padding(
-              padding: EdgeInsets.all(20.r),
+              padding:
+              EdgeInsets.all(20.r),
               child: Column(
                 crossAxisAlignment:
                 CrossAxisAlignment.start,
@@ -297,23 +374,30 @@ class _HomeTabState extends ConsumerState<HomeTab> {
                 MainAxisAlignment.end,
                 children: [
                   Container(
-                    padding: EdgeInsets.symmetric(
+                    padding:
+                    EdgeInsets.symmetric(
                       horizontal: 10.w,
                       vertical: 5.h,
                     ),
-                    decoration: BoxDecoration(
-                      color: primary.withValues(
+                    decoration:
+                    BoxDecoration(
+                      color: primary
+                          .withValues(
                         alpha: 0.92,
                       ),
                       borderRadius:
-                      BorderRadius.circular(999.r),
+                      BorderRadius.circular(
+                        999.r,
+                      ),
                     ),
                     child: Text(
                       'BGCTUB',
-                      style: theme.textTheme.labelSmall
+                      style: theme.textTheme
+                          .labelSmall
                           ?.copyWith(
                         color: Colors.white,
-                        fontWeight: FontWeight.w700,
+                        fontWeight:
+                        FontWeight.w700,
                         letterSpacing: 0.6,
                       ),
                     ),
@@ -324,17 +408,20 @@ class _HomeTabState extends ConsumerState<HomeTab> {
                     maxLines: 2,
                     overflow:
                     TextOverflow.ellipsis,
-                    style: theme.textTheme.headlineSmall
+                    style: theme.textTheme
+                        .headlineSmall
                         ?.copyWith(
                       color: Colors.white,
-                      fontWeight: FontWeight.w800,
+                      fontWeight:
+                      FontWeight.w800,
                       height: 1.05,
                     ),
                   ),
                   SizedBox(height: 6.h),
                   Text(
                     'Your digital campus companion',
-                    style: theme.textTheme.bodyMedium
+                    style: theme.textTheme
+                        .bodyMedium
                         ?.copyWith(
                       color: Colors.white70,
                     ),
@@ -355,26 +442,32 @@ class _HomeTabState extends ConsumerState<HomeTab> {
     required Color color,
     required VoidCallback onTap,
   }) {
-    final theme = Theme.of(context);
+    final theme =
+    Theme.of(context);
 
     return Material(
       color: AppColors.surface,
-      borderRadius: BorderRadius.circular(
+      borderRadius:
+      BorderRadius.circular(
         AppRadii.large.r,
       ),
       child: InkWell(
-        borderRadius: BorderRadius.circular(
+        borderRadius:
+        BorderRadius.circular(
           AppRadii.large.r,
         ),
         onTap: onTap,
-        splashColor: color.withValues(
+        splashColor:
+        color.withValues(
           alpha: 0.1,
         ),
-        highlightColor: color.withValues(
+        highlightColor:
+        color.withValues(
           alpha: 0.05,
         ),
         child: Padding(
-          padding: EdgeInsets.all(14.r),
+          padding:
+          EdgeInsets.all(14.r),
           child: Column(
             mainAxisAlignment:
             MainAxisAlignment.center,
@@ -382,9 +475,12 @@ class _HomeTabState extends ConsumerState<HomeTab> {
             CrossAxisAlignment.start,
             children: [
               Container(
-                padding: EdgeInsets.all(8.r),
-                decoration: BoxDecoration(
-                  color: color.withValues(
+                padding:
+                EdgeInsets.all(8.r),
+                decoration:
+                BoxDecoration(
+                  color:
+                  color.withValues(
                     alpha: 0.15,
                   ),
                   borderRadius:
@@ -404,7 +500,8 @@ class _HomeTabState extends ConsumerState<HomeTab> {
                 maxLines: 1,
                 overflow:
                 TextOverflow.ellipsis,
-                style: theme.textTheme.titleSmall
+                style: theme.textTheme
+                    .titleSmall
                     ?.copyWith(
                   color:
                   AppColors.textPrimary,
@@ -420,27 +517,6 @@ class _HomeTabState extends ConsumerState<HomeTab> {
     );
   }
 
-  void _safeRoute(
-      BuildContext context,
-      String routeName,
-      ) {
-    try {
-      Navigator.pushNamed(
-        context,
-        routeName,
-      );
-    } catch (_) {
-      ScaffoldMessenger.of(context)
-          .showSnackBar(
-        const SnackBar(
-          content: Text(
-            'Module under construction.',
-          ),
-        ),
-      );
-    }
-  }
-
   List<Widget> _buildFeatureTiles(
       BuildContext context, {
         required bool isTeacher,
@@ -450,121 +526,144 @@ class _HomeTabState extends ConsumerState<HomeTab> {
       _buildFeatureTile(
         context: context,
         label: 'Academic Calendar',
-        icon: Icons.calendar_month_outlined,
-        color: const Color(0xFF1877F2),
-        onTap: () => _safeRoute(
-          context,
-          '/calendar',
-        ),
-      ),
-      _buildFeatureTile(
-        context: context,
-        label: 'Clubs',
-        icon: Icons.groups_outlined,
-        color: const Color(0xFF9C27B0),
-        onTap: () => _safeRoute(
-          context,
-          '/clubs',
-        ),
+        icon:
+        Icons.calendar_month_outlined,
+        color:
+        const Color(0xFF1877F2),
+        onTap: () =>
+            Navigator.pushNamed(
+              context,
+              AppRoutes.calendar,
+            ),
       ),
       if (!isTeacher)
         _buildFeatureTile(
           context: context,
           label: 'Exam Routine',
-          icon: Icons.assignment_outlined,
-          color: const Color(0xFFE91E63),
-          onTap: () => Navigator.pushNamed(
-            context,
-            AppRoutes.examRoutine,
-          ),
+          icon:
+          Icons.assignment_outlined,
+          color:
+          const Color(0xFFE91E63),
+          onTap: () =>
+              Navigator.pushNamed(
+                context,
+                AppRoutes.examRoutine,
+              ),
         ),
       _buildFeatureTile(
         context: context,
         label: 'Books Library',
-        icon: Icons.menu_book_rounded,
-        color: const Color(0xFF4CAF50),
-        onTap: () => Navigator.pushNamed(
-          context,
-          AppRoutes.books,
-        ),
+        icon:
+        Icons.menu_book_rounded,
+        color:
+        const Color(0xFF4CAF50),
+        onTap: () =>
+            Navigator.pushNamed(
+              context,
+              AppRoutes.books,
+            ),
       ),
       _buildFeatureTile(
         context: context,
         label: 'Notes Catalog',
-        icon: Icons.description_outlined,
-        color: const Color(0xFFFF9800),
-        onTap: () => Navigator.pushNamed(
-          context,
-          AppRoutes.notes,
-        ),
+        icon:
+        Icons.description_outlined,
+        color:
+        const Color(0xFFFF9800),
+        onTap: () =>
+            Navigator.pushNamed(
+              context,
+              AppRoutes.notes,
+            ),
       ),
       _buildFeatureTile(
         context: context,
         label: 'Live Events',
-        icon: Icons.sports_soccer_rounded,
-        color: const Color(0xFF00BCD4),
-        onTap: () => Navigator.pushNamed(
-          context,
-          AppRoutes.liveEvents,
-        ),
+        icon:
+        Icons.sports_soccer_rounded,
+        color:
+        const Color(0xFF00BCD4),
+        onTap: () =>
+            Navigator.pushNamed(
+              context,
+              AppRoutes.liveEvents,
+            ),
       ),
       if (isTeacher) ...[
         _buildFeatureTile(
           context: context,
           label: 'Attendance',
-          icon: Icons.fact_check_outlined,
-          color: const Color(0xFF607D8B),
-          onTap: () => Navigator.pushNamed(
-            context,
-            AppRoutes.attendanceSetup,
-          ),
+          icon:
+          Icons.fact_check_outlined,
+          color:
+          const Color(0xFF607D8B),
+          onTap: () =>
+              Navigator.pushNamed(
+                context,
+                AppRoutes.attendanceSetup,
+              ),
         ),
         _buildFeatureTile(
           context: context,
-          label: 'Attendance Dashboard',
-          icon: Icons.dashboard_outlined,
-          color: const Color(0xFF795548),
-          onTap: () => Navigator.pushNamed(
-            context,
-            AppRoutes.attendanceExport,
-          ),
+          label:
+          'Attendance Dashboard',
+          icon:
+          Icons.dashboard_outlined,
+          color:
+          const Color(0xFF795548),
+          onTap: () =>
+              Navigator.pushNamed(
+                context,
+                AppRoutes.attendanceExport,
+              ),
         ),
       ],
-      if (isDeveloper && !isTeacher)
+      if (isDeveloper &&
+          !isTeacher)
         _buildFeatureTile(
           context: context,
           label: 'Pending',
-          icon: Icons.pending_actions_outlined,
+          icon: Icons
+              .pending_actions_outlined,
           color: Colors.redAccent,
-          onTap: () => Navigator.pushNamed(
-            context,
-            AppRoutes.devTriage,
-          ),
+          onTap: () =>
+              Navigator.pushNamed(
+                context,
+                AppRoutes.devTriage,
+              ),
         ),
     ];
   }
 
-  Widget _buildDrawer(BuildContext context) {
-    final theme = Theme.of(context);
+  Widget _buildDrawer(
+      BuildContext context,
+      ) {
+    final theme =
+    Theme.of(context);
 
     return Drawer(
-      backgroundColor: AppColors.background,
+      backgroundColor:
+      AppColors.background,
       child: SafeArea(
         child: Column(
           crossAxisAlignment:
           CrossAxisAlignment.stretch,
           children: [
             Padding(
-              padding: EdgeInsets.symmetric(
+              padding:
+              EdgeInsets.symmetric(
                 horizontal: 24.w,
                 vertical: 32.h,
               ),
               child: Row(
                 children: [
                   Container(
-                    padding: EdgeInsets.all(12.r),
-                    decoration: BoxDecoration(
-                      color: theme.colorScheme.primary
+                    padding:
+                    EdgeInsets.all(12.r),
+                    decoration:
+                    BoxDecoration(
+                      color: theme.colorScheme
+                          .primary
                           .withValues(
                         alpha: 0.1,
                       ),
@@ -575,15 +674,17 @@ class _HomeTabState extends ConsumerState<HomeTab> {
                     ),
                     child: Icon(
                       Icons.school_rounded,
-                      color:
-                      theme.colorScheme.primary,
+                      color: theme
+                          .colorScheme
+                          .primary,
                       size: 32.r,
                     ),
                   ),
                   SizedBox(width: 16.w),
                   Text(
                     'BGCTUB\nCompanion',
-                    style: theme.textTheme.titleMedium
+                    style: theme.textTheme
+                        .titleMedium
                         ?.copyWith(
                       color:
                       AppColors.textPrimary,
@@ -607,12 +708,14 @@ class _HomeTabState extends ConsumerState<HomeTab> {
               ),
               leading: Icon(
                 Icons.update_rounded,
-                color: AppColors.textSecondary,
+                color:
+                AppColors.textSecondary,
                 size: 24.r,
               ),
               title: Text(
                 'Check for Updates',
-                style: theme.textTheme.bodyLarge
+                style: theme.textTheme
+                    .bodyLarge
                     ?.copyWith(
                   color:
                   AppColors.textPrimary,
@@ -632,12 +735,14 @@ class _HomeTabState extends ConsumerState<HomeTab> {
               ),
               leading: Icon(
                 Icons.support_agent_rounded,
-                color: AppColors.textSecondary,
+                color:
+                AppColors.textSecondary,
                 size: 24.r,
               ),
               title: Text(
                 'Contact Us',
-                style: theme.textTheme.bodyLarge
+                style: theme.textTheme
+                    .bodyLarge
                     ?.copyWith(
                   color:
                   AppColors.textPrimary,
