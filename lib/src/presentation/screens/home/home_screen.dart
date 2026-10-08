@@ -1,6 +1,7 @@
 import 'dart:async';
 
-import 'package:firebase_auth/firebase_auth.dart' as firebase_auth;
+import 'package:firebase_auth/firebase_auth.dart'
+as firebase_auth;
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -23,18 +24,23 @@ class HomeScreen extends ConsumerStatefulWidget {
   const HomeScreen({super.key});
 
   @override
-  ConsumerState<HomeScreen> createState() => _HomeScreenState();
+  ConsumerState<HomeScreen> createState() =>
+      _HomeScreenState();
 }
 
-class _HomeScreenState extends ConsumerState<HomeScreen> {
+class _HomeScreenState
+    extends ConsumerState<HomeScreen> {
   int _currentIndex = 0;
 
   late final PageController _pageController;
 
   Timer? _updateCheckTimer;
 
-  StreamSubscription<RemoteMessage>? _foregroundMessageSubscription;
-  StreamSubscription<RemoteMessage>? _openedAppMessageSubscription;
+  StreamSubscription<RemoteMessage>?
+  _foregroundMessageSubscription;
+
+  StreamSubscription<RemoteMessage>?
+  _openedAppMessageSubscription;
 
   bool _isOpeningNotice = false;
 
@@ -72,8 +78,10 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   @override
   void dispose() {
     _updateCheckTimer?.cancel();
-    _foregroundMessageSubscription?.cancel();
-    _openedAppMessageSubscription?.cancel();
+    _foregroundMessageSubscription
+        ?.cancel();
+    _openedAppMessageSubscription
+        ?.cancel();
     _pageController.dispose();
 
     super.dispose();
@@ -85,7 +93,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         updateServiceProvider,
       );
 
-      final info = await updateService.checkForUpdates();
+      final info =
+      await updateService.checkForUpdates();
 
       if (!mounted || !info.hasUpdate) {
         return;
@@ -124,9 +133,11 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
 
     try {
       final initialMessage =
-      await FirebaseMessaging.instance.getInitialMessage();
+      await FirebaseMessaging.instance
+          .getInitialMessage();
 
-      if (!mounted || initialMessage == null) {
+      if (!mounted ||
+          initialMessage == null) {
         return;
       }
 
@@ -135,7 +146,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
       );
     } catch (error, stackTrace) {
       debugPrint(
-        'Failed to resolve initial Firebase Messaging message: '
+        'Failed to resolve initial Firebase '
+            'Messaging message: '
             '$error\n$stackTrace',
       );
     }
@@ -148,8 +160,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
           .syncAnnouncements();
     } catch (error, stackTrace) {
       debugPrint(
-        'Announcement sync after notification failed: '
-            '$error\n$stackTrace',
+        'Announcement sync after notification '
+            'failed: $error\n$stackTrace',
       );
     }
   }
@@ -183,8 +195,11 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         return;
       }
 
-      final uid =
-          firebase_auth.FirebaseAuth.instance.currentUser?.uid;
+      final uid = firebase_auth
+          .FirebaseAuth
+          .instance
+          .currentUser
+          ?.uid;
 
       if (uid == null) {
         return;
@@ -233,8 +248,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
       );
     } catch (error, stackTrace) {
       debugPrint(
-        'Deep link to AnnouncementDetailScreen failed: '
-            '$error\n$stackTrace',
+        'Deep link to AnnouncementDetailScreen '
+            'failed: $error\n$stackTrace',
       );
     } finally {
       _isOpeningNotice = false;
@@ -282,9 +297,10 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
 
         final now = DateTime.now();
 
-        final canExit = _lastPressedAt != null &&
-            now.difference(_lastPressedAt!) <=
-                const Duration(seconds: 2);
+        final canExit =
+            _lastPressedAt != null &&
+                now.difference(_lastPressedAt!) <=
+                    const Duration(seconds: 2);
 
         if (canExit) {
           SystemNavigator.pop();
@@ -293,7 +309,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
 
         _lastPressedAt = now;
 
-        ScaffoldMessenger.of(context).showSnackBar(
+        ScaffoldMessenger.of(context)
+            .showSnackBar(
           SnackBar(
             content: const Text(
               'Press back again to exit',
@@ -301,12 +318,19 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                 color: Colors.white,
               ),
             ),
-            backgroundColor: AppColors.elevatedSurface,
-            behavior: SnackBarBehavior.floating,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(10.r),
+            backgroundColor:
+            AppColors.elevatedSurface,
+            behavior:
+            SnackBarBehavior.floating,
+            shape:
+            RoundedRectangleBorder(
+              borderRadius:
+              BorderRadius.circular(
+                10.r,
+              ),
             ),
-            duration: const Duration(seconds: 2),
+            duration:
+            const Duration(seconds: 2),
           ),
         );
       },
@@ -315,7 +339,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         body: PageView(
           controller: _pageController,
           onPageChanged: (index) {
-            if (!mounted || _currentIndex == index) {
+            if (!mounted ||
+                _currentIndex == index) {
               return;
             }
 
@@ -341,26 +366,30 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
               children: [
                 _navItem(
                   activeIcon: Icons.home,
-                  inactiveIcon: Icons.home_outlined,
+                  inactiveIcon:
+                  Icons.home_outlined,
                   label: 'Home',
                   index: 0,
                 ),
                 _navItem(
-                  activeIcon: Icons.calendar_today,
-                  inactiveIcon:
-                  Icons.calendar_today_outlined,
+                  activeIcon:
+                  Icons.calendar_today,
+                  inactiveIcon: Icons
+                      .calendar_today_outlined,
                   label: 'Routine',
                   index: 1,
                 ),
                 _navItem(
                   activeIcon: Icons.campaign,
-                  inactiveIcon: Icons.campaign_outlined,
+                  inactiveIcon:
+                  Icons.campaign_outlined,
                   label: 'Notice',
                   index: 2,
                 ),
                 _navItem(
                   activeIcon: Icons.person,
-                  inactiveIcon: Icons.person_outline,
+                  inactiveIcon:
+                  Icons.person_outline,
                   label: 'Profile',
                   index: 3,
                 ),
@@ -378,7 +407,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     required String label,
     required int index,
   }) {
-    final isActive = _currentIndex == index;
+    final isActive =
+        _currentIndex == index;
 
     return Expanded(
       child: Padding(
@@ -390,13 +420,14 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
           selected: isActive,
           onTap: () => _selectTab(index),
           minHeight: 48.h,
-          borderRadius: BorderRadius.circular(16.r),
+          borderRadius:
+          BorderRadius.circular(16.r),
           padding: EdgeInsets.zero,
-          backgroundColor: isActive
-              ? AppColors.primary
-              : Colors.transparent,
+          backgroundColor:
+          Colors.transparent,
           child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
+            mainAxisAlignment:
+            MainAxisAlignment.center,
             children: [
               Icon(
                 isActive
@@ -404,24 +435,30 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                     : inactiveIcon,
                 size: 28.r,
                 color: isActive
-                    ? AppColors.textPrimary
-                    : AppColors.textSecondary,
+                    ? Colors.white
+                    : const Color(
+                  0xFF8C8C92,
+                ),
               ),
               SizedBox(height: 4.h),
               Text(
                 label,
                 maxLines: 1,
-                overflow: TextOverflow.ellipsis,
+                overflow:
+                TextOverflow.ellipsis,
                 style: Theme.of(context)
                     .textTheme
                     .labelMedium
                     ?.copyWith(
+                  fontSize: 12.sp,
                   fontWeight: isActive
-                      ? FontWeight.w700
+                      ? FontWeight.w600
                       : FontWeight.w500,
                   color: isActive
-                      ? AppColors.textPrimary
-                      : AppColors.textSecondary,
+                      ? Colors.white
+                      : const Color(
+                    0xFF8C8C92,
+                  ),
                 ),
               ),
             ],

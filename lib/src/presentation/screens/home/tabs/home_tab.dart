@@ -202,7 +202,7 @@ class _HomeTabState
                       crossAxisCount: 2,
                       crossAxisSpacing: 12.w,
                       mainAxisSpacing: 12.h,
-                      mainAxisExtent: 96.h,
+                      mainAxisExtent: 136.h,
                     ),
                   ),
                 ),
@@ -239,15 +239,17 @@ class _HomeTabState
               drawerContext,
               ) {
             return Material(
-              color: AppColors.surface,
+              color: const Color(
+                0xFF1C1D20,
+              ),
               borderRadius:
               BorderRadius.circular(
-                AppRadii.medium.r,
+                20.r,
               ),
               child: InkWell(
                 borderRadius:
                 BorderRadius.circular(
-                  AppRadii.medium.r,
+                  20.r,
                 ),
                 onTap: () {
                   Scaffold.of(
@@ -261,7 +263,7 @@ class _HomeTabState
                     Icons.menu_rounded,
                     color:
                     AppColors.textPrimary,
-                    size: 24.r,
+                    size: 23.r,
                   ),
                 ),
               ),
@@ -283,10 +285,12 @@ class _HomeTabState
                     .bodyMedium
                     ?.copyWith(
                   color:
-                  AppColors.textTertiary,
+                  AppColors.textSecondary,
+                  fontSize: 14.sp,
+                  height: 1.1,
                 ),
               ),
-              SizedBox(height: 2.h),
+              SizedBox(height: 4.h),
               Text(
                 displayName,
                 maxLines: 1,
@@ -297,8 +301,10 @@ class _HomeTabState
                     ?.copyWith(
                   color:
                   AppColors.textPrimary,
+                  fontSize: 16.sp,
                   fontWeight:
                   FontWeight.w700,
+                  height: 1.1,
                 ),
               ),
             ],
@@ -322,7 +328,7 @@ class _HomeTabState
       child: ClipRRect(
         borderRadius:
         BorderRadius.circular(
-          AppRadii.large.r,
+          20.r,
         ),
         child: Stack(
           fit: StackFit.expand,
@@ -345,15 +351,15 @@ class _HomeTabState
                   colors: [
                     Colors.black
                         .withValues(
-                      alpha: 0.12,
+                      alpha: 0.10,
                     ),
                     Colors.black
                         .withValues(
-                      alpha: 0.38,
+                      alpha: 0.35,
                     ),
                     Colors.black
                         .withValues(
-                      alpha: 0.78,
+                      alpha: 0.80,
                     ),
                   ],
                   stops: const [
@@ -376,14 +382,14 @@ class _HomeTabState
                   Container(
                     padding:
                     EdgeInsets.symmetric(
-                      horizontal: 10.w,
-                      vertical: 5.h,
+                      horizontal: 11.w,
+                      vertical: 6.h,
                     ),
                     decoration:
                     BoxDecoration(
                       color: primary
                           .withValues(
-                        alpha: 0.92,
+                        alpha: 0.94,
                       ),
                       borderRadius:
                       BorderRadius.circular(
@@ -396,9 +402,10 @@ class _HomeTabState
                           .labelSmall
                           ?.copyWith(
                         color: Colors.white,
+                        fontSize: 11.sp,
                         fontWeight:
                         FontWeight.w700,
-                        letterSpacing: 0.6,
+                        letterSpacing: 0.5,
                       ),
                     ),
                   ),
@@ -412,9 +419,11 @@ class _HomeTabState
                         .headlineSmall
                         ?.copyWith(
                       color: Colors.white,
+                      fontSize: 24.sp,
                       fontWeight:
                       FontWeight.w800,
                       height: 1.05,
+                      letterSpacing: -0.3,
                     ),
                   ),
                   SizedBox(height: 6.h),
@@ -423,7 +432,9 @@ class _HomeTabState
                     style: theme.textTheme
                         .bodyMedium
                         ?.copyWith(
-                      color: Colors.white70,
+                      color:
+                      Colors.white70,
+                      fontSize: 14.sp,
                     ),
                   ),
                 ],
@@ -438,6 +449,7 @@ class _HomeTabState
   Widget _buildFeatureTile({
     required BuildContext context,
     required String label,
+    required String description,
     required IconData icon,
     required Color color,
     required VoidCallback onTap,
@@ -445,69 +457,171 @@ class _HomeTabState
     final theme =
     Theme.of(context);
 
+    final borderRadius =
+    BorderRadius.circular(18.r);
+
     return Material(
-      color: AppColors.surface,
-      borderRadius:
-      BorderRadius.circular(
-        AppRadii.large.r,
-      ),
+      color: Colors.transparent,
+      borderRadius: borderRadius,
+      clipBehavior: Clip.antiAlias,
       child: InkWell(
-        borderRadius:
-        BorderRadius.circular(
-          AppRadii.large.r,
-        ),
+        borderRadius: borderRadius,
         onTap: onTap,
         splashColor:
         color.withValues(
-          alpha: 0.1,
+          alpha: 0.10,
         ),
         highlightColor:
         color.withValues(
-          alpha: 0.05,
+          alpha: 0.06,
         ),
-        child: Padding(
-          padding:
-          EdgeInsets.all(14.r),
-          child: Column(
-            mainAxisAlignment:
-            MainAxisAlignment.center,
-            crossAxisAlignment:
-            CrossAxisAlignment.start,
-            children: [
-              Container(
-                padding:
-                EdgeInsets.all(8.r),
-                decoration:
-                BoxDecoration(
-                  color:
-                  color.withValues(
-                    alpha: 0.15,
-                  ),
-                  borderRadius:
-                  BorderRadius.circular(
-                    10.r,
-                  ),
+        child: Ink(
+          decoration: BoxDecoration(
+            borderRadius:
+            borderRadius,
+            gradient: LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: [
+                color.withValues(
+                  alpha: 0.13,
                 ),
-                child: Icon(
-                  icon,
-                  color: color,
-                  size: 22.r,
+                const Color(
+                  0xFF111315,
+                ).withValues(
+                  alpha: 0.98,
+                ),
+                const Color(
+                  0xFF0B0C0E,
+                ),
+              ],
+              stops: const [
+                0.0,
+                0.42,
+                1.0,
+              ],
+            ),
+            border: Border.all(
+              color: Colors.white
+                  .withValues(
+                alpha: 0.035,
+              ),
+              width: 1,
+            ),
+          ),
+          child: Stack(
+            clipBehavior: Clip.none,
+            children: [
+              Positioned(
+                right: -35.r,
+                top: -38.r,
+                child: Container(
+                  width: 150.r,
+                  height: 150.r,
+                  decoration:
+                  BoxDecoration(
+                    shape: BoxShape.circle,
+                    gradient:
+                    RadialGradient(
+                      center:
+                      Alignment.topLeft,
+                      radius: 0.85,
+                      colors: [
+                        color.withValues(
+                          alpha: 0.15,
+                        ),
+                        color.withValues(
+                          alpha: 0.07,
+                        ),
+                        color.withValues(
+                          alpha: 0.0,
+                        ),
+                      ],
+                    ),
+                  ),
                 ),
               ),
-              const Spacer(),
-              Text(
-                label,
-                maxLines: 1,
-                overflow:
-                TextOverflow.ellipsis,
-                style: theme.textTheme
-                    .titleSmall
-                    ?.copyWith(
-                  color:
-                  AppColors.textPrimary,
-                  fontWeight:
-                  FontWeight.w700,
-                  height: 1.2,
+              Positioned(
+                right: -17.r,
+                top: 20.r,
+                child: Transform.rotate(
+                  angle: -0.12,
+                  child: Icon(
+                    icon,
+                    size: 82.r,
+                    color: Colors.white
+                        .withValues(
+                      alpha: 0.055,
+                    ),
+                  ),
+                ),
+              ),
+              Padding(
+                padding:
+                EdgeInsets.all(14.r),
+                child: Column(
+                  crossAxisAlignment:
+                  CrossAxisAlignment
+                      .start,
+                  children: [
+                    Container(
+                      width: 44.r,
+                      height: 44.r,
+                      decoration:
+                      BoxDecoration(
+                        color: color
+                            .withValues(
+                          alpha: 0.17,
+                        ),
+                        borderRadius:
+                        BorderRadius
+                            .circular(
+                          13.r,
+                        ),
+                      ),
+                      child: Icon(
+                        icon,
+                        color: color,
+                        size: 24.r,
+                      ),
+                    ),
+                    const Spacer(),
+                    Text(
+                      label,
+                      maxLines: 1,
+                      overflow:
+                      TextOverflow.ellipsis,
+                      style: theme.textTheme
+                          .titleSmall
+                          ?.copyWith(
+                        color:
+                        AppColors
+                            .textPrimary,
+                        fontSize: 14.sp,
+                        fontWeight:
+                        FontWeight.w700,
+                        height: 1.15,
+                      ),
+                    ),
+                    SizedBox(height: 5.h),
+                    Text(
+                      description,
+                      maxLines: 2,
+                      overflow:
+                      TextOverflow.ellipsis,
+                      style: theme.textTheme
+                          .bodyMedium
+                          ?.copyWith(
+                        color:
+                        AppColors
+                            .textSecondary,
+                        fontSize: 12.5.sp,
+                        fontWeight:
+                        FontWeight.w400,
+                        height: 1.35,
+                      ),
+                    ),
+                  ],
                 ),
               ),
             ],
@@ -526,10 +640,12 @@ class _HomeTabState
       _buildFeatureTile(
         context: context,
         label: 'Academic Calendar',
+        description:
+        'View important dates\nand upcoming events',
         icon:
         Icons.calendar_month_outlined,
         color:
-        const Color(0xFF1877F2),
+        const Color(0xFF65A8FF),
         onTap: () =>
             Navigator.pushNamed(
               context,
@@ -540,10 +656,12 @@ class _HomeTabState
         _buildFeatureTile(
           context: context,
           label: 'Exam Routine',
+          description:
+          'Check your exam\nschedule',
           icon:
           Icons.assignment_outlined,
           color:
-          const Color(0xFFE91E63),
+          const Color(0xFFFF3D91),
           onTap: () =>
               Navigator.pushNamed(
                 context,
@@ -553,10 +671,12 @@ class _HomeTabState
       _buildFeatureTile(
         context: context,
         label: 'Books Library',
+        description:
+        'Access recommended\nbooks and resources',
         icon:
         Icons.menu_book_rounded,
         color:
-        const Color(0xFF4CAF50),
+        const Color(0xFF52D99A),
         onTap: () =>
             Navigator.pushNamed(
               context,
@@ -566,10 +686,12 @@ class _HomeTabState
       _buildFeatureTile(
         context: context,
         label: 'Notes Catalog',
+        description:
+        'Browse and download\nclass notes',
         icon:
         Icons.description_outlined,
         color:
-        const Color(0xFFFF9800),
+        const Color(0xFFFFAE2B),
         onTap: () =>
             Navigator.pushNamed(
               context,
@@ -579,10 +701,12 @@ class _HomeTabState
       _buildFeatureTile(
         context: context,
         label: 'Live Events',
+        description:
+        'Stay updated with\ncampus events',
         icon:
         Icons.sports_soccer_rounded,
         color:
-        const Color(0xFF00BCD4),
+        const Color(0xFF23D6E8),
         onTap: () =>
             Navigator.pushNamed(
               context,
@@ -593,6 +717,8 @@ class _HomeTabState
         _buildFeatureTile(
           context: context,
           label: 'Attendance',
+          description:
+          'Record and manage\nclass attendance',
           icon:
           Icons.fact_check_outlined,
           color:
@@ -605,8 +731,9 @@ class _HomeTabState
         ),
         _buildFeatureTile(
           context: context,
-          label:
-          'Attendance Dashboard',
+          label: 'Attendance Dashboard',
+          description:
+          'Review attendance\ninsights and reports',
           icon:
           Icons.dashboard_outlined,
           color:
@@ -623,8 +750,10 @@ class _HomeTabState
         _buildFeatureTile(
           context: context,
           label: 'Pending',
-          icon: Icons
-              .pending_actions_outlined,
+          description:
+          'Track your requests\nand approvals',
+          icon:
+          Icons.pending_actions_outlined,
           color: Colors.redAccent,
           onTap: () =>
               Navigator.pushNamed(
@@ -687,7 +816,8 @@ class _HomeTabState
                         .titleMedium
                         ?.copyWith(
                       color:
-                      AppColors.textPrimary,
+                      AppColors
+                          .textPrimary,
                       fontWeight:
                       FontWeight.w800,
                       height: 1.2,

@@ -5,6 +5,7 @@ import 'package:intl/intl.dart';
 
 import '../../../data/local/app_database.dart';
 import '../../../data/repositories/live_event_repository.dart';
+import '../../theme/app_theme.dart';
 
 /// Provides the dynamic title displayed in the event screen AppBar.
 ///
@@ -63,19 +64,19 @@ class _LiveEventsScreenState
     );
 
     return Scaffold(
-      backgroundColor: const Color(0xFF0F172A),
+      backgroundColor: AppColors.background,
       appBar: AppBar(
-        backgroundColor: const Color(0xFF0F172A),
+        backgroundColor: AppColors.background,
         elevation: 0,
         centerTitle: true,
         iconTheme: const IconThemeData(
-          color: Colors.white,
+          color: AppColors.textPrimary,
         ),
         title: titleAsync.when(
           data: (title) => Text(
             title.isEmpty ? 'Campus Events' : title,
             style: TextStyle(
-              color: Colors.white,
+              color: AppColors.textPrimary,
               fontSize: 22.sp,
               fontWeight: FontWeight.w500,
             ),
@@ -85,13 +86,13 @@ class _LiveEventsScreenState
             height: 24,
             child: CircularProgressIndicator(
               strokeWidth: 2,
-              color: Colors.white54,
+              color: AppColors.textSecondary,
             ),
           ),
           error: (_, _) => Text(
             'Campus Events',
             style: TextStyle(
-              color: Colors.white,
+              color: AppColors.textPrimary,
               fontSize: 22.sp,
               fontWeight: FontWeight.w500,
             ),
@@ -108,7 +109,7 @@ class _LiveEventsScreenState
                 data: _buildEventsList,
                 loading: () => const Center(
                   child: CircularProgressIndicator(
-                    color: Color(0xFF5667FD),
+                    color: AppColors.primary,
                   ),
                 ),
                 error: (_, _) => _buildErrorState(),
@@ -129,23 +130,23 @@ class _LiveEventsScreenState
       child: TextField(
         controller: _searchController,
         style: const TextStyle(
-          color: Colors.white,
+          color: AppColors.textPrimary,
         ),
         textInputAction: TextInputAction.search,
         decoration: InputDecoration(
           hintText: 'Search events, venues, or topics...',
           hintStyle: const TextStyle(
-            color: Colors.white54,
+            color: AppColors.textTertiary,
           ),
           prefixIcon: const Icon(
             Icons.search,
-            color: Colors.white54,
+            color: AppColors.textTertiary,
           ),
           suffixIcon: _searchQuery.isNotEmpty
               ? IconButton(
             icon: const Icon(
               Icons.clear,
-              color: Colors.white54,
+              color: AppColors.textTertiary,
             ),
             tooltip: 'Clear search',
             onPressed: () {
@@ -158,7 +159,7 @@ class _LiveEventsScreenState
           )
               : null,
           filled: true,
-          fillColor: const Color(0xFF1E293B),
+          fillColor: AppColors.surface,
           border: OutlineInputBorder(
             borderRadius:
             BorderRadius.circular(16.r),
@@ -168,7 +169,7 @@ class _LiveEventsScreenState
             borderRadius:
             BorderRadius.circular(16.r),
             borderSide: const BorderSide(
-              color: Color(0xFF5667FD),
+              color: AppColors.primary,
             ),
           ),
           contentPadding:
@@ -200,7 +201,7 @@ class _LiveEventsScreenState
             children: [
               Icon(
                 Icons.event_busy_outlined,
-                color: Colors.white38,
+                color: AppColors.textTertiary,
                 size: 52.sp,
               ),
               SizedBox(height: 14.h),
@@ -210,7 +211,7 @@ class _LiveEventsScreenState
                     : 'No events found.',
                 textAlign: TextAlign.center,
                 style: TextStyle(
-                  color: Colors.white54,
+                  color: AppColors.textSecondary,
                   fontSize: 16.sp,
                 ),
               ),
@@ -220,7 +221,7 @@ class _LiveEventsScreenState
                   'Try a different search term.',
                   textAlign: TextAlign.center,
                   style: TextStyle(
-                    color: Colors.white38,
+                    color: AppColors.textTertiary,
                     fontSize: 14.sp,
                   ),
                 ),
@@ -265,7 +266,7 @@ class _LiveEventsScreenState
               'Failed to load events.',
               textAlign: TextAlign.center,
               style: TextStyle(
-                color: Colors.white,
+                color: AppColors.textPrimary,
                 fontSize: 16.sp,
                 fontWeight: FontWeight.w500,
               ),
@@ -275,7 +276,7 @@ class _LiveEventsScreenState
               'Please try again later.',
               textAlign: TextAlign.center,
               style: TextStyle(
-                color: Colors.white54,
+                color: AppColors.textSecondary,
                 fontSize: 14.sp,
               ),
             ),
@@ -334,18 +335,11 @@ class _LiveEventsScreenState
       ),
       padding: EdgeInsets.all(20.r),
       decoration: BoxDecoration(
-        gradient: const LinearGradient(
-          colors: [
-            Color(0xFF1E293B),
-            Color(0xFF111827),
-          ],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
+        color: AppColors.surface,
         borderRadius:
         BorderRadius.circular(20.r),
         border: Border.all(
-          color: Colors.white10,
+          color: AppColors.divider,
           width: 1,
         ),
       ),
@@ -387,9 +381,8 @@ class _LiveEventsScreenState
                 padding:
                 EdgeInsets.all(10.r),
                 decoration: BoxDecoration(
-                  color: const Color(
-                    0xFF5667FD,
-                  ).withValues(
+                  color: AppColors.primary
+                      .withValues(
                     alpha: 0.15,
                   ),
                   borderRadius:
@@ -414,7 +407,8 @@ class _LiveEventsScreenState
                       Text(
                         primaryTitle,
                         style: TextStyle(
-                          color: Colors.white,
+                          color:
+                          AppColors.textPrimary,
                           fontSize: 19.sp,
                           fontWeight:
                           FontWeight.bold,
@@ -427,7 +421,7 @@ class _LiveEventsScreenState
                         secondaryTitle,
                         style: TextStyle(
                           color:
-                          Colors.white70,
+                          AppColors.textSecondary,
                           fontSize: 16.sp,
                           fontWeight:
                           FontWeight.w500,
@@ -448,8 +442,7 @@ class _LiveEventsScreenState
               vertical: 10.h,
             ),
             decoration: BoxDecoration(
-              color: Colors.white
-                  .withValues(alpha: 0.05),
+              color: AppColors.elevatedSurface,
               borderRadius:
               BorderRadius.circular(
                 12.r,
@@ -459,7 +452,8 @@ class _LiveEventsScreenState
               children: [
                 Icon(
                   Icons.schedule_outlined,
-                  color: Colors.white60,
+                  color:
+                  AppColors.textSecondary,
                   size: 18.sp,
                 ),
                 SizedBox(width: 8.w),
@@ -468,7 +462,7 @@ class _LiveEventsScreenState
                     '$dateString  •  $timeString',
                     style: TextStyle(
                       color:
-                      Colors.white70,
+                      AppColors.textSecondary,
                       fontSize: 13.sp,
                       fontWeight:
                       FontWeight.w500,
@@ -486,7 +480,8 @@ class _LiveEventsScreenState
               children: [
                 Icon(
                   Icons.location_on_outlined,
-                  color: Colors.white54,
+                  color:
+                  AppColors.textTertiary,
                   size: 17.sp,
                 ),
                 SizedBox(width: 6.w),
@@ -494,7 +489,8 @@ class _LiveEventsScreenState
                   child: Text(
                     subtitleText,
                     style: TextStyle(
-                      color: Colors.white54,
+                      color:
+                      AppColors.textTertiary,
                       fontSize: 14.sp,
                       height: 1.3,
                     ),
